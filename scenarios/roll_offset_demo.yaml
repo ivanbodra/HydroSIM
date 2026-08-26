@@ -1,0 +1,37 @@
+scenario:
+  id: geometry.roll_offset_demo
+  version: 0.1.0
+  title: Roll offset demonstration
+
+random_seed: 1001
+
+environment:
+  terrain:
+    type: flat
+    depth_m: 30.0
+
+platform:
+  speed_mps: 4.0
+  heading_deg: 0.0
+
+sonar:
+  type: ideal_multibeam
+  number_of_beams: 128
+  swath_angle_deg: 120.0
+
+truth:
+  transducer_alignment:
+    roll_deg: 0.5
+    pitch_deg: 0.0
+    yaw_deg: 0.0
+
+configured:
+  transducer_alignment:
+    roll_deg: 0.0
+    pitch_deg: 0.0
+    yaw_deg: 0.0
+
+expected_learning_outcomes:
+  - Observe how a roll alignment error affects soundings across the swath.
+  - Compare true and configured beam intersections.
+  - Understand why errors increase toward outer beams.
