@@ -1,6 +1,6 @@
 # HydroSIM Conventions
 
-Version: 0.1.1
+Version: 0.1.2
 
 > These conventions define the internal geometric and temporal semantics of HydroSIM. External instrument or software conventions must be converted explicitly at system boundaries; they must not silently alter the internal convention.
 
@@ -90,7 +90,7 @@ HydroSIM uses the following positive attitude conventions in the vessel/body fra
 - Positive pitch (`θ`): bow up
 - Positive yaw (`ψ`): turn to starboard; clockwise when viewed from above
 
-Positive roll and yaw follow the right-hand rule about `+X_B` and `+Z_B`. Positive pitch is intentionally defined as bow-up hydrographic/navigation pitch and therefore is the opposite sign of a standard active right-hand rotation about `+Y_B` in the Forward-Starboard-Down frame.
+With the right-handed Forward-Starboard-Down body frame and the active rotation matrices defined below, these signs are obtained directly from the standard right-hand elementary rotations about `+X_B`, `+Y_B`, and `+Z_B` respectively.
 
 Heading and yaw share the same positive rotational sense in the NED convention, but they remain semantically distinct:
 
@@ -111,11 +111,17 @@ with:
 - `θ` = pitch
 - `ψ` = yaw / heading angle as applicable
 
-For the Body-to-Navigation transformation, the composite direction-cosine matrix is defined as:
+The elementary active right-hand rotation matrices are:
 
-`R_NB = R_z(ψ) R_y(-θ) R_x(φ)`
+`R_x(φ) = [[1, 0, 0], [0, cosφ, -sinφ], [0, sinφ, cosφ]]`
 
-where `R_x`, `R_y`, and `R_z` are the standard active right-hand elementary rotation matrices. The minus sign on `θ` implements the HydroSIM bow-up-positive pitch convention in the Forward-Starboard-Down body frame.
+`R_y(θ) = [[cosθ, 0, sinθ], [0, 1, 0], [-sinθ, 0, cosθ]]`
+
+`R_z(ψ) = [[cosψ, -sinψ, 0], [sinψ, cosψ, 0], [0, 0, 1]]`
+
+For the Body-to-Navigation transformation, the composite direction-cosine matrix is:
+
+`R_NB = R_z(ψ) R_y(θ) R_x(φ)`
 
 A vector expressed in body coordinates is transformed to navigation coordinates by:
 
@@ -135,14 +141,38 @@ No implementation may rely on a library's undocumented or default Euler-angle co
 
 ### Canonical rotation tests
 
-The following cases must be used as unit-test references:
+The following cases are mandatory unit-test references.
 
-1. Heading 0°: body forward maps to North.
-2. Heading +90°: body forward maps to East.
-3. Roll +90°: body starboard axis rotates toward Down.
-4. Pitch +90°: body forward axis rotates toward Up.
+1. **Zero attitude / heading 0°**
+   - input body forward vector: `[1, 0, 0]_B`
+   - expected navigation vector: `[1, 0, 0]_N`
+   - interpretation: Forward maps to North.
 
-The explicit elementary matrices used in code must be documented adjacent to the implementation and validated against these cases.
+2. **Heading / yaw +90°**
+   - input body forward vector: `[1, 0, 0]_B`
+   - apply `R_z(+90°)`
+   - expected navigation vector: `[0, 1, 0]_N`
+   - interpretation: Forward maps to East.
+
+3. **Roll +90°**
+   - input body starboard vector: `[0, 1, 0]_B`
+   - apply `R_x(+90°)`
+   - expected rotated vector: `[0, 0, 1]`
+   - interpretation: Starboard rotates toward Down.
+
+4. **Pitch +90°**
+   - input body forward vector: `[1, 0, 0]_B`
+   - apply `R_y(+90°)`
+   - expected rotated vector: `[0, 0, -1]`
+   - interpretation: Forward rotates toward Up because positive Z is Down.
+
+In addition to the physical cases above, every implemented rotation matrix must satisfy, within numerical tolerance:
+
+- `R^T R = I`
+- `R^-1 = R^T`
+- `det(R) = +1`
+
+These tests are normative for the HydroSIM geometry core.
 
 ## 8. Heave
 
@@ -287,9 +317,7 @@ The NOAA HSSD is treated primarily as a survey-data specification. Detailed sens
 
 ## 17. Remaining items before Issue #1 is closed
 
-The core internal convention is now defined. Before Issue #1 is closed, review and approve:
+The rotation matrices and canonical tests are now defined and approved. Before Issue #1 is closed, review and approve:
 
-1. the explicit elementary `R_x`, `R_y`, and `R_z` matrices and the pitch sign mapping used by HydroSIM;
-2. the canonical +90° test cases derived from those matrices;
-3. whether `VRP` is the preferred permanent project term for the body-frame origin;
-4. whether any additional external convention must be documented before geometry implementation begins.
+1. whether `VRP` is the preferred permanent project term for the body-frame origin;
+2. whether any additional external convention must be documented before geometry implementation begins.
