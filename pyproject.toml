@@ -1,0 +1,29 @@
+[project]
+name = "hydrosim"
+version = "0.1.0"
+description = "Scientific and didactic hydrographic surveying simulator"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pydantic>=2",
+    "pyyaml"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff"
+]
+visualization = [
+    "matplotlib",
+    "plotly",
+    "PySide6"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
