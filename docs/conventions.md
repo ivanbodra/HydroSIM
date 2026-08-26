@@ -90,7 +90,7 @@ HydroSIM uses the following positive attitude conventions in the vessel/body fra
 - Positive pitch (`θ`): bow up
 - Positive yaw (`ψ`): turn to starboard; clockwise when viewed from above
 
-These signs are consistent with positive right-hand rotations about the positive body axes `X_B`, `Y_B`, and `Z_B`, respectively.
+Positive roll and yaw follow the right-hand rule about `+X_B` and `+Z_B`. Positive pitch is intentionally defined as bow-up hydrographic/navigation pitch and therefore is the opposite sign of a standard active right-hand rotation about `+Y_B` in the Forward-Starboard-Down frame.
 
 Heading and yaw share the same positive rotational sense in the NED convention, but they remain semantically distinct:
 
@@ -113,13 +113,15 @@ with:
 
 For the Body-to-Navigation transformation, the composite direction-cosine matrix is defined as:
 
-`R_NB = R_z(ψ) R_y(θ) R_x(φ)`
+`R_NB = R_z(ψ) R_y(-θ) R_x(φ)`
 
-and a vector expressed in body coordinates is transformed to navigation coordinates by:
+where `R_x`, `R_y`, and `R_z` are the standard active right-hand elementary rotation matrices. The minus sign on `θ` implements the HydroSIM bow-up-positive pitch convention in the Forward-Starboard-Down body frame.
+
+A vector expressed in body coordinates is transformed to navigation coordinates by:
 
 `v_N = R_NB v_B`
 
-Because column vectors are used, the rightmost matrix acts first. Therefore the written product `R_z R_y R_x` corresponds to the conceptual application order Roll, then Pitch, then Yaw.
+Because column vectors are used, the rightmost matrix acts first. Therefore the written product corresponds to the conceptual application order Roll, then Pitch, then Yaw.
 
 The inverse transformation is:
 
@@ -287,7 +289,7 @@ The NOAA HSSD is treated primarily as a survey-data specification. Detailed sens
 
 The core internal convention is now defined. Before Issue #1 is closed, review and approve:
 
-1. the explicit elementary `R_x`, `R_y`, and `R_z` matrices for the NED/right-handed convention;
+1. the explicit elementary `R_x`, `R_y`, and `R_z` matrices and the pitch sign mapping used by HydroSIM;
 2. the canonical +90° test cases derived from those matrices;
 3. whether `VRP` is the preferred permanent project term for the body-frame origin;
 4. whether any additional external convention must be documented before geometry implementation begins.
