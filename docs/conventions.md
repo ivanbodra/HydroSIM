@@ -1,12 +1,12 @@
 # HydroSIM Conventions
 
-Version: 0.1.0
+Version: 0.1.1
 
-> No geometry implementation should be considered authoritative before these conventions are reviewed and accepted.
+> These conventions define the internal geometric and temporal semantics of HydroSIM. External instrument or software conventions must be converted explicitly at system boundaries; they must not silently alter the internal convention.
 
 ## 1. Internal units
 
-HydroSIM uses SI units internally.
+HydroSIM uses SI units internally unless a scientific model explicitly requires otherwise.
 
 - Length: metre [m]
 - Time: second [s]
@@ -15,49 +15,151 @@ HydroSIM uses SI units internally.
 - Angles: radians internally; user interfaces may display degrees
 - Frequency: hertz [Hz]
 - Sound speed: metre per second [m/s]
-- Acoustic levels: decibels [dB], with reference explicitly identified where required
+- Acoustic levels: decibels [dB], with the physical reference explicitly identified where required
 
-## 2. Vessel coordinate system
+## 2. Geodetic coordinates and CRS
 
-HydroSIM uses a right-handed vessel coordinate system:
+Geodetic coordinates and local Cartesian coordinates are distinct concepts and must not be conflated.
 
-- X = forward
-- Y = starboard
-- Z = down
+When geographic/geodetic coordinates are used, HydroSIM represents them explicitly as:
+
+- latitude
+- longitude
+- ellipsoidal height, where applicable
+
+Ellipsoidal height is positive upward.
+
+A CRS must be identified explicitly by its definition and axis directions. An EPSG code may identify a CRS, but the internal simulation frame is not inferred from an EPSG code alone.
+
+For example, EPSG:4326 defines a two-dimensional geographic CRS and does not itself define the HydroSIM local NED frame or a vertical axis.
+
+## 3. Local navigation frame (N)
+
+The initial prototype uses a local right-handed North-East-Down navigation frame, identified by the symbol `N`:
+
+- `X_N` = North
+- `Y_N` = East
+- `Z_N` = Down
 
 Therefore:
 
-`X × Y = Z`
+`X_N × Y_N = Z_N`
 
-## 3. Local navigation frame
+Heading is measured clockwise from North:
 
-The initial prototype uses a local Cartesian navigation frame:
+- 0° = North
+- 90° = East
+- 180° = South
+- 270° = West
 
-- X_local = East
-- Y_local = North
-- Z_local = Down
+Positive `Z_N` is downward.
 
-Geodetic coordinates will be introduced later.
+## 4. Vessel / body frame (B)
 
-## 4. Attitude
+The vessel frame is identified by the symbol `B` and is right-handed:
 
-- Positive roll: starboard side down
-- Positive pitch: bow up
-- Heading/yaw: clockwise when viewed from above
+- `X_B` = Forward
+- `Y_B` = Starboard
+- `Z_B` = Down
 
-The implementation must explicitly document whether matrices represent active or passive rotations.
+Therefore:
 
-## 5. Rotation order
+`X_B × Y_B = Z_B`
 
-The initial implementation uses the documented sequence:
+The origin of the body frame is the Vessel Reference Point (`VRP`). The VRP is a defined geometric reference point and is not assumed to coincide with the centre of gravity, GNSS antenna, IMU/MRU, transducer, waterline, or any other sensor unless explicitly configured.
 
-`Yaw → Pitch → Roll`
+## 5. Sensor frames
 
-The exact matrix formulation must be covered by unit tests. No function may rely on an implicit Euler-angle convention.
+Sensors may define their own local frames. Initial frame identifiers are:
 
-## 6. Lever arms
+- `B` = vessel/body frame
+- `N` = local navigation frame
+- `T` = transducer frame
+- `I` = IMU/MRU frame
+- `G` = GNSS antenna/reference frame or reference point, where needed
 
-Lever arms are vectors from Reference Point A to Reference Point B.
+Additional identifiers such as `T1` and `T2` may be used for dual-head systems.
+
+No sensor frame is assumed to be perfectly aligned with the vessel frame.
+
+## 6. Attitude conventions
+
+HydroSIM uses the following positive attitude conventions in the vessel/body frame:
+
+- Positive roll (`φ`): starboard side down
+- Positive pitch (`θ`): bow up
+- Positive yaw (`ψ`): turn to starboard; clockwise when viewed from above
+
+These signs are consistent with positive right-hand rotations about the positive body axes `X_B`, `Y_B`, and `Z_B`, respectively.
+
+Heading and yaw share the same positive rotational sense in the NED convention, but they remain semantically distinct:
+
+- heading describes vessel orientation relative to North;
+- yaw is the rotational degree of freedom about the vertical/body `Z` axis.
+
+## 7. Rotation representation and order
+
+HydroSIM uses column vectors and explicitly defined active rotation matrices.
+
+The conceptual Euler rotation sequence is:
+
+`Roll → Pitch → Yaw`
+
+with:
+
+- `φ` = roll
+- `θ` = pitch
+- `ψ` = yaw / heading angle as applicable
+
+For the Body-to-Navigation transformation, the composite direction-cosine matrix is defined as:
+
+`R_NB = R_z(ψ) R_y(θ) R_x(φ)`
+
+and a vector expressed in body coordinates is transformed to navigation coordinates by:
+
+`v_N = R_NB v_B`
+
+Because column vectors are used, the rightmost matrix acts first. Therefore the written product `R_z R_y R_x` corresponds to the conceptual application order Roll, then Pitch, then Yaw.
+
+The inverse transformation is:
+
+`v_B = R_NB^T v_N`
+
+because a valid rotation matrix is orthogonal:
+
+`R_NB^-1 = R_NB^T`
+
+No implementation may rely on a library's undocumented or default Euler-angle convention.
+
+### Canonical rotation tests
+
+The following cases must be used as unit-test references:
+
+1. Heading 0°: body forward maps to North.
+2. Heading +90°: body forward maps to East.
+3. Roll +90°: body starboard axis rotates toward Down.
+4. Pitch +90°: body forward axis rotates toward Up.
+
+The explicit elementary matrices used in code must be documented adjacent to the implementation and validated against these cases.
+
+## 8. Heave
+
+Heave uses the hydrographic sign convention:
+
+- Positive heave = upward vessel displacement
+- Negative heave = downward vessel displacement
+
+This is intentionally different from the sign of the `Z_N` and `Z_B` coordinates, which are positive downward.
+
+Therefore, for a pure heave displacement:
+
+`ΔZ = -heave`
+
+Heave must never be treated as an alias for a Z coordinate.
+
+## 9. Lever arms
+
+A lever arm is a directed vector from a source reference point to a target reference point.
 
 Naming convention:
 
@@ -67,50 +169,77 @@ Example:
 
 `lever_arm_vrp_to_transducer`
 
-Components are expressed in the source reference frame unless explicitly stated otherwise.
+Components are expressed in the source frame unless explicitly stated otherwise.
 
-## 7. Sensor alignment
+For a lever arm from the VRP to the transducer expressed in body coordinates:
 
-Sensor mounting angles are separate from vessel attitude.
+`p_T^N = p_VRP^N + R_NB l_VRP_to_T^B`
 
-Example:
+Example interpretation in the body frame:
+
+- `x > 0`: target is forward of the source
+- `y > 0`: target is starboard of the source
+- `z > 0`: target is below the source
+
+## 10. Sensor alignment
+
+Sensor mounting/alignment angles are fixed installation parameters and are separate from dynamic vessel attitude.
+
+Examples:
 
 - vessel roll = dynamic platform motion
 - transducer roll alignment = fixed installation parameter
+- IMU-to-vessel misalignment = fixed installation parameter
 
-These values must never be stored as the same variable.
+These values must never be stored as the same variable or silently combined.
 
-## 8. Time and latency
+Transformations must identify both the source and target frames.
+
+## 11. Time and latency
 
 Internal simulation time is expressed as seconds from the simulation epoch.
 
-Each sample may additionally contain UTC time in future versions.
+UTC timestamps may additionally be stored when needed, but simulation time remains the deterministic internal reference.
 
-Latency is initially defined as:
+HydroSIM defines positive latency as a delayed observation/state:
 
-`observed_time - true_measurement_time`
+`state_used(t) = state_true(t - Δt)` for `Δt > 0`
 
-The convention must be preserved throughout the system and verified with dedicated tests before the latency module is implemented.
+Example:
 
-## 9. Depth and elevation
+- ping time = 10.000 s
+- latency = +0.100 s
+- state used by processing = state at 9.900 s
 
-Positive Z is downward.
+The sign convention must be applied consistently to all simulated sensor streams and verified with dedicated tests.
 
-Therefore depth is positive below the local reference surface.
+Latency must be modelled separately from clock offset, timestamp error, transmission delay, and interpolation error when those effects are introduced.
 
-Elevation may be represented separately where required.
+## 12. Depth, height, and elevation
 
-## 10. State categories
+Within NED and body frames, positive Z is downward.
 
-Relevant quantities must be explicitly associated with one of the following categories:
+Therefore:
 
-- Truth: physical value used by the simulator
-- Observed: value delivered by a simulated sensor
-- Configured: value supplied to the processing/acquisition system
-- Estimated: value inferred by a student or algorithm
-- Derived: value calculated from other states
+- depth below the local reference surface is positive;
+- upward geometric displacement corresponds to negative ΔZ;
+- ellipsoidal height, when used in geodetic coordinates, is positive upward.
 
-## 11. Reproducibility
+Depth, Z coordinate, elevation, ellipsoidal height, draft, water level, and heave are distinct quantities and must not be used interchangeably.
+
+## 13. State categories
+
+Relevant quantities must be semantically associated with one of the following categories:
+
+- `Truth`: physical value used by the simulator
+- `Observed`: value delivered by a simulated sensor
+- `Configured`: value supplied to the processing/acquisition system
+- `Estimated`: value inferred by a student or algorithm
+- `Derived`: value calculated from other states
+
+A state category is semantic, not a requirement to duplicate every field into five copies. Data structures should group values by state where appropriate.
+
+## 14. Reproducibility
 
 Every stochastic simulation must receive an explicit random seed.
 
@@ -122,12 +251,43 @@ A reproducible simulation must identify at least:
 - random seed
 - configuration/event history
 
-## 12. Open items for review
+## 15. External conventions
 
-Before geometry v0.1 is frozen, the following must be explicitly validated:
+HydroSIM uses the conventions defined in this document internally. Manufacturer, acquisition-software, processing-software, or survey-organization conventions may differ.
 
-1. active versus passive rotation convention;
-2. exact yaw-pitch-roll matrix composition;
-3. mapping between navigation-frame heading convention and mathematical rotations;
-4. latency sign convention in acquisition/processing examples;
-5. naming and reference point for vessel and transducer frames.
+Adapters must explicitly convert external conventions into HydroSIM internal conventions.
+
+Future mappings may include, as needed:
+
+- Kongsberg
+- HYPACK/HYSWEEP
+- POS MV / Applanix
+- CARIS
+- NOAA workflows
+- other hydrographic systems
+
+No external convention may be assumed to match HydroSIM merely because it uses the terms roll, pitch, yaw, heave, X, Y, or Z.
+
+## 16. Reference and standards context
+
+The initial conventions were selected for internal consistency and interoperability with common hydrographic practice, while keeping external conventions explicitly convertible.
+
+Relevant references for later traceability include:
+
+- NOAA Office of Coast Survey, Hydrographic Survey Specifications and Deliverables, Version 2026.0.02
+- NOAA Office of Coast Survey Field Procedures Manual
+- IHO S-44 and related hydrographic guidance
+- ISO 19111 / OGC WKT coordinate-reference-system concepts
+- EPSG Geodetic Parameter Dataset
+- manufacturer documentation for supported sonar and positioning systems
+
+The NOAA HSSD is treated primarily as a survey-data specification. Detailed sensor-axis and Euler-angle conventions must be verified against the relevant field-procedure or manufacturer documentation before external adapters are implemented.
+
+## 17. Remaining items before Issue #1 is closed
+
+The core internal convention is now defined. Before Issue #1 is closed, review and approve:
+
+1. the explicit elementary `R_x`, `R_y`, and `R_z` matrices for the NED/right-handed convention;
+2. the canonical +90° test cases derived from those matrices;
+3. whether `VRP` is the preferred permanent project term for the body-frame origin;
+4. whether any additional external convention must be documented before geometry implementation begins.
