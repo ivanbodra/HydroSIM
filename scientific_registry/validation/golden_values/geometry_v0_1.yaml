@@ -1,0 +1,86 @@
+registry:
+  id: geometry.golden_values
+  version: 0.1.0
+  conventions_version: 0.1.4
+  description: >-
+    Analytically derived reference values for regression testing the HydroSIM
+    v0.1 geometry core. Expected values are not copied from HydroSIM output.
+  default_tolerance: 1.0e-9
+
+cases:
+  - id: flat_bottom_nadir_30m
+    model: terrain_ray_intersection
+    derivation: "For a nadir unit ray over z=30 m, r=30 m and p=(0,0,30)."
+    units: m
+    input:
+      terrain_depth: 30.0
+      origin: [0.0, 0.0, 0.0]
+      direction: [0.0, 0.0, 1.0]
+    expected:
+      point: [0.0, 0.0, 30.0]
+      slant_range: 30.0
+
+  - id: flat_bottom_port_45deg_30m
+    model: terrain_ray_intersection
+    derivation: >-
+      HydroSIM across-track convention uses +45 deg toward Port (-Y).
+      With depth D=30 m: r=D/cos(45)=30*sqrt(2), y=-D*tan(45)=-30 m.
+    units: m
+    input:
+      terrain_depth: 30.0
+      beam_angle_deg: 45.0
+    expected:
+      direction: [0.0, -0.7071067811865476, 0.7071067811865476]
+      point: [0.0, -30.0, 30.0]
+      slant_range: 42.42640687119285
+
+  - id: plane_intersection_known
+    model: terrain_ray_intersection
+    derivation: >-
+      Plane through (0,0,10) with normal (0,0,1); ray starts at (1,2,0)
+      in direction (0,0,1), therefore the intersection is (1,2,10) at 10 m.
+    units: m
+    input:
+      plane_point: [0.0, 0.0, 10.0]
+      plane_normal: [0.0, 0.0, 1.0]
+      origin: [1.0, 2.0, 0.0]
+      direction: [0.0, 0.0, 1.0]
+    expected:
+      point: [1.0, 2.0, 10.0]
+      slant_range: 10.0
+
+  - id: lever_arm_yaw_90
+    model: lever_arm_transformation
+    derivation: >-
+      Vessel at (10,20,30), yaw +90 deg. Body lever arm (2,0,0) rotates
+      from Forward to East, yielding destination position (10,22,30).
+    units: m
+    input:
+      vessel_position: [10.0, 20.0, 30.0]
+      vessel_attitude_deg: [0.0, 0.0, 90.0]
+      lever_arm_body: [2.0, 0.0, 0.0]
+    expected:
+      sensor_position: [10.0, 22.0, 30.0]
+
+  - id: roll_offset_nadir_30m_half_degree
+    model: true_vs_configured_sounding
+    derivation: >-
+      Truth sensor roll is +0.5 deg and configured roll is 0 deg. A nominal
+      nadir beam (+Z sensor) physically intersects z=30 m. Truth direction is
+      (0,-sin(a),cos(a)); true range is 30/cos(a). The configured solution
+      reuses that same measured range along +Z. Thus true y=-30*tan(a),
+      configured z=30/cos(a), and error=configured-true.
+    units: m
+    input:
+      terrain_depth: 30.0
+      beam_angle_deg: 0.0
+      true_roll_deg: 0.5
+      configured_roll_deg: 0.0
+    expected:
+      true_point: [0.0, -0.2618060331680091, 30.0]
+      measured_slant_range: 30.001142344680936
+      configured_point: [0.0, 0.0, 30.001142344680936]
+      error_vector: [0.0, 0.2618060331680091, 0.001142344680936]
+      horizontal_error: 0.2618060331680091
+      vertical_error: 0.001142344680936
+      error_magnitude: 0.261808525487925
