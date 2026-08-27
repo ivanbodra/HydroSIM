@@ -1,6 +1,6 @@
 # HydroSIM Conventions
 
-Version: 0.1.2
+Version: 0.1.3
 
 > These conventions define the internal geometric and temporal semantics of HydroSIM. External instrument or software conventions must be converted explicitly at system boundaries; they must not silently alter the internal convention.
 
@@ -66,7 +66,9 @@ Therefore:
 
 `X_B × Y_B = Z_B`
 
-The origin of the body frame is the Vessel Reference Point (`VRP`). The VRP is a defined geometric reference point and is not assumed to coincide with the centre of gravity, GNSS antenna, IMU/MRU, transducer, waterline, or any other sensor unless explicitly configured.
+The permanent origin of the body frame is the Vessel Reference Point (`VRP`). The VRP is a defined geometric reference point and is not assumed to coincide with the centre of gravity, GNSS antenna, IMU/MRU, transducer, waterline, or any other sensor unless explicitly configured.
+
+Other sensors have their own frame origins. HydroSIM does not require these origins to be called reference points (`RP`). Terms such as transducer origin, IMU origin, and GNSS antenna origin may be used directly.
 
 ## 5. Sensor frames
 
@@ -76,7 +78,7 @@ Sensors may define their own local frames. Initial frame identifiers are:
 - `N` = local navigation frame
 - `T` = transducer frame
 - `I` = IMU/MRU frame
-- `G` = GNSS antenna/reference frame or reference point, where needed
+- `G` = GNSS antenna frame or antenna origin, where needed
 
 Additional identifiers such as `T1` and `T2` may be used for dual-head systems.
 
@@ -191,7 +193,7 @@ Heave must never be treated as an alias for a Z coordinate.
 
 ## 9. Lever arms
 
-A lever arm is a directed vector from a source reference point to a target reference point.
+A lever arm is a directed vector from a source reference point or frame origin to a target reference point or frame origin.
 
 Naming convention:
 
@@ -203,7 +205,7 @@ Example:
 
 Components are expressed in the source frame unless explicitly stated otherwise.
 
-For a lever arm from the VRP to the transducer expressed in body coordinates:
+For a lever arm from the VRP to the transducer origin expressed in body coordinates:
 
 `p_T^N = p_VRP^N + R_NB l_VRP_to_T^B`
 
@@ -227,11 +229,78 @@ These values must never be stored as the same variable or silently combined.
 
 Transformations must identify both the source and target frames.
 
-## 11. Time and latency
+## 11. Beam and transmit-sector angles
 
-Internal simulation time is expressed as seconds from the simulation epoch.
+Beam and transmit-sector angular conventions are defined independently from the Cartesian signs of the vessel frame.
 
-UTC timestamps may additionally be stored when needed, but simulation time remains the deterministic internal reference.
+For a nominal downward-looking transducer:
+
+- zero across-track receive angle corresponds to the nominal transducer normal in the across-track plane;
+- positive across-track receive angle points to port;
+- negative across-track receive angle points to starboard;
+- zero along-track transmit tilt corresponds to the nominal transducer normal in the along-track plane;
+- positive along-track transmit tilt points forward;
+- negative along-track transmit tilt points aft.
+
+The zero-angle direction is the transducer-frame normal, not necessarily geographic nadir. It coincides with `+Z_B` only when the transducer is perfectly aligned with the vessel frame and no steering is applied.
+
+HydroSIM should preserve the distinction between receive-beam angle and transmit-sector tilt. A multibeam sounding may therefore reference both an `RxBeam` and a `TxSector` rather than storing a single undifferentiated beam angle.
+
+These signs are chosen to remain compatible with common Kongsberg multibeam usage. External datagram conventions must still be validated explicitly when adapters are implemented.
+
+## 12. Range, slant range, and travel time
+
+HydroSIM distinguishes the following quantities:
+
+- `range`: length of the actual acoustic propagation path between transducer and target along the ray trajectory;
+- `slant_range`: straight-line Euclidean distance between transducer and target;
+- `twtt`: two-way acoustic travel time.
+
+For acoustic path `Γ`:
+
+`range = ∫_Γ ds`
+
+and:
+
+`slant_range = ||p_target - p_transducer||`
+
+In a homogeneous medium with a straight ray:
+
+`range = slant_range`
+
+With refraction, the acoustic path may be curved and normally:
+
+`range >= slant_range`
+
+For spatially varying sound speed:
+
+`t_oneway = ∫_Γ ds / c(r)`
+
+For the simplified reciprocal case in which the return follows the same path:
+
+`twtt = 2 ∫_Γ ds / c(r)`
+
+HydroSIM must not generally replace this relationship with `range = c * twtt / 2` unless the assumed constant or effective sound speed and propagation model make that approximation valid.
+
+## 13. Time and multi-sensor synchronization
+
+Time is a shared infrastructure across all HydroSIM sensors. Sensor streams may operate at different update rates, temporal resolutions, latencies, and clock characteristics.
+
+Internal simulation time is expressed as seconds from the simulation epoch and is the deterministic master time used by the simulator.
+
+UTC timestamps may additionally be stored when needed.
+
+HydroSIM distinguishes at least:
+
+- `measurement_time`: physical time to which a measurement refers;
+- `timestamp`: time value encoded or reported by the sensor/system;
+- `reception_time`: time at which the measurement becomes available to the collector;
+- `use_time` or `processing_time`: time at which the measurement is used by acquisition or processing;
+- `sample_rate` / `update_rate`: native rate of a sensor stream;
+- `time_resolution`: temporal quantization/resolution of the reported time;
+- `latency`: delay between the physical measurement and the availability/use of that information;
+- `clock_bias` / `timestamp_error`: time-tag error, modelled separately from latency;
+- `interpolation_method`: method used to obtain a sensor state at a requested time between samples.
 
 HydroSIM defines positive latency as a delayed observation/state:
 
@@ -239,27 +308,59 @@ HydroSIM defines positive latency as a delayed observation/state:
 
 Example:
 
-- ping time = 10.000 s
+- requested/ping time = 10.000 s
 - latency = +0.100 s
-- state used by processing = state at 9.900 s
+- state available for use corresponds to 9.900 s
 
-The sign convention must be applied consistently to all simulated sensor streams and verified with dedicated tests.
+Different sensor streams must not be assumed to have identical timestamps or update rates. A ping references time; sensor states used for that ping are obtained from their independent streams by the explicitly configured temporal model.
 
-Latency must be modelled separately from clock offset, timestamp error, transmission delay, and interpolation error when those effects are introduced.
+The precise physical event represented by `ping_time` (for example transmission start or another transmit epoch) remains to be defined before acoustic ping implementation.
 
-## 12. Depth, height, and elevation
+## 14. Vertical references and vessel geometry
 
 Within NED and body frames, positive Z is downward.
 
-Therefore:
+HydroSIM distinguishes vessel geometry, transducer installation geometry, vessel motion, and hydrographic water-level correction.
 
-- depth below the local reference surface is positive;
-- upward geometric displacement corresponds to negative ΔZ;
-- ellipsoidal height, when used in geodetic coordinates, is positive upward.
+### 14.1 Waterline relative to the VRP
 
-Depth, Z coordinate, elevation, ellipsoidal height, draft, water level, and heave are distinct quantities and must not be used interchangeably.
+`waterline` is a configured vertical reference relative to the vessel reference point (`VRP`). It may be entered or changed by the user during acquisition and may also be corrected or replaced during processing.
 
-## 13. State categories
+Because the configured waterline may change over time, HydroSIM must support waterline as a time-varying configured value or configuration-event history rather than assuming it is a single immutable session constant.
+
+The sign and exact stored representation must be explicit in implementation. In the NED body geometry, vertical offsets follow positive-down convention.
+
+The configured vessel waterline must be kept distinct from a geodetic or tidal `water_level` relative to a vertical datum. These are different concepts even when acquisition software uses similar user-facing terminology.
+
+### 14.2 Transducer vertical position
+
+The transducer vertical position relative to the VRP is defined by its lever arm. The vertical relationship between the transducer and the configured waterline follows from the VRP-to-transducer lever arm and the configured waterline.
+
+HydroSIM should not require the user to recalculate a transducer vertical offset from fore/aft draft, trim, list, pitch, roll, or heave when those effects are already represented by vessel geometry or sensor/motion streams.
+
+Manual incorporation of a motion or trim correction into a static installation value can create double counting when the same effect is subsequently applied from the MRU or processing chain. HydroSIM should be able to represent this as a configuration error in training scenarios.
+
+### 14.3 Draft and vessel drawing
+
+`draft` is retained primarily as a vessel-geometry and visualization quantity, for example to draw the hull relative to the configured waterline.
+
+Optional `draft_fore` and `draft_aft` values may be used to represent the vessel geometry and static trim condition, but they are not the primary vertical reference for acoustic sounding calculations.
+
+### 14.4 Motion and dynamic immersion
+
+Roll, pitch, and heave are obtained from the motion model or MRU stream and remain distinct from static installation geometry.
+
+`dynamic_draft` and `squat` are separate optional effects. They may alter the dynamic vertical position and, in more advanced models, may also produce a dynamic trim component. They must not be silently inferred from static draft values.
+
+### 14.5 Hydrographic water level relative to datum
+
+A hydrographic `water_level(t)` relative to a defined vertical datum is a separate environmental/processing quantity. It may originate from observations, zoning, models, or other sources and may be applied during acquisition or processing depending on the workflow.
+
+`waterline` relative to the vessel VRP and `water_level` relative to a geodetic/hydrographic datum must never be treated as synonyms.
+
+Depth, Z coordinate, elevation, ellipsoidal height, draft, waterline, water level, transducer vertical position, dynamic draft, squat, and heave are distinct quantities and must not be used interchangeably.
+
+## 15. State categories
 
 Relevant quantities must be semantically associated with one of the following categories:
 
@@ -271,7 +372,7 @@ Relevant quantities must be semantically associated with one of the following ca
 
 A state category is semantic, not a requirement to duplicate every field into five copies. Data structures should group values by state where appropriate.
 
-## 14. Reproducibility
+## 16. Reproducibility
 
 Every stochastic simulation must receive an explicit random seed.
 
@@ -283,7 +384,7 @@ A reproducible simulation must identify at least:
 - random seed
 - configuration/event history
 
-## 15. External conventions
+## 17. External conventions
 
 HydroSIM uses the conventions defined in this document internally. Manufacturer, acquisition-software, processing-software, or survey-organization conventions may differ.
 
@@ -298,9 +399,9 @@ Future mappings may include, as needed:
 - NOAA workflows
 - other hydrographic systems
 
-No external convention may be assumed to match HydroSIM merely because it uses the terms roll, pitch, yaw, heave, X, Y, or Z.
+No external convention may be assumed to match HydroSIM merely because it uses the terms roll, pitch, yaw, heave, X, Y, Z, range, waterline, or water level.
 
-## 16. Reference and standards context
+## 18. Reference and standards context
 
 The initial conventions were selected for internal consistency and interoperability with common hydrographic practice, while keeping external conventions explicitly convertible.
 
@@ -311,13 +412,25 @@ Relevant references for later traceability include:
 - IHO S-44 and related hydrographic guidance
 - ISO 19111 / OGC WKT coordinate-reference-system concepts
 - EPSG Geodetic Parameter Dataset
+- Kongsberg multibeam installation and datagram documentation
 - manufacturer documentation for supported sonar and positioning systems
 
-The NOAA HSSD is treated primarily as a survey-data specification. Detailed sensor-axis and Euler-angle conventions must be verified against the relevant field-procedure or manufacturer documentation before external adapters are implemented.
+The NOAA HSSD is treated primarily as a survey-data specification. Detailed sensor-axis, beam-angle, Euler-angle, time-tag, and vertical-reference conventions must be verified against the relevant field-procedure or manufacturer documentation before external adapters are implemented.
 
-## 17. Remaining items before Issue #1 is closed
+## 19. Remaining items before Issue #1 is closed
 
-The rotation matrices and canonical tests are now defined and approved. Before Issue #1 is closed, review and approve:
+The following internal conventions are now approved and documented:
 
-1. whether `VRP` is the preferred permanent project term for the body-frame origin;
-2. whether any additional external convention must be documented before geometry implementation begins.
+- NED navigation frame and FSD vessel frame;
+- `VRP` as the permanent vessel/body-frame origin;
+- attitude signs, rotation matrices, and canonical rotation tests;
+- heave sign;
+- directed lever arms and sensor-frame origins;
+- beam/sector angle convention;
+- range, slant-range, and TWTT distinction;
+- multi-sensor temporal model and positive-latency sign;
+- separation of vessel waterline, hydrographic water level, transducer geometry, draft, motion, dynamic draft, and squat.
+
+Before Issue #1 is closed, the remaining item is:
+
+1. define the precise event represented by `ping_time` before acoustic ping implementation begins.
