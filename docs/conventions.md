@@ -1,8 +1,10 @@
 # HydroSIM Conventions
 
-Version: 0.1.4
+Version: 0.1.5
 
 > These conventions define the internal geometric and temporal semantics of HydroSIM. External instrument or software conventions must be converted explicitly at system boundaries; they must not silently alter the internal convention.
+>
+> English is the canonical language of the HydroSIM software, scientific architecture, schemas, registry, tests, and primary documentation. Portuguese (`pt-BR`) is supported as a software localization and translated documentation layer. See `docs/language_policy.md`.
 
 ## 1. Internal units
 
@@ -231,6 +233,8 @@ Transformations must identify both the source and target frames.
 
 ## 11. Beam and transmit-sector angles
 
+HydroSIM uses **along-track** and **across-track** as its preferred canonical geometric terms. Along-track is longitudinal, approximately vessel/body `+X` (Forward). Across-track is transverse along the vessel/body Y axis (`+Y` Starboard, `-Y` Port). These terms are tied to vessel/system geometry and are not aliases for geographic horizontal or vertical directions.
+
 Beam and transmit-sector angular conventions are defined independently from the Cartesian signs of the vessel frame.
 
 For a nominal downward-looking transducer:
@@ -245,6 +249,8 @@ For a nominal downward-looking transducer:
 The zero-angle direction is the transducer-frame normal, not necessarily geographic nadir. It coincides with `+Z_B` only when the transducer is perfectly aligned with the vessel frame and no steering is applied.
 
 HydroSIM should preserve the distinction between receive-beam angle and transmit-sector tilt. A multibeam sounding may therefore reference both an `RxBeam` and a `TxSector` rather than storing a single undifferentiated beam angle.
+
+Canonical identifiers use English snake_case, including `along_track`, `across_track`, `along_track_angle`, and `across_track_angle`.
 
 These signs are chosen to remain compatible with common Kongsberg multibeam usage. External datagram conventions must still be validated explicitly when adapters are implemented.
 
@@ -387,72 +393,47 @@ Depth, Z coordinate, elevation, ellipsoidal height, draft, waterline, water leve
 
 Relevant quantities must be semantically associated with one of the following categories:
 
-- `Truth`: physical value used by the simulator
-- `Observed`: value delivered by a simulated sensor
-- `Configured`: value supplied to the processing/acquisition system
-- `Estimated`: value inferred by a student or algorithm
-- `Derived`: value calculated from other states
+- `Truth`: physical simulation truth;
+- `Observed`: sensor measurement or reported observation;
+- `Configured`: acquisition/processing input or user/system configuration;
+- `Estimated`: quantity inferred by a student, calibration procedure, or algorithm;
+- `Derived`: processed or calculated result.
 
-A state category is semantic, not a requirement to duplicate every field into five copies. Data structures should group values by state where appropriate.
+These categories are semantic states, not necessarily Python classes. They must remain distinguishable in data models and documentation where ambiguity could affect scientific interpretation.
 
-## 16. Reproducibility
+## 16. Configuration and history
 
-Every stochastic simulation must receive an explicit random seed.
+HydroSIM should model configuration as versioned state over time rather than duplicating a complete configuration object in every ping.
 
-A reproducible simulation must identify at least:
+A ping references a time and the applicable configuration state. Changes such as waterline, latency, alignment, sound-speed source, acquisition mode, or other processing parameters should be representable as configuration events or validity intervals.
 
-- scenario ID and version
-- HydroSIM software version
-- scientific model set and versions
-- random seed
-- configuration/event history
+This design preserves provenance and enables deterministic replay of a session.
 
-## 17. External conventions
+## 17. External adapters
 
-HydroSIM uses the conventions defined in this document internally. Manufacturer, acquisition-software, processing-software, or survey-organization conventions may differ.
+External formats and equipment conventions must be converted explicitly at system boundaries.
 
-Adapters must explicitly convert external conventions into HydroSIM internal conventions.
+An adapter must document:
 
-Future mappings may include, as needed:
+- source frame and target frame;
+- axis directions;
+- angle signs and units;
+- rotation convention/order when applicable;
+- timestamp semantics;
+- vertical-reference semantics;
+- beam/sector angle conventions;
+- any assumptions or unavailable metadata.
 
-- Kongsberg
-- HYPACK/HYSWEEP
-- POS MV / Applanix
-- CARIS
-- NOAA workflows
-- other hydrographic systems
+HydroSIM's internal conventions must not be changed merely to match a particular vendor format.
 
-No external convention may be assumed to match HydroSIM merely because it uses the terms roll, pitch, yaw, heave, X, Y, Z, range, waterline, or water level.
+## 18. Versioning
 
-## 18. Reference and standards context
+This document is versioned because convention changes can alter scientific results.
 
-The initial conventions were selected for internal consistency and interoperability with common hydrographic practice, while keeping external conventions explicitly convertible.
+Any incompatible convention change requires:
 
-Relevant references for later traceability include:
-
-- NOAA Office of Coast Survey, Hydrographic Survey Specifications and Deliverables, Version 2026.0.02
-- NOAA Office of Coast Survey Field Procedures Manual
-- IHO S-44 and related hydrographic guidance
-- ISO 19111 / OGC WKT coordinate-reference-system concepts
-- EPSG Geodetic Parameter Dataset
-- Kongsberg multibeam installation and datagram documentation
-- manufacturer documentation for supported sonar and positioning systems
-
-The NOAA HSSD is treated primarily as a survey-data specification. Detailed sensor-axis, beam-angle, Euler-angle, time-tag, and vertical-reference conventions must be verified against the relevant field-procedure or manufacturer documentation before external adapters are implemented.
-
-## 19. Issue #1 status
-
-The following internal conventions are now approved and documented:
-
-- NED navigation frame and FSD vessel frame;
-- `VRP` as the permanent vessel/body-frame origin;
-- attitude signs, rotation matrices, and canonical rotation tests;
-- heave sign;
-- directed lever arms and sensor-frame origins;
-- beam/sector angle convention;
-- range, slant-range, and TWTT distinction;
-- multi-sensor temporal model and positive-latency sign;
-- ping temporal-event semantics, including distinction among nominal ping epoch, trigger, physical transmission, and recorded timestamp;
-- separation of vessel waterline, hydrographic water level, transducer geometry, draft, motion, dynamic draft, and squat.
-
-No convention item currently blocks the geometry implementation. Exact external-device mappings remain adapter-specific and must be validated against the applicable manufacturer documentation.
+1. explicit version increment;
+2. documentation of the change;
+3. updated validation/golden-value tests;
+4. review of persisted scenarios and scientific-registry entries;
+5. migration or explicit incompatibility handling where required.
