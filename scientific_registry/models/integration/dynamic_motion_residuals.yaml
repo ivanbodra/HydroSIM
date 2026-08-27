@@ -1,0 +1,285 @@
+model_set:
+  id: integration.dynamic_motion_residuals
+  version: 0.1.0
+  language: en
+  scientific_status: literature_grounded_provisional
+  purpose: >-
+    Canonical HydroSIM taxonomy for dynamic multibeam integration errors and their
+    observable bathymetric signatures. Wobble is treated as an observable signature,
+    not as a physical error source.
+
+  conceptual_chain:
+    - error_source
+    - input_or_integration_error
+    - georeferencing_or_measurement_effect
+    - sounding_truth_error
+    - spatial_temporal_signature
+    - observed_wobble
+
+  signature_taxonomy:
+    - id: hughes_clarke_type_I
+      description: approximately linear across-track tilt of a swath in the shallow-water approximation
+    - id: hughes_clarke_type_II
+      description: approximately in-phase vertical translation of the full swath
+    - id: hughes_clarke_type_III
+      description: nonlinear roll-coupled across-track tilt/curvature
+    - id: hughes_clarke_type_IV
+      description: approximately symmetric nonlinear across-track curvature
+
+  evidence_levels:
+    direct_source: statement, equation, classification, or relationship explicitly supported by the cited source
+    derived_from_source: HydroSIM mathematical consequence or first-order approximation derived from a source-supported model
+    strongly_supported_reconstruction: synthesis supported by multiple source statements but not yet verified as a verbatim source parameterization
+    hypothesis: retained for investigation and not suitable as a canonical implemented scientific claim
+
+  models:
+    - id: integration.motion_scale_error
+      version: 0.1.0
+      cause_domain: orientation
+      estimation_role: estimated_parameter
+      physical_cause: scale mismatch in reported vessel attitude
+      principal_drivers:
+        - roll
+        - pitch
+      relationships:
+        - expression: "attitude_observed = scale_factor * attitude_true"
+          evidence_level: derived_from_source
+        - expression: "attitude_error = (scale_factor - 1) * attitude_true"
+          evidence_level: derived_from_source
+      expected_signature:
+        signature_class: hughes_clarke_type_I
+        across_track: approximately linear tilt; near-zero magnitude at nadir and increasing toward outer swath in the shallow-water case
+        along_track: ribbing follows the driving motion cycle
+      observability:
+        required_excitation:
+          - appreciable attitude amplitude
+        poor_conditions:
+          - near-static platform
+        confounded_by:
+          - integration.surface_sound_speed_error
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "Error Sources; (A) Motion Scaling Problems; Figures 6-7"
+          evidence_level: direct_source
+
+    - id: integration.motion_latency_error
+      version: 0.1.0
+      cause_domain: timing
+      estimation_role: estimated_parameter
+      physical_cause: time offset between motion state and the sonar/integration epoch
+      principal_drivers:
+        - roll_rate
+        - pitch_rate
+      relationships:
+        - expression: "attitude_error(t) = attitude_true(t - latency) - attitude_true(t)"
+          evidence_level: derived_from_source
+        - expression: "attitude_error(t) ~= -attitude_rate(t) * latency"
+          validity: small latency, first-order approximation
+          evidence_level: derived_from_source
+      expected_signature:
+        signature_class: hughes_clarke_type_I
+        across_track: approximately linear swath tilt in shallow water
+        along_track: motion-correlated periodic ribbing with phase controlled by the derivative of the driving attitude
+      observability:
+        required_excitation:
+          - appreciable angular rate
+        poor_conditions:
+          - low-amplitude slow motion
+        confounded_by:
+          - integration.motion_scale_error
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "(B) Time Delays in the Motion Sensor Output; Figures 1-7"
+          evidence_level: direct_source
+
+    - id: integration.motion_axes_yaw_misalignment
+      version: 0.1.0
+      cause_domain: orientation
+      estimation_role: estimated_parameter
+      physical_cause: roll/pitch measurement axes rotated about the vertical axis relative to the vessel coordinate system
+      principal_drivers:
+        - roll
+        - pitch
+      expected_effect: cross-coupling between roll and pitch
+      expected_signature:
+        signature_class: hughes_clarke_type_I
+        across_track: approximately linear motion-correlated tilt in the shallow-water case
+        along_track: follows the motion component coupled into the incorrect axis
+      observability:
+        required_excitation:
+          - variation in the coupled attitude components
+        poor_conditions:
+          - insufficient roll or pitch excitation
+        confounded_by:
+          - sonar_to_body_yaw_alignment
+          - heading_measurement_error
+      terminology_note: >-
+        This is not a generic vessel yaw error. It represents yaw misalignment of the
+        motion-sensor roll/pitch axes relative to the vessel coordinate system.
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "Error Sources; cross-talk between roll and pitch / yaw misalignment; Figures 6-7"
+          evidence_level: direct_source
+
+    - id: integration.lever_arm_x_error
+      version: 0.1.0
+      cause_domain: spatial_integration
+      estimation_role: estimated_parameter
+      physical_cause: incorrect fore-aft separation between the motion reference and sonar reference
+      principal_drivers:
+        - pitch
+      expected_signature:
+        signature_class: hughes_clarke_type_II
+        across_track: approximately uniform vertical translation of the full swath in shallow water
+        along_track: ribbing primarily correlated with pitch
+      observability:
+        required_excitation:
+          - appreciable pitch
+        confounded_by:
+          - motion.heave_error
+          - true_along_track_bathymetric_variation
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "lever arm error / induced heave discussion; Figures 6-7"
+          evidence_level: direct_source
+
+    - id: integration.lever_arm_y_error
+      version: 0.1.0
+      cause_domain: spatial_integration
+      estimation_role: estimated_parameter
+      physical_cause: incorrect transverse separation between the motion reference and sonar reference
+      principal_drivers:
+        - roll
+      expected_signature:
+        signature_class: hughes_clarke_type_II
+        across_track: approximately uniform vertical translation of the full swath in shallow water
+        along_track: ribbing primarily correlated with roll
+      observability:
+        required_excitation:
+          - appreciable roll
+        confounded_by:
+          - motion.heave_error
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "lever arm error / induced heave discussion; Figures 6-7"
+          evidence_level: direct_source
+
+    - id: integration.surface_sound_speed_error
+      version: 0.1.0
+      cause_domain: surface_sound_speed
+      estimation_role: estimated_parameter
+      physical_cause: incorrect sound speed used in electronic beam steering
+      principal_drivers:
+        - surface_sound_speed_error
+        - across_track_angle
+        - roll
+      expected_signature:
+        signature_class: hughes_clarke_type_III
+        across_track: nonlinear roll-coupled tilt/curvature; generally small near nadir and increasing toward outer swath
+        along_track: pattern modulated by vessel roll
+      observability:
+        required_excitation:
+          - sufficient swath width
+          - roll variation
+        confounded_by:
+          - integration.motion_scale_error
+          - propagation.ssp_refraction_error
+        diagnostic_feature: compare inner-swath and outer-swath slope/curvature rather than using only a single swath slope
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "surface sound speed error while rolling; Figures 6-7"
+          evidence_level: direct_source
+
+    - id: environment.near_surface_sv_gradient_motion_coupling
+      version: 0.1.0
+      cause_domain: surface_sound_speed
+      estimation_role: confounding_error
+      physical_cause: transducer moves vertically through a near-surface sound-speed gradient
+      principal_drivers:
+        - transducer_vertical_motion
+        - near_surface_sound_speed_gradient
+      relationships:
+        - expression: "surface_sound_speed_at_array = c(z_transducer(t))"
+          evidence_level: derived_from_source
+      expected_signature:
+        signature_class: hughes_clarke_type_IV
+        across_track: approximately symmetric nonlinear outer-swath curvature with little effect near nadir
+        along_track: follows vertical vessel motion
+      observability:
+        required_excitation:
+          - vertical vessel motion
+          - appreciable near-surface sound-speed gradient
+        confounded_by:
+          - propagation.ssp_refraction_error
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "heaving through a surface sound speed gradient; Figures 6-7"
+          evidence_level: direct_source
+
+    - id: propagation.ssp_refraction_error
+      version: 0.1.0
+      cause_domain: water_column
+      estimation_role: confounding_error
+      physical_cause: mismatch between the actual water-column sound-speed structure and the profile/model used for ray tracing
+      principal_drivers:
+        - water_column_sound_speed_structure
+        - across_track_angle
+        - depth
+        - spatial_temporal_profile_mismatch
+      expected_signature:
+        signature_class: variable
+        across_track: generally nonlinear and commonly stronger toward outer beams
+        along_track: depends on spatial and temporal variability of the water column
+      observability:
+        confounded_by:
+          - integration.surface_sound_speed_error
+          - environment.near_surface_sv_gradient_motion_coupling
+          - true_bathymetry
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "Basic Alignment assumptions: adequacy of water-column sound-speed profile"
+          evidence_level: direct_source
+      implementation_status: not_yet_formulated
+
+  risc_parameterization:
+    status: provisional
+    evidence_level: strongly_supported_reconstruction
+    statement: >-
+      Maingot 2019 explicitly states that six common motion-driven errors are identified
+      simultaneously and that dynamic errors arise from offsets in orientation, space,
+      sound speed, or time. The exact six-member parameter vector below is retained as a
+      working HydroSIM reconstruction until verified against the full thesis equations or
+      an equivalent primary-source parameter table.
+    candidate_parameters:
+      - integration.motion_scale_error
+      - integration.motion_latency_error
+      - integration.motion_axes_yaw_misalignment
+      - integration.lever_arm_x_error
+      - integration.lever_arm_y_error
+      - integration.surface_sound_speed_error
+    source_mapping:
+      - reference_id: maingot_2019_high_frequency_motion_residuals_thesis
+        locator: abstract and full-text verification pending
+        evidence_level: strongly_supported_reconstruction
+      - reference_id: maingot_hughes_clarke_calder_2019_identification_estimation
+        locator: abstract
+        evidence_level: direct_source
+
+  general_observability:
+    source_mapping:
+      - reference_id: maingot_2019_high_frequency_motion_residuals_thesis
+        locator: abstract
+        evidence_level: direct_source
+    requirements:
+      - significant vessel motion over periods of a few tens of seconds
+      - smooth or gently rolling bathymetry over the corresponding along-track spatial extent
+    principle: >-
+      An error parameter may exist in Truth without being practically observable in a
+      particular acquisition geometry or motion state.
+
+  relationship_to_acoustic_measurement_uncertainty:
+    statement: >-
+      Dynamic integration residuals are scientifically distinct from intrinsic acoustic
+      time/angle measurement accuracy. They may interact in the final sounding uncertainty
+      and residual field, but they must remain separate model families.
+    reference_id: lurton_2003_acoustical_measurement_accuracy
