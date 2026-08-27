@@ -47,8 +47,10 @@ def test_nadir_flat_bottom_golden_value():
     registry, cases = _load_cases()
     case = cases["flat_bottom_nadir_30m"]
     tol = registry["default_tolerance"]
-    result = FlatTerrain(case["input"]["terrain_depth"]).intersect_ray(
-        Vector3(x=0, y=0, z=0), Vector3(x=0, y=0, z=1)
+    inp = case["input"]
+    result = FlatTerrain(depth=inp["terrain_depth"]).intersect_ray(
+        Vector3(x=inp["origin"][0], y=inp["origin"][1], z=inp["origin"][2]),
+        Vector3(x=inp["direction"][0], y=inp["direction"][1], z=inp["direction"][2]),
     )
     assert result.valid
     _assert_vector(result.point, case["expected"]["point"], tol)
@@ -60,15 +62,21 @@ def test_port_45_flat_bottom_golden_value():
     case = cases["flat_bottom_port_45deg_30m"]
     tol = registry["default_tolerance"]
     beam = BeamRay(
-        definition=BeamDefinition(index=0, angle=0.7853981633974483, role="rx"),
-        origin_sensor_frame=Vector3(x=0, y=0, z=0),
+        definition=BeamDefinition(
+            index=0,
+            across_track_angle=0.7853981633974483,
+            role="rx",
+            array_name="golden",
+        ),
+        origin_array_frame=Vector3(x=0, y=0, z=0),
         direction_array_frame=Vector3(x=0, y=-0.7071067811865476, z=0.7071067811865476),
         direction_sensor_frame=Vector3(x=0, y=-0.7071067811865476, z=0.7071067811865476),
     )
     _assert_vector(beam.direction_sensor_frame, case["expected"]["direction"], tol)
-    result = FlatTerrain(case["input"]["terrain_depth"]).intersect_ray(
-        beam.origin_sensor_frame, beam.direction_sensor_frame
+    result = FlatTerrain(depth=case["input"]["terrain_depth"]).intersect_ray(
+        beam.origin_array_frame, beam.direction_sensor_frame
     )
+    assert result.valid
     _assert_vector(result.point, case["expected"]["point"], tol)
     assert result.slant_range == pytest.approx(case["expected"]["slant_range"], abs=tol)
 
@@ -86,6 +94,7 @@ def test_known_plane_intersection_golden_value():
         Vector3(x=inp["origin"][0], y=inp["origin"][1], z=inp["origin"][2]),
         Vector3(x=inp["direction"][0], y=inp["direction"][1], z=inp["direction"][2]),
     )
+    assert result.valid
     _assert_vector(result.point, case["expected"]["point"], tol)
     assert result.slant_range == pytest.approx(case["expected"]["slant_range"], abs=tol)
 
@@ -97,10 +106,15 @@ def test_lever_arm_yaw_90_golden_value():
     inp = case["input"]
     pose = Pose(
         position=Vector3(x=inp["vessel_position"][0], y=inp["vessel_position"][1], z=inp["vessel_position"][2]),
-        attitude=Attitude.from_degrees(roll=0, pitch=0, yaw=90),
+        attitude=Attitude.from_degrees(
+            roll=inp["vessel_attitude_deg"][0],
+            pitch=inp["vessel_attitude_deg"][1],
+            yaw=inp["vessel_attitude_deg"][2],
+        ),
         frame="N",
     )
-    result = apply_lever_arm(pose, Vector3(x=2, y=0, z=0))
+    lever = inp["lever_arm_body"]
+    result = apply_lever_arm(pose, Vector3(x=lever[0], y=lever[1], z=lever[2]))
     _assert_vector(result, case["expected"]["sensor_position"], tol)
 
 
@@ -108,9 +122,15 @@ def test_roll_offset_sounding_golden_value():
     registry, cases = _load_cases()
     case = cases["roll_offset_nadir_30m_half_degree"]
     tol = registry["default_tolerance"]
+    inp = case["input"]
     beam = BeamRay(
-        definition=BeamDefinition(index=0, angle=0.0, role="rx"),
-        origin_sensor_frame=Vector3(x=0, y=0, z=0),
+        definition=BeamDefinition(
+            index=0,
+            across_track_angle=0.0,
+            role="rx",
+            array_name="golden",
+        ),
+        origin_array_frame=Vector3(x=0, y=0, z=0),
         direction_array_frame=Vector3(x=0, y=0, z=1),
         direction_sensor_frame=Vector3(x=0, y=0, z=1),
     )
@@ -121,10 +141,14 @@ def test_roll_offset_sounding_golden_value():
             frame="N",
         ),
         lever_arm_vrp_to_sensor=Vector3(x=0, y=0, z=0),
-        true_sensor_alignment=Attitude.from_degrees(roll=0.5, pitch=0, yaw=0),
-        configured_sensor_alignment=Attitude.from_degrees(roll=0, pitch=0, yaw=0),
+        true_sensor_alignment=Attitude.from_degrees(
+            roll=inp["true_roll_deg"], pitch=0, yaw=0
+        ),
+        configured_sensor_alignment=Attitude.from_degrees(
+            roll=inp["configured_roll_deg"], pitch=0, yaw=0
+        ),
         beam=beam,
-        terrain=FlatTerrain(case["input"]["terrain_depth"]),
+        terrain=FlatTerrain(depth=inp["terrain_depth"]),
     )
     expected = case["expected"]
     _assert_vector(comparison.true.point, expected["true_point"], tol)
