@@ -8,6 +8,7 @@ from .rotations import (
     rotation_y,
     rotation_z,
 )
+from .terrain import FlatTerrain, PlaneTerrain, RayIntersection
 from .transforms import (
     apply_lever_arm,
     attitude_from_rotation_matrix,
@@ -18,7 +19,10 @@ from .transforms import (
 
 __all__ = [
     "Attitude",
+    "FlatTerrain",
+    "PlaneTerrain",
     "Pose",
+    "RayIntersection",
     "Vector3",
     "apply_lever_arm",
     "attitude_from_rotation_matrix",
