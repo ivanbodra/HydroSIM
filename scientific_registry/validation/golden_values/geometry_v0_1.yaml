@@ -77,10 +77,10 @@ cases:
       true_roll_deg: 0.5
       configured_roll_deg: 0.0
     expected:
-      true_point: [0.0, -0.2618060331680091, 30.0]
-      measured_slant_range: 30.001142344680936
-      configured_point: [0.0, 0.0, 30.001142344680936]
-      error_vector: [0.0, 0.2618060331680091, 0.001142344680936]
-      horizontal_error: 0.2618060331680091
-      vertical_error: 0.001142344680936
-      error_magnitude: 0.261808525487925
+      true_point: [0.0, -0.2618060337227637, 30.0]
+      measured_slant_range: 30.00114235157211
+      configured_point: [0.0, 0.0, 30.00114235157211]
+      error_vector: [0.0, 0.2618060337227637, 0.0011423515721098454]
+      horizontal_error: 0.2618060337227637
+      vertical_error: 0.0011423515721098454
+      error_magnitude: 0.2618085259512363
