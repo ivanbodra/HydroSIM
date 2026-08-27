@@ -8,14 +8,26 @@ from .rotations import (
     rotation_y,
     rotation_z,
 )
+from .transforms import (
+    apply_lever_arm,
+    attitude_from_rotation_matrix,
+    sensor_pose_from_vessel,
+    transform_point,
+    transform_vector,
+)
 
 __all__ = [
     "Attitude",
     "Pose",
     "Vector3",
+    "apply_lever_arm",
+    "attitude_from_rotation_matrix",
     "rotate_vector",
     "rotation_matrix_from_rpy",
     "rotation_x",
     "rotation_y",
     "rotation_z",
+    "sensor_pose_from_vessel",
+    "transform_point",
+    "transform_vector",
 ]
