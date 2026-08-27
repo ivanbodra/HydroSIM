@@ -1,0 +1,106 @@
+version: 0.1.0
+language: en
+
+references:
+  - id: hughes_clarke_2003_dynamic_motion_residuals
+    type: journal_article
+    authors:
+      - John E. Hughes Clarke
+    year: 2003
+    title: "Dynamic Motion Residuals in Swath Sonar Data: Ironing out the Creases"
+    publication: "The International Hydrographic Review"
+    volume: "4"
+    issue: "1"
+    primary_url: "https://journals.lib.unb.ca/index.php/ihr/article/view/20600"
+    scope:
+      - dynamic integration errors
+      - wobble signatures
+      - motion scaling
+      - motion latency
+      - motion-axis cross-talk
+      - lever-arm induced heave
+      - surface sound speed effects
+    notes: >-
+      Primary source for the HydroSIM dynamic-motion-residual signature taxonomy.
+      The paper explicitly distinguishes static patch-test biases from dynamic residuals,
+      examines seven common dynamic integration problems, and classifies characteristic
+      across-track manifestations.
+
+  - id: maingot_2019_high_frequency_motion_residuals_thesis
+    type: masters_thesis
+    authors:
+      - Brandon Andrew Maingot
+    year: 2019
+    title: "High-Frequency Motion Residuals in Multibeam Echosounder Data: Analysis and Estimation"
+    institution: "University of New Hampshire"
+    department: "Ocean Engineering"
+    primary_url: "https://scholars.unh.edu/thesis/1301/"
+    advisors:
+      - John E. Hughes Clarke
+      - Brian Calder
+      - Giuseppe Masetti
+    scope:
+      - dynamic depth errors
+      - multiple simultaneous integration errors
+      - sounding-level input-error relationships
+      - along-track sounding distribution
+      - observability
+      - simulation with known integration errors
+    notes: >-
+      Primary source for the transition from visual/correlation-based wobble diagnosis
+      toward model-based simultaneous estimation. The publicly accessible abstract
+      explicitly states that six common motion-driven errors are simultaneously identified,
+      but does not enumerate the full six-parameter vector; any exact enumeration must
+      therefore retain provenance status until verified against the full thesis text.
+
+  - id: maingot_hughes_clarke_calder_2019_identification_estimation
+    type: conference_paper
+    authors:
+      - Brandon Maingot
+      - John E. Hughes Clarke
+      - Brian R. Calder
+    year: 2019
+    title: "High Frequency Motion Residuals in Multibeam Data: Identification and Estimation"
+    publication: "U.S. Hydrographic Conference"
+    primary_url: "https://scholars.unh.edu/ccom/1683/"
+    scope:
+      - dynamic integration errors
+      - identification
+      - estimation
+      - orientation space sound-speed time offsets
+    notes: >-
+      Supporting CCOM publication associated with the Maingot thesis work.
+
+  - id: maingot_2019_motion_residuals_seminar
+    type: seminar
+    authors:
+      - Brandon Maingot
+    year: 2019
+    title: "High Frequency Motion Residuals: Analysis and Estimation"
+    institution: "University of New Hampshire Center for Coastal and Ocean Mapping"
+    primary_url: "https://scholars.unh.edu/ccom_seminars/281/"
+    scope:
+      - dynamic integration errors
+      - model-based estimation
+      - RISC development context
+
+  - id: lurton_2003_acoustical_measurement_accuracy
+    type: journal_article
+    authors:
+      - Xavier Lurton
+    year: 2003
+    title: "Theoretical Modelling of Acoustical Measurement Accuracy for Swath Bathymetric Sonars"
+    publication: "The International Hydrographic Review"
+    volume: "4"
+    issue: "2"
+    affiliation: "Ifremer"
+    primary_url: "https://journals.lib.unb.ca/index.php/ihr/article/view/20615"
+    scope:
+      - acoustic sounding measurement
+      - time-angle bathymetry
+      - measurement accuracy
+      - amplitude and phase methods
+      - signal-to-noise ratio
+    notes: >-
+      Primary reference for intrinsic acoustic time/angle measurement accuracy.
+      Kept conceptually separate from integration-error models.
