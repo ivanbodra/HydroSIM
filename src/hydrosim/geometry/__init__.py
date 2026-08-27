@@ -1,5 +1,6 @@
 """Geometry primitives for HydroSIM."""
 
+from .arrays import ArrayElement, TransducerArray
 from .models import Attitude, Pose, Vector3
 from .rotations import (
     rotate_vector,
@@ -18,11 +19,13 @@ from .transforms import (
 )
 
 __all__ = [
+    "ArrayElement",
     "Attitude",
     "FlatTerrain",
     "PlaneTerrain",
     "Pose",
     "RayIntersection",
+    "TransducerArray",
     "Vector3",
     "apply_lever_arm",
     "attitude_from_rotation_matrix",
