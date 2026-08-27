@@ -1,6 +1,6 @@
 # HydroSIM Conventions
 
-Version: 0.1.3
+Version: 0.1.4
 
 > These conventions define the internal geometric and temporal semantics of HydroSIM. External instrument or software conventions must be converted explicitly at system boundaries; they must not silently alter the internal convention.
 
@@ -314,7 +314,30 @@ Example:
 
 Different sensor streams must not be assumed to have identical timestamps or update rates. A ping references time; sensor states used for that ping are obtained from their independent streams by the explicitly configured temporal model.
 
-The precise physical event represented by `ping_time` (for example transmission start or another transmit epoch) remains to be defined before acoustic ping implementation.
+### 13.1 Ping temporal events
+
+HydroSIM does not assume that a ping identifier timestamp is identical to the physical start of acoustic transmission. It distinguishes:
+
+- `ping_time`: nominal epoch associated with the ping and used to relate the ping to the common simulation timeline;
+- `trigger_time`: physical time at which a controller or sonar subsystem issues the event/command that initiates the transmit sequence;
+- `tx_time`: physical time at which acoustic transmission actually begins;
+- `ping_timestamp`: time value recorded or reported by the acquisition/sonar system for that ping.
+
+These quantities may coincide in an ideal system, but HydroSIM must permit them to differ. In particular:
+
+`tx_time = trigger_time + trigger_to_tx_delay`
+
+where `trigger_to_tx_delay` represents the effective delay between the initiating event and physical acoustic transmission.
+
+`ping_timestamp` may also differ from `tx_time` because of clock bias, timestamping location in the hardware/software chain, time quantization, or other synchronization effects.
+
+For multisector transmission, individual sectors may additionally use:
+
+`sector_tx_time = tx_time + sector_tx_delay`
+
+The acoustic travel time for a sounding is referenced to the appropriate physical transmit event rather than merely to the nominal ping identifier.
+
+Unmodelled temporal offsets can appear as an equivalent latency in hydrographic processing. A patch test may estimate such a residual timing error from its geometric effect, but it does not necessarily identify the physical subsystem in which that delay originated. HydroSIM must therefore preserve the distinction between physical delays, clock/timestamp errors, configured latency, and the equivalent residual latency estimated through calibration.
 
 ## 14. Vertical references and vessel geometry
 
@@ -417,7 +440,7 @@ Relevant references for later traceability include:
 
 The NOAA HSSD is treated primarily as a survey-data specification. Detailed sensor-axis, beam-angle, Euler-angle, time-tag, and vertical-reference conventions must be verified against the relevant field-procedure or manufacturer documentation before external adapters are implemented.
 
-## 19. Remaining items before Issue #1 is closed
+## 19. Issue #1 status
 
 The following internal conventions are now approved and documented:
 
@@ -429,8 +452,7 @@ The following internal conventions are now approved and documented:
 - beam/sector angle convention;
 - range, slant-range, and TWTT distinction;
 - multi-sensor temporal model and positive-latency sign;
+- ping temporal-event semantics, including distinction among nominal ping epoch, trigger, physical transmission, and recorded timestamp;
 - separation of vessel waterline, hydrographic water level, transducer geometry, draft, motion, dynamic draft, and squat.
 
-Before Issue #1 is closed, the remaining item is:
-
-1. define the precise event represented by `ping_time` before acoustic ping implementation begins.
+No convention item currently blocks the geometry implementation. Exact external-device mappings remain adapter-specific and must be validated against the applicable manufacturer documentation.
