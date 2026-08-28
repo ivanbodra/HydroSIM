@@ -3,11 +3,11 @@
 This module separates Truth from Configured state. The physical echo range is
 obtained from the Truth ray/terrain intersection. The configured/calculated
 sounding is then reconstructed from that same measured slant range using the
-configured sensor alignment.
+configured vessel state, lever arm, and sensor alignment.
 
 This distinction is important: processing does not normally know the true terrain
 and re-intersect an erroneous configured ray with it. Re-using the measured range
-allows alignment errors to produce the expected deterministic horizontal and
+allows integration and alignment errors to produce deterministic horizontal and
 vertical sounding residuals, including over a flat bottom.
 """
 
@@ -70,39 +70,44 @@ def _beam_direction_in_destination(sensor_pose: Pose, beam: BeamRay) -> Vector3:
     return rotate_vector(r_destination_sensor, beam.direction_sensor_frame)
 
 
-def compare_true_and_configured_sounding(
+def compare_true_and_configured_state_sounding(
     *,
     vessel_truth_pose: Pose,
-    lever_arm_vrp_to_sensor: Vector3,
+    vessel_configured_pose: Pose,
+    true_lever_arm_vrp_to_sensor: Vector3,
+    configured_lever_arm_vrp_to_sensor: Vector3,
     true_sensor_alignment: Attitude,
     configured_sensor_alignment: Attitude,
     beam: BeamRay,
     terrain: PlaneTerrain,
     sensor_frame: str = "T",
 ) -> SoundingComparison:
-    """Generate one true sounding and its configured/calculated counterpart.
+    """Compare one Truth sounding with a Configured-state reconstruction.
 
-    Assumptions for this v0.1 geometric pipeline:
+    The Truth branch determines the physical terrain intersection and therefore
+    the ideal measured slant range. The Configured branch may independently use a
+    different vessel pose, lever arm, and sensor alignment, but it reconstructs
+    the sounding with the *same* measured range.
 
-    - vessel pose and lever arm are known perfectly;
-    - the only configuration discrepancy represented here is sensor alignment;
-    - straight rays are used;
-    - the true terrain intersection supplies the ideal measured slant range;
-    - the configured solution uses that same range with the configured direction.
+    This is the generic v0.1 geometry hook for integration-error experiments such
+    as RISC lever-arm and motion-latency cross-validation. It intentionally does
+    not re-intersect the configured ray with the true terrain.
 
-    Later modules can replace the ideal range with TWTT-derived range, sound-speed
-    models, latency, lever-arm errors, and other Observed/Configured quantities.
+    Both vessel poses must be expressed in the same destination frame.
     """
+
+    if vessel_truth_pose.frame != vessel_configured_pose.frame:
+        raise ValueError("truth and configured vessel poses must use the same frame")
 
     true_sensor_pose = sensor_pose_from_vessel(
         vessel_truth_pose,
-        lever_arm_vrp_to_sensor,
+        true_lever_arm_vrp_to_sensor,
         true_sensor_alignment,
         sensor_frame=sensor_frame,
     )
     configured_sensor_pose = sensor_pose_from_vessel(
-        vessel_truth_pose,
-        lever_arm_vrp_to_sensor,
+        vessel_configured_pose,
+        configured_lever_arm_vrp_to_sensor,
         configured_sensor_alignment,
         sensor_frame=sensor_frame,
     )
@@ -147,4 +152,35 @@ def compare_true_and_configured_sounding(
         horizontal_error=hypot(error.x, error.y),
         vertical_error=error.z,
         error_magnitude=sqrt(error.x * error.x + error.y * error.y + error.z * error.z),
+    )
+
+
+def compare_true_and_configured_sounding(
+    *,
+    vessel_truth_pose: Pose,
+    lever_arm_vrp_to_sensor: Vector3,
+    true_sensor_alignment: Attitude,
+    configured_sensor_alignment: Attitude,
+    beam: BeamRay,
+    terrain: PlaneTerrain,
+    sensor_frame: str = "T",
+) -> SoundingComparison:
+    """Generate one true sounding and a configuration-alignment counterpart.
+
+    This compatibility wrapper preserves the original v0.1 API in which vessel
+    pose and lever arm are assumed perfect and only sensor alignment differs.
+    More general integration-error experiments should call
+    :func:`compare_true_and_configured_state_sounding`.
+    """
+
+    return compare_true_and_configured_state_sounding(
+        vessel_truth_pose=vessel_truth_pose,
+        vessel_configured_pose=vessel_truth_pose,
+        true_lever_arm_vrp_to_sensor=lever_arm_vrp_to_sensor,
+        configured_lever_arm_vrp_to_sensor=lever_arm_vrp_to_sensor,
+        true_sensor_alignment=true_sensor_alignment,
+        configured_sensor_alignment=configured_sensor_alignment,
+        beam=beam,
+        terrain=terrain,
+        sensor_frame=sensor_frame,
     )
