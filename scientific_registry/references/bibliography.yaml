@@ -1,4 +1,4 @@
-version: 0.1.0
+version: 0.1.1
 language: en
 
 references:
@@ -46,12 +46,15 @@ references:
       - along-track sounding distribution
       - observability
       - simulation with known integration errors
+      - Rigorous Inter-Sensor Calibrator (RISC)
+      - six-parameter integration-error model
     notes: >-
       Primary source for the transition from visual/correlation-based wobble diagnosis
-      toward model-based simultaneous estimation. The publicly accessible abstract
-      explicitly states that six common motion-driven errors are simultaneously identified,
-      but does not enumerate the full six-parameter vector; any exact enumeration must
-      therefore retain provenance status until verified against the full thesis text.
+      toward model-based simultaneous estimation. Full-thesis verification confirms the
+      six RISC parameters in Section 2.2 as GNSS-MBES X lever error, GNSS-MBES Y lever
+      error, INS-MBES latency, INS scaling, INS-MB Z-axis misalignment, and SSS error
+      (latency and/or bias). Section 3.1 provides the analytical error equations used by
+      the HydroSIM reference implementation and sign-convention crosswalk.
 
   - id: maingot_hughes_clarke_calder_2019_identification_estimation
     type: conference_paper
