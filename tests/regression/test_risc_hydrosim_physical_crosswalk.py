@@ -4,24 +4,26 @@ Tier 1 tests reproduce the published Maingot (2019) equations directly. These
 Tier 2 tests verify that selected published RISC parameter semantics map into the
 HydroSIM Truth/Configured sounding pipeline with the expected physical effect.
 
-The current physical cross-validation covers:
+The current physical cross-validation covers all six published RISC parameters:
 
 - Delta Lx;
 - Delta Ly;
 - Delta t;
 - Delta rho;
-- Delta kappa.
+- Delta kappa;
+- Delta SSS.
 
-Delta SSS is intentionally deferred until the steering/propagation path can carry
-its physical semantics without treating sound-speed error as a generic beam-angle
-perturbation.
+The Delta SSS case is deliberately limited to the published simple steering
+relation followed by straight-ray propagation in a homogeneous medium. It is not
+a substitute for the later coupled Tx/Rx motion-compensation and water-column
+ray-tracing model.
 
 These tests do not validate the RISC optimizer or field performance.
 """
 
 from __future__ import annotations
 
-from math import asin, cos, isclose, sin, sqrt, tan
+from math import asin, cos, isclose, radians, sin, sqrt, tan
 
 import pytest
 
@@ -38,24 +40,38 @@ from hydrosim.integration.risc_maingot import (
     apply_maingot_motion_errors,
     configured_lever_arm_from_maingot_error,
     hydrosim_lever_arm_error_from_maingot,
+    hydrosim_sss_error_from_maingot,
+    maingot_surface_sound_speed,
+    maingot_surface_sound_speed_steering_angle,
 )
 
 
 ABS_TOL = 1e-10
 
 
-def _nadir_beam() -> BeamRay:
+def _beam_at_across_track_angle(angle_rad: float, *, index: int = 0) -> BeamRay:
+    """Create an ideal RX beam using HydroSIM's +Port across-track convention."""
+
+    direction = Vector3(
+        x=0.0,
+        y=-sin(angle_rad),
+        z=cos(angle_rad),
+    )
     return BeamRay(
         definition=BeamDefinition(
-            index=0,
-            across_track_angle=0.0,
+            index=index,
+            across_track_angle=angle_rad,
             role="rx",
             array_name="risc_crosswalk",
         ),
         origin_array_frame=Vector3(x=0.0, y=0.0, z=0.0),
-        direction_array_frame=Vector3(x=0.0, y=0.0, z=1.0),
-        direction_sensor_frame=Vector3(x=0.0, y=0.0, z=1.0),
+        direction_array_frame=direction,
+        direction_sensor_frame=direction,
     )
+
+
+def _nadir_beam() -> BeamRay:
+    return _beam_at_across_track_angle(0.0)
 
 
 def _zero_alignment() -> Attitude:
@@ -327,3 +343,65 @@ def test_maingot_positive_delta_kappa_cross_talk_has_expected_physical_direction
     # toward Port (-Y). This makes the cross-talk sign observable in geometry.
     assert comparison.configured.point.y < 0.0
     assert comparison.error_vector.y < 0.0
+
+
+def test_maingot_delta_sss_maps_through_steering_then_straight_propagation() -> None:
+    """Delta SSS changes steering before propagation; it is not a generic pose error.
+
+    The test uses a homogeneous medium and straight propagation so only the
+    published simple SSS steering relation is under examination. The Truth echo
+    fixes the measured slant range; the Configured branch reuses that range with
+    the SSS-adjusted steering direction.
+    """
+
+    true_sss = 1500.0
+    delta_sss_maingot = 2.0
+    true_angle = radians(30.0)
+    depth = 30.0
+
+    configured_sss = maingot_surface_sound_speed(true_sss, delta_sss_maingot)
+    hydrosim_sss_error = hydrosim_sss_error_from_maingot(delta_sss_maingot)
+    configured_angle = maingot_surface_sound_speed_steering_angle(
+        true_angle,
+        true_sss,
+        delta_sss_maingot,
+    )
+
+    assert configured_sss == pytest.approx(1498.0, abs=ABS_TOL)
+    assert hydrosim_sss_error == pytest.approx(-2.0, abs=ABS_TOL)
+    assert configured_angle < true_angle
+
+    true_beam = _beam_at_across_track_angle(true_angle)
+    configured_beam = _beam_at_across_track_angle(configured_angle)
+
+    comparison = compare_true_and_configured_state_sounding(
+        vessel_truth_pose=_static_pose(),
+        vessel_configured_pose=_static_pose(),
+        true_lever_arm_vrp_to_sensor=Vector3(x=0.0, y=0.0, z=0.0),
+        configured_lever_arm_vrp_to_sensor=Vector3(x=0.0, y=0.0, z=0.0),
+        true_sensor_alignment=_zero_alignment(),
+        configured_sensor_alignment=_zero_alignment(),
+        beam=true_beam,
+        configured_beam=configured_beam,
+        terrain=FlatTerrain(depth=depth),
+    )
+
+    measured_range = depth / cos(true_angle)
+    expected_true_y = -depth * tan(true_angle)
+    expected_configured_y = -measured_range * sin(configured_angle)
+    expected_configured_z = measured_range * cos(configured_angle)
+
+    assert comparison.true.slant_range == pytest.approx(measured_range, abs=ABS_TOL)
+    assert comparison.configured.slant_range == pytest.approx(measured_range, abs=ABS_TOL)
+    assert comparison.true.point.y == pytest.approx(expected_true_y, abs=ABS_TOL)
+    assert comparison.true.point.z == pytest.approx(depth, abs=ABS_TOL)
+    assert comparison.configured.point.y == pytest.approx(expected_configured_y, abs=ABS_TOL)
+    assert comparison.configured.point.z == pytest.approx(expected_configured_z, abs=ABS_TOL)
+
+    # Positive Maingot Delta SSS means configured SSS is too low. In the simple
+    # steering relation this reduces a positive Port steering angle. The
+    # reconstructed point therefore moves toward nadir and becomes deeper when
+    # the original measured slant range is preserved.
+    assert comparison.configured.point.y > comparison.true.point.y
+    assert comparison.error_vector.y > 0.0
+    assert comparison.error_vector.z > 0.0
