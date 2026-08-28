@@ -3,12 +3,13 @@
 This module separates Truth from Configured state. The physical echo range is
 obtained from the Truth ray/terrain intersection. The configured/calculated
 sounding is then reconstructed from that same measured slant range using the
-configured vessel state, lever arm, and sensor alignment.
+configured vessel state, lever arm, sensor alignment, and optionally a different
+configured beam direction.
 
 This distinction is important: processing does not normally know the true terrain
 and re-intersect an erroneous configured ray with it. Re-using the measured range
-allows integration and alignment errors to produce deterministic horizontal and
-vertical sounding residuals, including over a flat bottom.
+allows integration, alignment, and steering errors to produce deterministic
+horizontal and vertical sounding residuals, including over a flat bottom.
 """
 
 from __future__ import annotations
@@ -80,20 +81,24 @@ def compare_true_and_configured_state_sounding(
     configured_sensor_alignment: Attitude,
     beam: BeamRay,
     terrain: PlaneTerrain,
+    configured_beam: BeamRay | None = None,
     sensor_frame: str = "T",
 ) -> SoundingComparison:
     """Compare one Truth sounding with a Configured-state reconstruction.
 
     The Truth branch determines the physical terrain intersection and therefore
     the ideal measured slant range. The Configured branch may independently use a
-    different vessel pose, lever arm, and sensor alignment, but it reconstructs
-    the sounding with the *same* measured range.
+    different vessel pose, lever arm, sensor alignment, and beam direction, but it
+    reconstructs the sounding with the *same* measured range.
 
-    This is the generic v0.1 geometry hook for integration-error experiments such
-    as RISC lever-arm and motion-latency cross-validation. It intentionally does
-    not re-intersect the configured ray with the true terrain.
+    ``beam`` is always the Truth beam. When ``configured_beam`` is omitted, the
+    same beam is used by both branches. Supplying ``configured_beam`` supports
+    explicit steering-error experiments, including surface-sound-speed steering,
+    without disguising such effects as sensor-alignment errors.
 
-    Both vessel poses must be expressed in the same destination frame.
+    This function intentionally does not re-intersect the configured ray with the
+    true terrain. Both vessel poses must be expressed in the same destination
+    frame.
     """
 
     if vessel_truth_pose.frame != vessel_configured_pose.frame:
@@ -121,7 +126,10 @@ def compare_true_and_configured_state_sounding(
         raise ValueError("true beam does not intersect terrain in the forward direction")
 
     true_range = float(true_intersection.slant_range)
-    configured_direction = _beam_direction_in_destination(configured_sensor_pose, beam)
+    beam_used_by_configured_state = configured_beam if configured_beam is not None else beam
+    configured_direction = _beam_direction_in_destination(
+        configured_sensor_pose, beam_used_by_configured_state
+    )
     configured_point = _point_along_ray(
         configured_sensor_pose.position,
         configured_direction,
