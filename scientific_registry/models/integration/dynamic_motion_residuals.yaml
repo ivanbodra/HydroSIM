@@ -1,6 +1,6 @@
 model_set:
   id: integration.dynamic_motion_residuals
-  version: 0.1.0
+  version: 0.1.1
   language: en
   scientific_status: literature_grounded_provisional
   purpose: >-
@@ -24,7 +24,7 @@ model_set:
     - id: hughes_clarke_type_III
       description: nonlinear roll-coupled across-track tilt/curvature
     - id: hughes_clarke_type_IV
-      description: approximately symmetric nonlinear across-track curvature
+      description: approximately symmetric nonlinear across-track curvature about nadir
 
   evidence_levels:
     direct_source: statement, equation, classification, or relationship explicitly supported by the cited source
@@ -32,85 +32,140 @@ model_set:
     strongly_supported_reconstruction: synthesis supported by multiple source statements but not yet verified as a verbatim source parameterization
     hypothesis: retained for investigation and not suitable as a canonical implemented scientific claim
 
+  hughes_clarke_2003_cases:
+    source_note: >-
+      Hughes Clarke explicitly examines seven common integration problems, labelled A-G,
+      using synthetic swath data and motion time series. The mapping below preserves those
+      source labels as bibliographic locators only; they are not HydroSIM model identifiers.
+    cases:
+      A: motion_scaling_problems
+      B: time_delays_in_motion_sensor_output
+      C: imperfect_alignment_of_roll_pitch_axes_with_sonar_reference_frame
+      D: x_relative_sensor_offset_error
+      E: y_relative_sensor_offset_error
+      F: vertical_motion_close_to_or_in_a_sound_speed_gradient
+      G: rolling_with_an_imperfect_surface_sound_speed
+    source_mapping:
+      reference_id: hughes_clarke_2003_dynamic_motion_residuals
+      locator: "printed pp. 10-15; Figures 5-10"
+      evidence_level: direct_source
+
   models:
     - id: integration.motion_scale_error
-      version: 0.1.0
+      version: 0.1.1
+      source_case: A
       cause_domain: orientation
       estimation_role: estimated_parameter
       physical_cause: scale mismatch in reported vessel attitude
       principal_drivers:
         - roll
         - pitch
+        - heave_when_the_motion_stream_is_scaled
       relationships:
         - expression: "attitude_observed = scale_factor * attitude_true"
           evidence_level: derived_from_source
         - expression: "attitude_error = (scale_factor - 1) * attitude_true"
           evidence_level: derived_from_source
       expected_signature:
-        signature_class: hughes_clarke_type_I
-        across_track: approximately linear tilt; near-zero magnitude at nadir and increasing toward outer swath in the shallow-water case
-        along_track: ribbing follows the driving motion cycle
+        primary_signature_class: hughes_clarke_type_I
+        secondary_signature_class: hughes_clarke_type_II
+        across_track: >-
+          For roll scaling in the shallow-water approximation, approximately linear tilt,
+          zero at nadir and increasing toward the outer swath. If heave is also scaled,
+          the whole swath may rise and fall together as a Type-II component.
+        along_track: ribbing follows the phase and magnitude of the driving motion
       observability:
         required_excitation:
           - appreciable attitude amplitude
+        diagnostic_dependency: error magnitude scales with motion magnitude rather than motion period
         poor_conditions:
           - near-static platform
         confounded_by:
           - integration.surface_sound_speed_error
       source_mapping:
         - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "Error Sources; (A) Motion Scaling Problems; Figures 6-7"
+          locator: "case A, printed pp. 10-11; Figure 3 Type I; Figures 6A and 7A"
           evidence_level: direct_source
+          supported_claims:
+            - error magnitude scales with angle magnitude, most noticeably roll
+            - residual across-track slope correlates with roll phase
+            - roll error produces linear across-track profile tilt
+            - heave scaling can produce in-phase rise/fall of all beams
 
     - id: integration.motion_latency_error
-      version: 0.1.0
+      version: 0.1.1
+      source_case: B
       cause_domain: timing
       estimation_role: estimated_parameter
       physical_cause: time offset between motion state and the sonar/integration epoch
       principal_drivers:
         - roll_rate
         - pitch_rate
+        - heave_rate
       relationships:
         - expression: "attitude_error(t) = attitude_true(t - latency) - attitude_true(t)"
           evidence_level: derived_from_source
         - expression: "attitude_error(t) ~= -attitude_rate(t) * latency"
           validity: small latency, first-order approximation
           evidence_level: derived_from_source
+        - expression: "R(t) = A * sin(2*pi*t/T)"
+          evidence_level: direct_source
+        - expression: "dR/dt = (2*pi*A/T) * cos(2*pi*t/T)"
+          evidence_level: direct_source
       expected_signature:
-        signature_class: hughes_clarke_type_I
-        across_track: approximately linear swath tilt in shallow water
-        along_track: motion-correlated periodic ribbing with phase controlled by the derivative of the driving attitude
+        primary_signature_class: hughes_clarke_type_I
+        secondary_signature_class: hughes_clarke_type_II
+        across_track: approximately linear roll-driven swath tilt in shallow water
+        along_track: motion-correlated ribbing controlled primarily by angular rate rather than attitude magnitude
       observability:
         required_excitation:
           - appreciable angular rate
+        diagnostic_dependency: shorter-period motion produces larger residuals for equal amplitude
         poor_conditions:
           - low-amplitude slow motion
         confounded_by:
           - integration.motion_scale_error
       source_mapping:
         - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "(B) Time Delays in the Motion Sensor Output; Figures 1-7"
+          locator: "case B, printed pp. 11-12; Figure 2; Figure 3 Type I; Figures 6B and 7B"
           evidence_level: direct_source
+          supported_claims:
+            - time-synchronization importance depends on rate of change of orientation
+            - roll residual correlates with roll rate
+            - shorter-period motion produces stronger ribbing at equal roll amplitude
 
     - id: integration.motion_axes_yaw_misalignment
-      version: 0.1.0
+      version: 0.1.1
+      source_case: C
       cause_domain: orientation
       estimation_role: estimated_parameter
       physical_cause: roll/pitch measurement axes rotated about the vertical axis relative to the vessel coordinate system
       principal_drivers:
         - roll
         - pitch
-      expected_effect: cross-coupling between roll and pitch
+      relationships:
+        - expression: "sin(observed_roll) = cos(E)*sin(true_roll) + sin(E)*sin(true_pitch)"
+          evidence_level: direct_source
+        - expression: "sin(observed_pitch) = cos(E)*sin(true_pitch) - sin(E)*sin(true_roll)"
+          evidence_level: direct_source
+        - expression: "roll_error ~= E * true_pitch"
+          validity: small yaw-misalignment angle and small-angle approximation
+          evidence_level: derived_from_source
+        - expression: "pitch_error ~= -E * true_roll"
+          validity: small yaw-misalignment angle and small-angle approximation
+          evidence_level: derived_from_source
+      expected_effect: roll/pitch cross-coupling plus small attenuation of the same-axis signal
       expected_signature:
         signature_class: hughes_clarke_type_I
-        across_track: approximately linear motion-correlated tilt in the shallow-water case
-        along_track: follows the motion component coupled into the incorrect axis
+        across_track: approximately linear motion-correlated roll-like tilt in shallow water
+        along_track: strongest diagnostic component follows pitch leaking into roll
       observability:
         required_excitation:
-          - variation in the coupled attitude components
+          - variation in roll and pitch
         poor_conditions:
-          - insufficient roll or pitch excitation
+          - insufficient pitch excitation when diagnosing roll cross-talk
         confounded_by:
+          - integration.motion_scale_error
           - sonar_to_body_yaw_alignment
           - heading_measurement_error
       terminology_note: >-
@@ -118,16 +173,25 @@ model_set:
         motion-sensor roll/pitch axes relative to the vessel coordinate system.
       source_mapping:
         - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "Error Sources; cross-talk between roll and pitch / yaw misalignment; Figures 6-7"
+          locator: "case C, printed pp. 12-13; Figure 8; Figures 6C and 7C"
           evidence_level: direct_source
+          supported_claims:
+            - yaw misalignment of roll/pitch axes causes cross-talk
+            - same-axis signal is attenuated by cos(E)
+            - cross-axis leakage scales with sin(E)
+            - dominant bathymetric signature is a Type-I roll error correlated with pitch
 
     - id: integration.lever_arm_x_error
-      version: 0.1.0
+      version: 0.1.1
+      source_case: D
       cause_domain: spatial_integration
       estimation_role: estimated_parameter
       physical_cause: incorrect fore-aft separation between the motion reference and sonar reference
       principal_drivers:
         - pitch
+      shared_induced_heave_equation:
+        expression: "IH_error = -dX*sin(p) + dY*sin(r)*cos(p) + dZ*(1 - cos(r)*cos(p))"
+        evidence_level: direct_source
       expected_signature:
         signature_class: hughes_clarke_type_II
         across_track: approximately uniform vertical translation of the full swath in shallow water
@@ -138,22 +202,31 @@ model_set:
         confounded_by:
           - motion.heave_error
           - true_along_track_bathymetric_variation
+          - position_to_sonar_latency_in_static_patch_test_context
       source_mapping:
         - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "lever arm error / induced heave discussion; Figures 6-7"
+          locator: "case D, printed pp. 13-14; induced-heave equation; Figure 3 Type II; Figures 6D and 7D"
           evidence_level: direct_source
+          supported_claims:
+            - X lever-arm error is directly correlated with pitch
+            - induced-heave error is nearly common to all beams when the ping cycle is short relative to motion period
 
     - id: integration.lever_arm_y_error
-      version: 0.1.0
+      version: 0.1.1
+      source_case: E
       cause_domain: spatial_integration
       estimation_role: estimated_parameter
       physical_cause: incorrect transverse separation between the motion reference and sonar reference
       principal_drivers:
         - roll
+        - pitch_secondary_at_large_pitch
+      shared_induced_heave_equation:
+        expression: "IH_error = -dX*sin(p) + dY*sin(r)*cos(p) + dZ*(1 - cos(r)*cos(p))"
+        evidence_level: direct_source
       expected_signature:
         signature_class: hughes_clarke_type_II
         across_track: approximately uniform vertical translation of the full swath in shallow water
-        along_track: ribbing primarily correlated with roll
+        along_track: ribbing predominantly correlated with roll
       observability:
         required_excitation:
           - appreciable roll
@@ -161,37 +234,15 @@ model_set:
           - motion.heave_error
       source_mapping:
         - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "lever arm error / induced heave discussion; Figures 6-7"
+          locator: "case E, printed pp. 13-14; induced-heave equation; Figure 3 Type II; Figures 6E and 7E"
           evidence_level: direct_source
-
-    - id: integration.surface_sound_speed_error
-      version: 0.1.0
-      cause_domain: surface_sound_speed
-      estimation_role: estimated_parameter
-      physical_cause: incorrect sound speed used in electronic beam steering
-      principal_drivers:
-        - surface_sound_speed_error
-        - across_track_angle
-        - roll
-      expected_signature:
-        signature_class: hughes_clarke_type_III
-        across_track: nonlinear roll-coupled tilt/curvature; generally small near nadir and increasing toward outer swath
-        along_track: pattern modulated by vessel roll
-      observability:
-        required_excitation:
-          - sufficient swath width
-          - roll variation
-        confounded_by:
-          - integration.motion_scale_error
-          - propagation.ssp_refraction_error
-        diagnostic_feature: compare inner-swath and outer-swath slope/curvature rather than using only a single swath slope
-      source_mapping:
-        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "surface sound speed error while rolling; Figures 6-7"
-          evidence_level: direct_source
+          supported_claims:
+            - Y lever-arm error is predominantly correlated with roll
+            - pitch influence enters through cos(p) and is small for modest pitch
 
     - id: environment.near_surface_sv_gradient_motion_coupling
-      version: 0.1.0
+      version: 0.1.1
+      source_case: F
       cause_domain: surface_sound_speed
       estimation_role: confounding_error
       physical_cause: transducer moves vertically through a near-surface sound-speed gradient
@@ -199,12 +250,15 @@ model_set:
         - transducer_vertical_motion
         - near_surface_sound_speed_gradient
       relationships:
+        - expression: "theta_error = asin((V_error/V_correct) * sin(theta_correct))"
+          evidence_level: direct_source
+          note: source equation describes the erroneous beam-steering angle for beams steered away from boresite
         - expression: "surface_sound_speed_at_array = c(z_transducer(t))"
           evidence_level: derived_from_source
       expected_signature:
         signature_class: hughes_clarke_type_IV
-        across_track: approximately symmetric nonlinear outer-swath curvature with little effect near nadir
-        along_track: follows vertical vessel motion
+        across_track: symmetric refraction artefact about nadir; both sides curl in phase while near-nadir beams show little motion
+        along_track: oscillates with vertical displacement of the sonar
       observability:
         required_excitation:
           - vertical vessel motion
@@ -213,11 +267,51 @@ model_set:
           - propagation.ssp_refraction_error
       source_mapping:
         - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "heaving through a surface sound speed gradient; Figures 6-7"
+          locator: "case F, printed pp. 14-15; Figure 9; Figure 3 Type IV; Figures 6F and 7F"
           evidence_level: direct_source
+          supported_claims:
+            - sonar-relative water-column structure changes with vertical motion through the gradient
+            - artefact is symmetric about nadir
+            - outer-beam errors are in phase while near-nadir beams show little motion
+
+    - id: integration.surface_sound_speed_error
+      version: 0.1.1
+      source_case: G
+      cause_domain: surface_sound_speed
+      estimation_role: estimated_parameter
+      physical_cause: incorrect sound speed used in electronic beam steering while the receive array is rolled or otherwise non-level
+      principal_drivers:
+        - surface_sound_speed_error
+        - across_track_angle
+        - roll
+      relationships:
+        - expression: "theta_error = asin((V_error/V_correct) * sin(theta_correct - phi))"
+          evidence_level: direct_source
+          note: source formulation for rolled receive-array steering geometry
+      expected_signature:
+        signature_class: hughes_clarke_type_III
+        across_track: nonlinear side-to-side tilt with curvature on each side; port and starboard sides are out of phase
+        along_track: pattern correlates with roll
+      observability:
+        required_excitation:
+          - sufficient swath width
+          - roll variation
+        confounded_by:
+          - integration.motion_scale_error
+          - propagation.ssp_refraction_error
+        diagnostic_feature: compare inner-swath and outer-swath slopes; they should agree for simple roll scaling but differ for the curved steering-error case
+      source_mapping:
+        - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+          locator: "case G, printed p. 15; Figure 10; Figure 3 Type III; Figures 6G and 7G"
+          evidence_level: direct_source
+          supported_claims:
+            - angular error depends on roll magnitude and sign
+            - steering error grows with obliquity
+            - port and starboard sides are out of phase
+            - inner-versus-outer slope comparison helps distinguish this case from roll scaling
 
     - id: propagation.ssp_refraction_error
-      version: 0.1.0
+      version: 0.1.1
       cause_domain: water_column
       estimation_role: confounding_error
       physical_cause: mismatch between the actual water-column sound-speed structure and the profile/model used for ray tracing
@@ -237,9 +331,38 @@ model_set:
           - true_bathymetry
       source_mapping:
         - reference_id: hughes_clarke_2003_dynamic_motion_residuals
-          locator: "Basic Alignment assumptions: adequacy of water-column sound-speed profile"
+          locator: "printed p. 7 Basic Alignment assumptions; printed pp. 14-15 discussion distinguishing steering and conventional refraction effects"
           evidence_level: direct_source
       implementation_status: not_yet_formulated
+
+  depth_regime_constraint:
+    statement: >-
+      The simple ping-level signature taxonomy is primarily useful when the ping
+      transmit/receive cycle is short compared with the characteristic motion/error period.
+      As water depth increases, the error can change substantially during a single receive
+      cycle and a swath may become curved or contain a migrating ripple rather than a single
+      instantaneous tilt.
+    source_mapping:
+      - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+        locator: "printed pp. 8-10; Figures 2-5"
+        evidence_level: direct_source
+
+  diagnostic_observables:
+    source_mapping:
+      - reference_id: hughes_clarke_2003_dynamic_motion_residuals
+        locator: "printed pp. 16-22, especially Figure 11 onward"
+        evidence_level: direct_source
+    candidates:
+      - high_pass_filtered_full_swath_across_track_slope
+      - high_pass_filtered_inner_swath_across_track_slope
+      - high_pass_filtered_port_slope
+      - high_pass_filtered_starboard_slope
+      - high_pass_filtered_swath_averaged_depth
+      - roll
+      - roll_rate
+      - pitch
+      - pitch_rate
+      - vertical_motion_at_sonar
 
   risc_parameterization:
     status: provisional
@@ -259,7 +382,7 @@ model_set:
       - integration.surface_sound_speed_error
     source_mapping:
       - reference_id: maingot_2019_high_frequency_motion_residuals_thesis
-        locator: abstract and full-text verification pending
+        locator: "public abstract; full thesis parameter-vector verification pending"
         evidence_level: strongly_supported_reconstruction
       - reference_id: maingot_hughes_clarke_calder_2019_identification_estimation
         locator: abstract
