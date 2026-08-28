@@ -1,0 +1,160 @@
+model:
+  id: integration.risc_maingot_2019
+  version: 0.1.0
+  language: en
+  scientific_status: literature_grounded_reference
+  implementation_status: reference_implementation_available
+  estimator_status: not_implemented
+
+  purpose: >-
+    Canonical HydroSIM registry entry for the six-parameter Rigorous Inter-Sensor
+    Calibrator (RISC) model published in Brandon A. Maingot's 2019 M.S. thesis.
+    This entry records the source parameterization, HydroSIM convention crosswalk,
+    analytical scope, and validation status. It does not imply independent field
+    validation of the estimator.
+
+  primary_reference:
+    reference_id: maingot_2019_high_frequency_motion_residuals_thesis
+    section_2_2_locator: "Section 2.2, six integration-error parameters"
+    section_3_1_locator: "Section 3.1, analytical georeferencing error model"
+    evidence_level: direct_source
+
+  published_parameter_vector:
+    notation: "beta_M = [Delta Lx, Delta Ly, Delta t, Delta rho, Delta kappa, Delta SSS]"
+    parameters:
+      - symbol: "Delta Lx"
+        source_name: "GNSS-MBES X-lever error"
+        hydrosim_model: integration.lever_arm_x_error
+        domain: spatial_integration
+      - symbol: "Delta Ly"
+        source_name: "GNSS-MBES Y-lever error"
+        hydrosim_model: integration.lever_arm_y_error
+        domain: spatial_integration
+      - symbol: "Delta t"
+        source_name: "INS-MBES latency"
+        hydrosim_model: integration.motion_latency_error
+        domain: timing
+      - symbol: "Delta rho"
+        source_name: "INS scaling"
+        hydrosim_model: integration.motion_scale_error
+        domain: orientation_and_heave
+      - symbol: "Delta kappa"
+        source_name: "INS-MB Z-axis misalignment"
+        hydrosim_model: integration.motion_axes_yaw_misalignment
+        domain: motion_axis_alignment
+      - symbol: "Delta SSS"
+        source_name: "SSS Error (latency and/or bias)"
+        hydrosim_model: integration.surface_sound_speed_error
+        domain: surface_sound_speed_steering
+
+  source_semantics:
+    latency:
+      expression: "x_star = x - x_dot * Delta t"
+      interpretation: positive Delta t uses an older state in the first-order local approximation
+      hydrosim_exact_semantic: "state_used(t) = state(t - Delta t)"
+      crosswalk: same_sign
+
+    motion_scale:
+      expression: "scaled_state = Delta rho * lagged_state"
+      interpretation: Delta rho is the total multiplicative scale factor
+      no_error_value: 1.0
+      hydrosim_optional_deviation_parameter: "delta rho_H = Delta rho_M - 1"
+
+    lever_arm:
+      expression: "L_configured = L_true - Delta L_M"
+      hydrosim_semantic: "delta L_H = L_configured - L_true"
+      crosswalk: "delta L_H = -Delta L_M"
+      applies_componentwise:
+        - x
+        - y
+
+    z_axis_misalignment:
+      roll_expression: >-
+        roll_star = asin(cos(Delta kappa)*sin(Delta rho*(roll-roll_rate*Delta t))
+        + sin(Delta kappa)*sin(Delta rho*(pitch-pitch_rate*Delta t)))
+      pitch_expression: >-
+        pitch_star = asin(cos(Delta kappa)*sin(Delta rho*(pitch-pitch_rate*Delta t))
+        - sin(Delta kappa)*sin(Delta rho*(roll-roll_rate*Delta t)))
+      small_angle_roll_cross_talk: "roll_star ~= scaled_roll + Delta kappa * scaled_pitch"
+      small_angle_pitch_cross_talk: "pitch_star ~= scaled_pitch - Delta kappa * scaled_roll"
+      terminology_constraint: >-
+        This parameter represents Z-axis misalignment of the INS motion axes relative
+        to the multibeam reference, causing roll/pitch cross-talk. It must not be
+        silently interpreted as a generic vessel-heading error or sonar yaw patch-test
+        bias.
+
+    surface_sound_speed:
+      configured_speed_expression: "SSS_configured = SSS_true - Delta SSS_M"
+      hydrosim_semantic: "delta c_s = c_configured - c_true"
+      crosswalk: "delta c_s = -Delta SSS_M"
+      simple_steering_expression: >-
+        theta_star = asin(((SSS - Delta SSS) / SSS) * sin(theta))
+      terminology_constraint: >-
+        Delta SSS is one effective instantaneous RISC parameter. The thesis states
+        that its physical origin may be latency and/or bias, but the six-parameter
+        RISC vector does not estimate separate SSS-bias and SSS-latency parameters.
+      implementation_constraint: >-
+        Surface-sound-speed error must enter through beam steering and then acoustic
+        propagation. It must not be represented as a generic sensor-pose rotation.
+
+  heave_note:
+    source_status: source_sign_not_directly_stated_in_thesis
+    hydrosim_convention: positive_up
+    likely_crosswalk: "Hv_M = -heave_H"
+    status: pending_direct_or_equivalent_source_confirmation
+
+  truth_configured_rule:
+    statement: >-
+      The Truth branch determines the physical echo and measured TWTT/range. The
+      Configured branch re-integrates the same observation using erroneous integration
+      states. An erroneous configured ray must not be re-intersected with the true
+      terrain to manufacture a new measurement.
+
+  reference_implementation:
+    path: src/hydrosim/integration/risc_maingot.py
+    scope:
+      - published latency approximation
+      - published motion scale
+      - published roll/pitch Z-axis cross-talk
+      - lever-arm sign crosswalk
+      - effective SSS sign crosswalk
+      - simple SSS steering relation
+    exclusions:
+      - RISC optimizer
+      - local reference-surface estimator
+      - full coupled Tx/Rx snapback model
+      - full water-column ray tracing
+      - independent field validation
+
+  validation:
+    tier_1:
+      name: published_equation_reproduction
+      test_path: tests/regression/test_risc_maingot_2019_golden_values.py
+      golden_values_path: scientific_registry/validation/golden_values/risc_maingot_2019_v0_1.yaml
+      status: implemented_not_runtime_verified_in_repository_ci
+    tier_2:
+      name: hydrosim_physical_crosswalk
+      test_path: tests/regression/test_risc_hydrosim_physical_crosswalk.py
+      parameters_covered:
+        - Delta Lx
+        - Delta Ly
+        - Delta t
+        - Delta rho
+        - Delta kappa
+        - Delta SSS
+      sss_scope: simple steering followed by homogeneous straight-ray propagation
+      status: implemented_not_runtime_verified_in_repository_ci
+    tier_3:
+      name: reproduce_selected_maingot_simulation_cases
+      status: planned
+    tier_4:
+      name: risc_estimator_and_optimization
+      status: not_started
+    tier_5:
+      name: independent_field_validation
+      status: outside_current_claims
+
+  scientific_disclaimer: >-
+    RISC is a research calibration method rather than an established hydrographic
+    calibration standard. HydroSIM reproduces and investigates the published method;
+    implementation fidelity does not by itself establish operational or field validity.
