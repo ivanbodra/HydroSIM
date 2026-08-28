@@ -1,6 +1,6 @@
 # Rigorous Inter-Sensor Calibrator (RISC)
 
-Version: 0.1.0
+Version: 0.1.1
 
 ## 1. Purpose
 
@@ -9,6 +9,13 @@ This document records the scientific basis and HydroSIM implementation semantics
 RISC belongs inside HydroSIM because it diagnoses and estimates parameters of the acquisition/integration system itself. It is not a seafloor-surface estimator such as CUBE and is not treated as downstream bathymetric product generation.
 
 RISC is a research calibration method, not an established hydrographic calibration standard. HydroSIM reproduces and investigates the published method; this does not constitute independent validation of field performance.
+
+HydroSIM has two distinct reasons to retain RISC capability:
+
+1. didactic demonstration of dynamic integration errors and their bathymetric signatures; and
+2. controlled scientific evaluation of the capability, observability, sensitivity, and limitations of the RISC method itself.
+
+The second role is particularly important because a simulator has access to known Truth. It can therefore compare injected integration errors directly with parameters recovered by a future RISC estimator, which is generally impossible with equivalent certainty in field data.
 
 ## 2. Scientific lineage
 
@@ -294,21 +301,71 @@ The current test set covers all six parameters through controlled physical cases
 - `Δκ`: roll/pitch cross-talk with an observable geometric sign consequence;
 - `ΔSSS`: SSS-dependent steering followed by homogeneous straight propagation.
 
-These tests are implemented in the repository but have not yet been claimed as runtime-verified by repository CI.
+Repository CI has executed the complete HydroSIM test suite successfully after these Tier-2 tests were added.
 
 ### Tier 3 — reproduction of selected Maingot simulation cases
 
-Planned. This should reproduce selected synthetic scenarios or figures from the thesis using the HydroSIM forward model.
+Deferred until the general HydroSIM survey/acquisition infrastructure naturally provides the required multi-ping time-series, motion, Tx/Rx timing, trajectory, sector, and propagation capabilities. Tier 3 should reuse that infrastructure rather than introduce RISC-specific duplicates.
 
 ### Tier 4 — RISC estimator and optimization
 
-Not started. Estimator work should begin only after the forward model and convention crosswalks are sufficiently validated.
+Deferred. The estimator is not required for the initial didactic simulator because the student is not expected to iteratively solve the RISC optimization. When implemented, the first estimator should be an offline/batch scientific capability rather than a mandatory real-time component.
 
-### Tier 5 — independent field validation
+### Tier 5 — controlled scientific evaluation of RISC
 
-Separate from implementation correctness. Reproducing the published method does not establish real-world performance.
+Planned research capability. Once an estimator exists, HydroSIM can exploit known simulation Truth to evaluate the method itself:
 
-## 13. Scope boundary
+```text
+Known Truth
+    ↓
+Inject known integration errors
+    ↓
+Simulate acquisition
+    ↓
+Generate dynamic residual field
+    ↓
+Run RISC estimator
+    ↓
+Compare estimated parameters with injected parameters
+```
+
+For each parameter, a direct recovery error can be defined as:
+
+\[
+e_{\beta_i}=\hat{\beta}_i-\beta_i^{truth}.
+\]
+
+Bathymetric performance may also be compared before and after correction, for example with `RMSE_before` and `RMSE_after` against known terrain Truth.
+
+This layer should investigate not only successful recovery but also observability, parameter confounding, sensitivity, and failure cases. Candidate controlled variables include motion amplitude and period, water depth, swath width, terrain roughness, noise, sound-speed conditions, and combinations of simultaneous integration errors.
+
+A scientifically useful negative result is explicitly in scope: HydroSIM should be able to demonstrate conditions under which RISC cannot uniquely or reliably recover the injected parameters.
+
+This scientific evaluation is distinct from reproducing Maingot. Reproduction validates the HydroSIM implementation against the published method; controlled Truth-based experiments evaluate the capability and limitations of the method under synthetic conditions.
+
+### Tier 6 — independent field validation
+
+Separate from implementation correctness and synthetic scientific evaluation. Reproducing the published method or demonstrating parameter recovery against simulation Truth does not establish real-world field performance.
+
+## 13. Execution and didactic role
+
+RISC shall not be a mandatory computational dependency of ordinary HydroSIM experiments. Simple geometry, acoustics, patch-test, or survey demonstrations must not instantiate the RISC estimator.
+
+A future capability model may distinguish:
+
+```text
+risc.mode:
+    disabled
+    visualize_only
+    offline_estimation
+    research_validation
+```
+
+`visualize_only` may use known injected errors to demonstrate characteristic dynamic residuals without running an optimizer. `offline_estimation` may estimate parameters after acquisition. `research_validation` may execute repeated controlled scenarios or parameter sweeps.
+
+Continuous on-the-go RISC correction is not an initial HydroSIM requirement. It may be investigated later if it provides scientific or didactic value, but it must not dictate the architecture or computational requirements of the core simulator.
+
+## 14. Scope boundary
 
 RISC is inside HydroSIM because it estimates properties of the measurement/integration system.
 
@@ -324,7 +381,7 @@ Observation cleaning / surface estimation / gridding / hydrographic product gene
 
 This is a functional distinction, not a real-time versus post-processing distinction. Modern hydrographic software may execute downstream processing during acquisition, but that does not change the scientific role of the algorithm.
 
-## 14. References
+## 15. References
 
 Canonical reference metadata are maintained in:
 
