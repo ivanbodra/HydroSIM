@@ -10,7 +10,12 @@ from .rotations import (
     rotation_y,
     rotation_z,
 )
-from .soundings import SoundingComparison, SoundingState, compare_true_and_configured_sounding
+from .soundings import (
+    SoundingComparison,
+    SoundingState,
+    compare_true_and_configured_sounding,
+    compare_true_and_configured_state_sounding,
+)
 from .terrain import FlatTerrain, PlaneTerrain, RayIntersection
 from .transforms import (
     apply_lever_arm,
@@ -37,6 +42,7 @@ __all__ = [
     "apply_lever_arm",
     "attitude_from_rotation_matrix",
     "compare_true_and_configured_sounding",
+    "compare_true_and_configured_state_sounding",
     "generate_ideal_fan",
     "generate_ideal_fan_degrees",
     "rotate_vector",
