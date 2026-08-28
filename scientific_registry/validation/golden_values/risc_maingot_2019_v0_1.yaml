@@ -1,0 +1,121 @@
+id: validation.risc_maingot_2019_v0_1
+version: 0.1.0
+status: literature_derived_executable_specification
+purpose: >-
+  Preserve analytical reference cases derived from Brandon Maingot's 2019 M.S. thesis,
+  Section 3.1, before implementing the RISC estimator in HydroSIM. These cases verify
+  notation/sign crosswalks and basic invariants. They do not validate the scientific
+  completeness or field performance of RISC.
+
+canonical_reference:
+  id: maingot_2019_high_frequency_motion_residuals_thesis
+  section: "3.1 - Coupling of Errors with a Georeference Model"
+  printed_pages: "43-45"
+
+source_parameter_vector:
+  notation: "[Delta_Lx, Delta_Ly, Delta_t, Delta_rho, Delta_kappa, Delta_SSS]"
+  notes:
+    - "Delta_rho is the multiplicative scale factor used by Maingot; unity means no scale error."
+    - "Maingot lever-arm error is subtracted from the true/source lever arm."
+    - "Maingot Delta_SSS is subtracted from SSS in the steering equations."
+    - "Positive latency uses an older state through the first-order form x* = x - x_dot Delta_t."
+
+hydrosim_crosswalk:
+  lever_arm_error:
+    hydrosim_definition: "delta_L = L_configured - L_true"
+    maingot_definition: "Delta_L_M = L_true - L_configured"
+    conversion: "delta_L_H = -Delta_L_M"
+  surface_sound_speed_error:
+    hydrosim_definition: "delta_c = c_configured - c_true"
+    maingot_definition: "Delta_SSS_M = SSS_true - SSS_configured"
+    conversion: "delta_c_H = -Delta_SSS_M"
+  latency:
+    conversion: "Delta_t_H = Delta_t_M"
+  motion_scale:
+    conversion: "rho_H = Delta_rho_M"
+  heave:
+    note: >-
+      HydroSIM canonical heave is positive Up. Maingot's exact heave sign is not stated
+      directly in the thesis; do not use this registry file to assert a Maingot heave-sign
+      convention.
+
+cases:
+  - id: zero_error_identity
+    description: "All integration-error parameters at neutral values leave inputs unchanged."
+    inputs:
+      roll_rad: 0.10
+      pitch_rad: -0.05
+      heading_rad: 0.30
+      heave_m: 0.40
+      roll_rate_rad_s: 0.02
+      pitch_rate_rad_s: -0.01
+      heading_rate_rad_s: 0.03
+      heave_rate_m_s: 0.10
+      latency_s: 0.0
+      scale_factor: 1.0
+      z_axis_misalignment_rad: 0.0
+    expected:
+      adjusted_roll_rad: 0.10
+      adjusted_pitch_rad: -0.05
+      adjusted_heading_rad: 0.30
+      adjusted_heave_m: 0.40
+
+  - id: latency_affine_state
+    description: >-
+      For a locally affine state, Maingot's first-order latency expression exactly equals
+      evaluation at t - Delta_t.
+    inputs:
+      state_at_t: 0.20
+      state_rate: 0.50
+      latency_s: 0.04
+    expected:
+      state_used: 0.18
+
+  - id: scale_factor_identity_and_102_percent
+    description: "Unity is neutral; 1.02 represents the 102% scaling convention."
+    inputs:
+      state_rad: 0.10
+      scale_factor: 1.02
+    expected:
+      scaled_state_rad: 0.102
+      fractional_scale_error: 0.02
+
+  - id: z_axis_misalignment_cross_talk
+    description: >-
+      Direct Maingot roll/pitch cross-talk equations with zero latency and unit scale.
+      Values are computed from the published sine/arcsine formulation, not from the
+      small-angle approximation.
+    inputs:
+      roll_rad: 0.10
+      pitch_rad: 0.20
+      scale_factor: 1.0
+      z_axis_misalignment_rad: 0.01
+    expected_formula:
+      adjusted_roll: "asin(cos(dk)*sin(roll) + sin(dk)*sin(pitch))"
+      adjusted_pitch: "asin(cos(dk)*sin(pitch) - sin(dk)*sin(roll))"
+
+  - id: lever_arm_error_sign_crosswalk
+    description: "Maingot subtracts Delta_L from the true/source lever arm."
+    inputs:
+      true_lever_arm_m: 2.0
+      maingot_error_m: 0.25
+    expected:
+      configured_lever_arm_m: 1.75
+      hydrosim_error_m: -0.25
+
+  - id: surface_sound_speed_error_sign_crosswalk
+    description: "Maingot uses SSS - Delta_SSS in the steering relation."
+    inputs:
+      true_sss_m_s: 1500.0
+      maingot_error_m_s: 2.0
+      steering_angle_rad: 0.5235987755982988
+    expected:
+      configured_sss_m_s: 1498.0
+      hydrosim_error_m_s: -2.0
+      adjusted_steering_formula: "asin(((SSS-Delta_SSS)/SSS)*sin(theta))"
+
+validation_policy:
+  - "Golden cases are source-traceability tests, not evidence that RISC is field validated."
+  - "Published and HydroSIM-canonical formulations must remain distinguishable in test names and comments."
+  - "Future production RISC code must reproduce these cases before estimator-level validation."
+  - "Changes to signs or parameter semantics require an explicit registry version increment."
