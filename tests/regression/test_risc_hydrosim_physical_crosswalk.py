@@ -4,18 +4,24 @@ Tier 1 tests reproduce the published Maingot (2019) equations directly. These
 Tier 2 tests verify that selected published RISC parameter semantics map into the
 HydroSIM Truth/Configured sounding pipeline with the expected physical effect.
 
-The tests intentionally begin with the least ambiguous parameters:
+The current physical cross-validation covers:
 
 - Delta Lx;
 - Delta Ly;
-- Delta t.
+- Delta t;
+- Delta rho;
+- Delta kappa.
 
-They do not validate the RISC optimizer or field performance.
+Delta SSS is intentionally deferred until the steering/propagation path can carry
+its physical semantics without treating sound-speed error as a generic beam-angle
+perturbation.
+
+These tests do not validate the RISC optimizer or field performance.
 """
 
 from __future__ import annotations
 
-from math import cos, isclose, sin, sqrt, tan
+from math import asin, cos, isclose, sin, sqrt, tan
 
 import pytest
 
@@ -201,3 +207,123 @@ def test_maingot_positive_latency_maps_to_older_roll_in_physical_sounding() -> N
         ),
         abs=ABS_TOL,
     )
+
+
+def test_maingot_motion_scale_maps_to_scaled_roll_physical_sounding() -> None:
+    """Delta rho is the total multiplicative motion scale, with 1.0 as identity."""
+
+    true_roll = 0.10
+    scale_factor = 1.02
+    depth = 30.0
+
+    adjusted = apply_maingot_motion_errors(
+        roll_rad=true_roll,
+        pitch_rad=0.0,
+        heading_rad=0.0,
+        heave_m=0.0,
+        roll_rate_rad_s=0.0,
+        pitch_rate_rad_s=0.0,
+        heading_rate_rad_s=0.0,
+        heave_rate_m_s=0.0,
+        latency_s=0.0,
+        scale_factor=scale_factor,
+        z_axis_misalignment_rad=0.0,
+    )
+
+    expected_configured_roll = scale_factor * true_roll
+    assert adjusted.roll_rad == pytest.approx(expected_configured_roll, abs=ABS_TOL)
+
+    comparison = compare_true_and_configured_state_sounding(
+        vessel_truth_pose=_static_pose(roll=true_roll),
+        vessel_configured_pose=_static_pose(roll=adjusted.roll_rad),
+        true_lever_arm_vrp_to_sensor=Vector3(x=0.0, y=0.0, z=0.0),
+        configured_lever_arm_vrp_to_sensor=Vector3(x=0.0, y=0.0, z=0.0),
+        true_sensor_alignment=_zero_alignment(),
+        configured_sensor_alignment=_zero_alignment(),
+        beam=_nadir_beam(),
+        terrain=FlatTerrain(depth=depth),
+    )
+
+    measured_range = depth / cos(true_roll)
+    expected_true_y = -depth * tan(true_roll)
+    expected_configured_y = -measured_range * sin(expected_configured_roll)
+    expected_configured_z = measured_range * cos(expected_configured_roll)
+
+    assert comparison.true.slant_range == pytest.approx(measured_range, abs=ABS_TOL)
+    assert comparison.configured.slant_range == pytest.approx(measured_range, abs=ABS_TOL)
+    assert comparison.true.point.y == pytest.approx(expected_true_y, abs=ABS_TOL)
+    assert comparison.configured.point.y == pytest.approx(expected_configured_y, abs=ABS_TOL)
+    assert comparison.configured.point.z == pytest.approx(expected_configured_z, abs=ABS_TOL)
+    assert comparison.error_vector.y < 0.0
+    assert comparison.error_vector.z < 0.0
+
+
+def test_maingot_positive_delta_kappa_cross_talk_has_expected_physical_direction() -> None:
+    """For pure +pitch, positive Maingot Delta kappa induces +roll cross-talk.
+
+    This test fixes the observable sign consequence of the published equation in
+    HydroSIM coordinates. It intentionally does not yet relabel Delta kappa as a
+    generic sonar yaw installation error: it is the INS-to-MB motion-axis Z-axis
+    misalignment term of the RISC model.
+    """
+
+    true_pitch = 0.12
+    delta_kappa = 0.01
+    depth = 30.0
+
+    adjusted = apply_maingot_motion_errors(
+        roll_rad=0.0,
+        pitch_rad=true_pitch,
+        heading_rad=0.0,
+        heave_m=0.0,
+        roll_rate_rad_s=0.0,
+        pitch_rate_rad_s=0.0,
+        heading_rate_rad_s=0.0,
+        heave_rate_m_s=0.0,
+        latency_s=0.0,
+        scale_factor=1.0,
+        z_axis_misalignment_rad=delta_kappa,
+    )
+
+    expected_roll = asin(sin(delta_kappa) * sin(true_pitch))
+    expected_pitch = asin(cos(delta_kappa) * sin(true_pitch))
+
+    assert adjusted.roll_rad == pytest.approx(expected_roll, abs=ABS_TOL)
+    assert adjusted.pitch_rad == pytest.approx(expected_pitch, abs=ABS_TOL)
+    assert adjusted.roll_rad > 0.0
+    assert adjusted.pitch_rad < true_pitch
+
+    comparison = compare_true_and_configured_state_sounding(
+        vessel_truth_pose=_static_pose(pitch=true_pitch),
+        vessel_configured_pose=_static_pose(
+            roll=adjusted.roll_rad,
+            pitch=adjusted.pitch_rad,
+        ),
+        true_lever_arm_vrp_to_sensor=Vector3(x=0.0, y=0.0, z=0.0),
+        configured_lever_arm_vrp_to_sensor=Vector3(x=0.0, y=0.0, z=0.0),
+        true_sensor_alignment=_zero_alignment(),
+        configured_sensor_alignment=_zero_alignment(),
+        beam=_nadir_beam(),
+        terrain=FlatTerrain(depth=depth),
+    )
+
+    measured_range = depth / cos(true_pitch)
+    expected_configured_x = (
+        measured_range * sin(expected_pitch) * cos(expected_roll)
+    )
+    expected_configured_y = -measured_range * sin(expected_roll)
+    expected_configured_z = (
+        measured_range * cos(expected_pitch) * cos(expected_roll)
+    )
+
+    assert comparison.true.point.x == pytest.approx(depth * tan(true_pitch), abs=ABS_TOL)
+    assert comparison.true.point.y == pytest.approx(0.0, abs=ABS_TOL)
+    assert comparison.true.point.z == pytest.approx(depth, abs=ABS_TOL)
+    assert comparison.configured.point.x == pytest.approx(expected_configured_x, abs=ABS_TOL)
+    assert comparison.configured.point.y == pytest.approx(expected_configured_y, abs=ABS_TOL)
+    assert comparison.configured.point.z == pytest.approx(expected_configured_z, abs=ABS_TOL)
+
+    # HydroSIM +roll is starboard-down; a +roll rotation of a +Z beam points it
+    # toward Port (-Y). This makes the cross-talk sign observable in geometry.
+    assert comparison.configured.point.y < 0.0
+    assert comparison.error_vector.y < 0.0
