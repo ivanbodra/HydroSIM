@@ -1,6 +1,6 @@
 # Dynamic Motion Residuals in Multibeam Bathymetry
 
-Version: 0.1.0  
+Version: 0.1.1  
 Language: English (canonical)  
 Status: Scientific working specification
 
@@ -25,9 +25,11 @@ This distinction is normative because it allows the simulator to generate the si
 
 ## 2. Scientific basis
 
-The primary source for the initial signature taxonomy is Hughes Clarke (2003), *Dynamic Motion Residuals in Swath Sonar Data: Ironing out the Creases*. The paper emphasizes that conventional patch-test procedures examine only a subset of possible systematic integration biases and that additional biases may produce dynamic rather than static bathymetric signatures.
+The primary source for the initial signature taxonomy is Hughes Clarke (2003), *Dynamic Motion Residuals in Swath Sonar Data: Ironing out the Creases*. The paper explains that the conventional patch test addresses only a subset of possible systematic integration biases and that additional biases may produce dynamic rather than static bathymetric signatures.
 
-Hughes Clarke separates dynamic errors associated with periods in the ocean-wave spectrum — commonly called wobbles — from longer-period signatures associated with vessel accelerations such as turns, course changes, obstacle avoidance, and speed changes.
+Hughes Clarke separates errors varying at periods in the ocean-wave spectrum — commonly called wobbles — from a separate family driven by longer-period vessel accelerations such as turns, course changes, obstacle avoidance, and speed changes.
+
+The paper explicitly examines seven common integration problems, labelled A-G. HydroSIM preserves these labels only as bibliographic locators; its canonical identifiers describe the physical/configuration cause instead.
 
 The Maingot (2019) work extends the problem from visual/correlation-based diagnosis toward model-based simultaneous estimation. Its publicly available abstract states that dynamic depth errors may result from offsets in orientation, space, sound speed, or time; that six common errors are simultaneously identified; and that individual sounding input-error relationships are considered over extended swath corridors. It also states that successful estimation requires significant vessel motion over a few tens of seconds and smooth or gently rolling bathymetry over the corresponding spatial extent.
 
@@ -35,150 +37,207 @@ Lurton (2003) is retained as a complementary reference for intrinsic acoustic ti
 
 Canonical bibliographic metadata is stored in `scientific_registry/references/bibliography.yaml`.
 
-## 3. Shallow-water signature approximation
+## 3. Shallow-water signature approximation and depth dependence
 
-Hughes Clarke shows that signature classification is particularly useful when the ping transmit/receive cycle is short relative to the characteristic period of the driving vessel motion. Under this condition, the dynamic error changes little during a single ping and the instantaneous across-track profile can approximately represent one sample of the angular and/or positional error state.
+Hughes Clarke shows that signature classification is particularly useful when the ping transmit/receive cycle is short relative to the characteristic period of the driving vessel motion. In that condition, the dynamic error changes little during a single ping and the instantaneous across-track profile can approximately represent one sample of the angular and/or positional error state.
 
-As water depth increases and the reception cycle becomes comparable to the motion/error period, different beams within the same ping are affected at different times. A simple across-track slope then becomes a progressively poorer representation of one instantaneous error state.
+This is not generally true in deep water. Hughes Clarke's Figure 5 shows the same latency-driven roll residual progressing from an approximately linear swath tilt in shallow water, through a nonlinear curved profile at intermediate depth, to a ripple migrating through the swath when the receive cycle becomes long relative to the motion/error period.
 
-Therefore HydroSIM must never assume that the shallow-water wobble taxonomy remains geometrically exact at arbitrary depth.
+Therefore HydroSIM must never implement the Hughes Clarke Type-I to Type-IV taxonomy as a fixed bathymetric deformation independent of travel time and beam reception time.
 
-## 4. Signature classes
+Primary source mapping: Hughes Clarke (2003), printed pp. 8-10, Figures 2-5.
 
-The initial HydroSIM registry preserves the four characteristic manifestation classes described by Hughes Clarke as observational labels, not physical models.
+## 4. Hughes Clarke signature classes
+
+The initial HydroSIM registry preserves four characteristic manifestation classes as observational labels, not physical models.
 
 | Signature ID | Canonical interpretation |
 | --- | --- |
-| `hughes_clarke_type_I` | Approximately linear across-track tilt in the shallow-water approximation |
+| `hughes_clarke_type_I` | Approximately linear across-track angular tilt in the shallow-water approximation |
 | `hughes_clarke_type_II` | Approximately in-phase vertical translation of the full swath |
-| `hughes_clarke_type_III` | Nonlinear roll-coupled across-track tilt/curvature |
-| `hughes_clarke_type_IV` | Approximately symmetric nonlinear across-track curvature |
+| `hughes_clarke_type_III` | Nonlinear roll-coupled across-track tilt/curvature, with opposite phase on the two sides |
+| `hughes_clarke_type_IV` | Approximately symmetric nonlinear curvature about nadir, with outer sides responding in phase |
 
-The exact manifestation depends on depth, receive-cycle duration, swath geometry, motion spectrum, and the error source. These labels must therefore not be implemented as direct deformation generators.
+The exact manifestation depends on depth, receive-cycle duration, swath geometry, motion spectrum, and the physical error source.
 
-## 5. Initial cause-to-signature matrix
+## 5. Hughes Clarke A-G source map
 
-| Canonical error source | Cause domain | Principal driver | Expected across-track signature | Along-track manifestation | Signature class | Estimation role |
-| --- | --- | --- | --- | --- | --- | --- |
-| `integration.motion_scale_error` | orientation | roll / pitch amplitude | approximately linear tilt; small near nadir and increasing outward | follows driving motion cycle | Type I | estimated parameter |
-| `integration.motion_latency_error` | timing | angular rate | approximately linear tilt in shallow water | periodic ribbing related to derivative/phase of motion | Type I | estimated parameter |
-| `integration.motion_axes_yaw_misalignment` | orientation | roll-pitch cross-coupling | approximately linear motion-correlated tilt | follows coupled motion component | Type I | estimated parameter |
-| `integration.lever_arm_x_error` | spatial integration | pitch | near-uniform full-swath vertical translation | primarily pitch-correlated | Type II | estimated parameter |
-| `integration.lever_arm_y_error` | spatial integration | roll | near-uniform full-swath vertical translation | primarily roll-correlated | Type II | estimated parameter |
-| `integration.surface_sound_speed_error` | surface sound speed | beam angle + roll | nonlinear roll-coupled tilt/curvature | roll-modulated | Type III | estimated parameter |
-| `environment.near_surface_sv_gradient_motion_coupling` | surface sound speed | vertical motion + near-surface gradient | approximately symmetric outer-swath curvature | follows vertical motion | Type IV | confounding/external effect |
-| `propagation.ssp_refraction_error` | water column | SSP mismatch + beam geometry | generally nonlinear; commonly stronger outward | depends on water-column variability | variable | confounding/external effect |
+Hughes Clarke's seven illustrated cases are now mapped directly to HydroSIM concepts:
 
-The machine-readable version is `scientific_registry/models/integration/dynamic_motion_residuals.yaml`.
+| Source case | Hughes Clarke description | HydroSIM canonical model | Main shallow-water signature |
+| --- | --- | --- | --- |
+| A | Motion scaling problems | `integration.motion_scale_error` | Type I for roll scaling; Type II component if heave is scaled |
+| B | Time delays in motion sensor output | `integration.motion_latency_error` | Type I for roll latency; possible Type II heave component |
+| C | Imperfect alignment of roll/pitch axes with sonar reference frame | `integration.motion_axes_yaw_misalignment` | Type I |
+| D | X relative sensor-offset error | `integration.lever_arm_x_error` | Type II |
+| E | Y relative sensor-offset error | `integration.lever_arm_y_error` | Type II |
+| F | Vertical motion close to or in a sound-speed gradient | `environment.near_surface_sv_gradient_motion_coupling` | Type IV |
+| G | Rolling with an imperfect surface sound speed | `integration.surface_sound_speed_error` | Type III |
 
-## 6. Motion scale error
+Primary source mapping: Hughes Clarke (2003), printed pp. 10-15, Figures 6-10.
 
-A scale mismatch means that the reported attitude amplitude differs systematically from the physical attitude amplitude. A HydroSIM representation may use
+## 6. Motion scale error — case A
+
+Hughes Clarke describes scale-factor problems in motion time series and notes that the error magnitude scales with the magnitude of the reported angle, most noticeably roll. In the shallow-water roll-dominated case, the resulting residual across-track slope correlates with roll phase and produces a linear tilt that is zero at nadir and increases toward the outer swath.
+
+HydroSIM may represent this mechanism as:
 
 ```text
 attitude_observed = scale_factor * attitude_true
-```
-
-and therefore
-
-```text
 attitude_error = (scale_factor - 1) * attitude_true
 ```
 
-The second relationship is a direct mathematical consequence of the first and is classified in the registry as `derived_from_source`, not as a verbatim published equation.
+These expressions are `derived_from_source`; they are a compact HydroSIM formalization of the source-described scaling mechanism rather than verbatim equations from the paper.
 
-In the shallow-water roll-dominated case, Hughes Clarke describes the primary bathymetric manifestation as a residual across-track slope that correlates with roll phase and grows toward the outer swath. Scaling depends on the magnitude of the motion, not its period.
+Hughes Clarke also points out that if heave is scaled, each ping can be vertically displaced by the heave difference, producing an in-phase rise and fall of all beams — a Type-II component. Therefore case A is not restricted to one signature class if all motion components share the scale problem.
 
-## 7. Motion latency
+Source mapping: printed pp. 10-11; Figure 3 Type I; Figures 6A and 7A.
 
-A timing offset causes the integration process to use a motion state corresponding to the wrong physical epoch. HydroSIM can express the exact conceptual relationship as
+## 7. Motion latency — case B
+
+Hughes Clarke explicitly formulates sinusoidal roll as a function of amplitude and period and differentiates it to show that sensitivity to timing error is governed by the rate of change of orientation:
 
 ```text
-attitude_error(t) = attitude_true(t - latency) - attitude_true(t)
+R(t) = A sin(2*pi*t/T)
+dR/dt = (2*pi*A/T) cos(2*pi*t/T)
 ```
 
-For sufficiently small latency, first-order expansion gives
+Consequently, for small latency HydroSIM can use the first-order relation:
 
 ```text
 attitude_error(t) ~= -attitude_rate(t) * latency
 ```
 
-This approximation is classified as `derived_from_source`.
+The approximation itself is `derived_from_source`; the sinusoidal motion/rate relationship and the qualitative dependency on angular rate are directly supported by Hughes Clarke.
 
-It provides an important didactic distinction:
+This establishes a particularly useful diagnostic distinction:
 
-- motion scale residuals approximately follow **attitude amplitude**;
-- small-latency residuals approximately follow **attitude rate**.
+- scale residuals approximately follow motion **amplitude**;
+- latency residuals approximately follow motion **rate**;
+- at equal amplitude, shorter-period motion produces a larger latency signature.
 
-For an ideal sinusoidal attitude signal, the scale-driven and latency-driven components are approximately in quadrature. In real vessel motion, multiple frequencies and correlated roll/pitch/heave prevent this from being a universally clean separation.
+For an ideal single-frequency sinusoid, scale- and latency-driven residual components are approximately in quadrature. Real vessel motion is multi-frequency and correlated across roll, pitch, and heave, so this is a didactic special case rather than a universal diagnostic rule.
 
-## 8. Motion-axis yaw misalignment
+Source mapping: printed pp. 11-12; Figure 2; Figure 3 Type I; Figures 6B and 7B.
 
-This error represents a rotation about the vertical axis between the motion sensor's roll/pitch axes and the vessel coordinate system, producing cross-talk between roll and pitch.
+## 8. Motion-axis yaw misalignment — case C
 
-It must not be conflated with:
-
-- vessel heading/yaw measurement error;
-- sonar-to-body yaw alignment;
-- heading patch-test bias.
-
-HydroSIM therefore uses the explicit identifier `integration.motion_axes_yaw_misalignment`.
-
-## 9. Lever-arm errors and induced heave
-
-Incorrect horizontal separation between the motion reference and sonar reference can convert angular vessel motion into an erroneous vertical correction.
-
-The principal shallow-water diagnostic relationships are:
-
-- fore-aft (`X`) lever-arm error -> strongest coupling with pitch;
-- transverse (`Y`) lever-arm error -> strongest coupling with roll.
-
-The resulting signature may appear as a near-uniform rise/fall of the entire swath rather than an across-track angular tilt. This is the principal distinction between Type-II-like induced-heave signatures and Type-I angular signatures.
-
-The implementation must derive this effect from rigid-body geometry. It must not create an artificial full-swath vertical offset waveform directly.
-
-## 10. Surface sound speed error
-
-Electronic beam steering depends on the sound speed used by the sonar. An incorrect surface sound speed therefore changes the realized beam-steering geometry.
-
-When coupled with roll, Hughes Clarke describes a nonlinear across-track signature distinct from the approximately linear motion-scale signature. The curvature and differing behavior between inner and outer swath provide diagnostic information.
-
-This is scientifically important because two different causes may share the same principal driver (`roll`) while producing different across-track shapes.
-
-HydroSIM must therefore keep separate concepts for:
+This error represents rotation about the vertical axis between the motion sensor's roll/pitch axes and the vessel coordinate system. Hughes Clarke explicitly gives the cross-coupling equations:
 
 ```text
-cause
-principal driver
-signature class
-observable diagnostic feature
+sin(observed_roll)  = cos(E) sin(true_roll)  + sin(E) sin(true_pitch)
+sin(observed_pitch) = cos(E) sin(true_pitch) - sin(E) sin(true_roll)
 ```
 
-## 11. Near-surface sound-speed gradient and vertical motion
+where `E` is the yaw misalignment angle.
 
-If the transducer moves vertically through a near-surface sound-speed gradient, the sound speed physically present at the array varies with transducer depth:
+The equations show two effects: attenuation of the same-axis signal by `cos(E)` and leakage from the other axis through `sin(E)`. For small `E`, the most sensitive diagnostic term is the cross-talk; approximately,
+
+```text
+roll_error  ~=  E * true_pitch
+pitch_error ~= -E * true_roll
+```
+
+with radians implied in the first-order approximation.
+
+This error must not be conflated with vessel heading error, sonar-to-body yaw alignment, or a conventional heading patch-test bias.
+
+Source mapping: printed pp. 12-13; Figure 8; Figures 6C and 7C.
+
+## 9. Lever-arm errors and induced heave — cases D and E
+
+Hughes Clarke explicitly gives the induced-heave error associated with lever-arm errors `dX`, `dY`, `dZ` and vessel roll/pitch `r`, `p`:
+
+```text
+IH_error = -dX sin(p)
+           + dY sin(r) cos(p)
+           + dZ [1 - cos(r) cos(p)]
+```
+
+This equation is a `direct_source` relationship and must later be reconciled explicitly with HydroSIM's Forward-Starboard-Down frame and sign conventions before implementation.
+
+The source identifies the dominant dynamic couplings:
+
+- X lever-arm error -> pitch-correlated induced heave;
+- Y lever-arm error -> predominantly roll-correlated induced heave;
+- Z lever-arm contribution is generally much smaller for modest roll/pitch.
+
+When the receive cycle is short relative to the motion period, this error is nearly common to every beam in the swath and appears as an in-phase rise/fall of the complete swath: Type II.
+
+Source mapping: printed pp. 13-14; induced-heave equation; Figure 3 Type II; Figures 6D-E and 7D-E.
+
+## 10. Near-surface sound-speed gradient and vertical motion — case F
+
+Hughes Clarke gives the erroneous beam-steering relation for a sound-speed mismatch as:
+
+```text
+theta_error = asin[(V_error / V_correct) sin(theta_correct)]
+```
+
+where the paper's `theta_error` denotes the erroneous steered angle rather than a simple angle difference. The notation must therefore be normalized carefully when implemented in HydroSIM.
+
+When the transducer oscillates vertically through a strong near-surface sound-speed gradient, the sonar-relative water-column structure changes dynamically with vertical transducer motion. Hughes Clarke describes a refraction artefact symmetric about nadir: both sides curl upward or downward together, while near-nadir beams show little movement. This is the Type-IV signature.
+
+HydroSIM may abstract the environmental coupling as:
 
 ```text
 surface_sound_speed_at_array = c(z_transducer(t))
 ```
 
-This equation is a HydroSIM abstraction of the source-supported physical mechanism and is classified as `derived_from_source`.
+which is classified as `derived_from_source`.
 
-The expected signature is approximately symmetric across the swath, with little effect near nadir and larger effects toward the outer beams. This is an important example of an error signature that emerges from **coupling between environmental state and platform motion** rather than from a single sensor parameter.
+Source mapping: printed pp. 14-15; Figure 9; Figure 3 Type IV; Figures 6F and 7F.
+
+## 11. Rolling with imperfect surface sound speed — case G
+
+Hughes Clarke considers the more common case where surface sound speed is simply wrong and the receive array is no longer level because of roll or mounting angle. The paper gives a rolled-array steering relationship of the form:
+
+```text
+theta_error = asin[(V_error / V_correct) sin(theta_correct - phi)]
+```
+
+and shows that the resulting Snell constant is not preserved.
+
+The resulting angular error depends on roll magnitude and sign and on desired steering angle. Because steering error grows with obliquity, the final swath tilts nonlinearly from side to side. The two sides are out of phase, producing Hughes Clarke Type III.
+
+This case is easily confused with roll scaling because both correlate with roll. Hughes Clarke proposes comparing inner-swath and outer-swath slopes: they should be similar for simple roll scaling but differ when the profile is curved by steering/refraction error.
+
+Source mapping: printed p. 15; Figure 10; Figure 3 Type III; Figures 6G and 7G.
 
 ## 12. Water-column SSP mismatch
 
-An incorrect sound-speed profile used for ray tracing can produce nonlinear across-track depth errors, commonly increasing toward outer beams. Unlike the simpler surface sound-speed steering effect, no single universal linear formula is appropriate because the error depends on the full propagation geometry and sound-speed structure.
+An incorrect sound-speed profile used for ray tracing can produce nonlinear across-track depth errors, commonly increasing toward outer beams. Hughes Clarke explicitly lists adequate knowledge of the water-column sound-speed profile as an assumption of basic alignment and distinguishes conventional refraction bias from the surface-steering mechanisms discussed in cases F and G.
 
-For this reason `propagation.ssp_refraction_error` is registered in this v0.1 specification as `not_yet_formulated`. A future propagation model must supply the governing ray equations, assumptions, and validation cases.
+No single universal linear formula is appropriate because the error depends on the full propagation geometry and sound-speed structure. `propagation.ssp_refraction_error` therefore remains `not_yet_formulated` in this specification. A future propagation model must supply governing ray equations, assumptions, and validation cases.
 
-## 13. Observability
+## 13. Diagnostic observables from Hughes Clarke
+
+The source's diagnostic approach motivates several Derived observables that HydroSIM can expose without treating them as physical causes:
+
+```text
+high_pass_filtered_full_swath_across_track_slope
+high_pass_filtered_inner_swath_across_track_slope
+high_pass_filtered_port_slope
+high_pass_filtered_starboard_slope
+high_pass_filtered_swath_averaged_depth
+roll
+roll_rate
+pitch
+pitch_rate
+vertical_motion_at_sonar
+```
+
+Hughes Clarke distinguishes two broad observable families: outer swath edges rising/falling (Types I, III, IV) and the complete swath rising/falling (Type II). Cross-plots between filtered bathymetric observables and driving motion quantities are then used to diagnose likely causes.
+
+A key identifiability warning from the paper is preserved: different physical causes can produce similar signatures. In particular, Type III surface-sound-speed/roll effects may resemble Type-I roll scaling, while heave scaling can be difficult to separate from X/Y lever-arm induced-heave effects.
+
+## 14. Observability and Maingot/RISC
 
 HydroSIM distinguishes **error existence** from **error observability**.
 
-A hidden Truth parameter may be non-zero while the acquisition conditions provide insufficient excitation to estimate it reliably. Maingot (2019) explicitly reports that successful estimation requires significant vessel motion over periods of a few tens of seconds and smooth or gently rolling bathymetry along the equivalent spatial extent.
+Maingot (2019) explicitly reports that successful estimation requires significant vessel motion over periods of a few tens of seconds and smooth or gently rolling bathymetry along the equivalent spatial extent. The method considers each sounding's input-error relationship over extended sections of a swath corridor, addresses multiple errors simultaneously, better accounts for along-track sounding distribution, and is not restricted to shallow-water geometry.
 
-Accordingly, model metadata may include:
+Accordingly, scientific model metadata may include:
 
 ```yaml
 observability:
@@ -188,13 +247,13 @@ observability:
   confounded_by: []
 ```
 
-This is particularly important for Module 2 calibration exercises. HydroSIM should not manufacture an obvious signature merely because an instructor configured a non-zero hidden error.
+A hidden Truth parameter may be non-zero but effectively unobservable in a particular motion state or acquisition geometry. HydroSIM must not manufacture a visible wobble merely because the hidden error is non-zero.
 
-## 14. RISC parameterization status
+## 15. RISC parameterization status
 
 The accessible Maingot (2019) abstract explicitly states that six common motion-driven errors are simultaneously identified and that the underlying offsets occur in orientation, space, sound speed, or time.
 
-For HydroSIM v0.1, the working six-parameter reconstruction is:
+For HydroSIM v0.1.1, the working six-parameter reconstruction remains:
 
 ```text
 motion scale
@@ -205,20 +264,20 @@ Y lever-arm error
 surface sound-speed error
 ```
 
-This enumeration is currently marked `strongly_supported_reconstruction`, not `direct_source`, because the publicly accessible abstract does not enumerate the six parameters. It must be promoted to `direct_source` only after verification against the full thesis equations, a primary-source parameter table, or an equivalent authoritative Maingot/RISC publication.
+This enumeration remains `strongly_supported_reconstruction`, not `direct_source`, because the accessible abstract does not enumerate the six parameters. It must be promoted only after verification against the full thesis equations, a primary-source parameter table, or an equivalent authoritative Maingot/RISC publication.
 
-This provenance distinction is intentional and normative.
+The fact that Hughes Clarke's seven A-G cases map naturally onto these six candidate fitted parameters plus the external/environmental near-surface-gradient case strengthens the reconstruction but does not by itself prove the exact RISC vector.
 
-## 15. Evidence and traceability policy
+## 16. Evidence and traceability policy
 
-Each scientific relationship should identify an evidence level:
+Each scientific relationship identifies an evidence level:
 
-- `direct_source`: explicitly supported by a cited source;
+- `direct_source`: explicitly supported by the cited source;
 - `derived_from_source`: mathematical consequence or approximation derived by HydroSIM from a source-supported relationship;
 - `strongly_supported_reconstruction`: synthesis strongly supported by the literature but awaiting exact primary-source verification;
 - `hypothesis`: retained for investigation and not suitable as a canonical implementation claim.
 
-Where possible, `source_mapping` should identify the specific section, equation, figure, page, table, or other locator in the primary source.
+Where possible, `source_mapping` identifies the specific source case, printed page, equation, figure, table, or other locator.
 
 The desired traceability chain is:
 
@@ -232,7 +291,7 @@ Reference
 
 and must also be navigable in reverse from implementation to scientific source.
 
-## 16. Relationship to uncertainty architecture
+## 17. Relationship to uncertainty architecture
 
 The following concepts remain distinct:
 
@@ -247,7 +306,7 @@ A Jacobian may describe the sensitivity of a sounding to an input parameter. Sen
 
 The wobble model therefore complements, but does not replace, the HydroSIM a priori uncertainty framework.
 
-## 17. Implementation rule
+## 18. Implementation rule
 
 No production scientific implementation should expose a generic parameter such as:
 
@@ -257,15 +316,16 @@ wobble_amplitude
 
 as a substitute for a physical/configuration cause.
 
-Didactic visualization may measure or display apparent wobble amplitude as a **Derived** quantity, but the simulated bathymetry must arise from the configured/hidden physical model and the acquisition geometry.
+Didactic visualization may measure or display apparent wobble amplitude as a **Derived** quantity, but simulated bathymetry must arise from the configured/hidden physical model and acquisition geometry.
 
-## 18. Next verification tasks
+## 19. Next verification tasks
 
-The following items remain intentionally open after v0.1:
+The following items remain intentionally open after v0.1.1:
 
 1. verify the exact six-parameter RISC/Maingot vector against full primary-source equations;
-2. map the Hughes Clarke mechanisms to exact page/equation/figure locators where available;
-3. formalize rigid-body lever-arm induced-heave equations under HydroSIM frame/sign conventions;
-4. formulate surface-sound-speed beam-steering equations under the HydroSIM `TxSector` / `RxBeam` model;
-5. connect each error model to sounding-level Jacobians for the a priori uncertainty architecture;
-6. create literature-derived and analytical golden-value tests before implementing the complete wobble estimator.
+2. reconcile the Hughes Clarke induced-heave equation with HydroSIM's exact frame/sign/rotation conventions and create analytical tests;
+3. normalize Hughes Clarke's sound-speed steering notation into explicit `desired_angle`, `realized_angle`, and `angle_error` quantities;
+4. formulate the surface-sound-speed steering mechanism within the HydroSIM `TxSector` / `RxBeam` architecture;
+5. formulate full water-column SSP/refraction effects using a documented ray model;
+6. connect each error model to sounding-level Jacobians for the a priori uncertainty architecture;
+7. create literature-derived and analytical golden-value tests before implementing a complete dynamic-residual estimator.
