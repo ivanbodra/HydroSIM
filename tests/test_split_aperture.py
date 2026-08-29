@@ -7,6 +7,7 @@ from hydrosim.acquisition import (
     SplitApertureDefinition,
     coherent_receive_sum,
     ideal_receive_steering,
+    split_aperture_phase_centers,
     split_coherent_receive_sum,
 )
 from hydrosim.geometry import Attitude, TransducerArray
@@ -70,6 +71,17 @@ def _coherent(source_angle_rad: float, steering_angle_rad: float):
         ),
         tone=NarrowbandReceiveTone(frequency_hz=150_000.0),
     )
+
+
+def test_phase_centres_match_four_element_geometry() -> None:
+    result = split_aperture_phase_centers(receive_array=_array())
+
+    assert result.negative_element_count == 2
+    assert result.positive_element_count == 2
+    assert isclose(result.negative_center_array_frame.y, -0.005, abs_tol=1e-12)
+    assert isclose(result.positive_center_array_frame.y, 0.005, abs_tol=1e-12)
+    assert isclose(result.negative_to_positive_baseline_array_frame.y, 0.01, abs_tol=1e-12)
+    assert isclose(result.baseline_length_m, 0.01, abs_tol=1e-12)
 
 
 def test_matched_steering_gives_equal_in_phase_subapertures() -> None:
