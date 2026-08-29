@@ -22,6 +22,14 @@ from .beamforming import (
     evaluate_receive_steering,
     ideal_receive_steering,
 )
+from .bottom_interaction import (
+    BottomInteractionResponse,
+    PointTargetStrength,
+    SeafloorAreaBackscatter,
+    evaluate_bottom_interaction,
+    evaluate_point_target_strength,
+    evaluate_seafloor_area_backscatter,
+)
 from .element_factor import RectangularElementFactor, rectangular_element_factor
 from .element_signals import (
     CoherentReceiveSum,
@@ -100,6 +108,7 @@ __all__ = [
     "ArrayFactorResponse",
     "ArrayTruthReception",
     "BeamTruthReturn",
+    "BottomInteractionResponse",
     "CoherentReceiveSum",
     "ConstantSoundSpeedPropagation",
     "ContinuousWavePulse",
@@ -115,6 +124,7 @@ __all__ = [
     "OneWayBeamPatternResponse",
     "OneWayTransmissionLoss",
     "PingSchedule",
+    "PointTargetStrength",
     "PropagationLossModel",
     "ReceiveBeamBankResponse",
     "ReceiveBeamResponse",
@@ -128,6 +138,7 @@ __all__ = [
     "SectorSignalChainResult",
     "SectorWaveformAssignment",
     "SectorWaveformPlan",
+    "SeafloorAreaBackscatter",
     "SoundSpeedLayer",
     "TransmitSector",
     "TransmitSectorSet",
@@ -135,8 +146,11 @@ __all__ = [
     "across_track_direction",
     "array_factor",
     "coherent_receive_sum",
+    "evaluate_bottom_interaction",
     "evaluate_mills_cross_receive_beam_bank",
+    "evaluate_point_target_strength",
     "evaluate_receive_steering",
+    "evaluate_seafloor_area_backscatter",
     "generate_acquisition_sequence",
     "ideal_receive_steering",
     "make_uniform_transmit_sectors",
