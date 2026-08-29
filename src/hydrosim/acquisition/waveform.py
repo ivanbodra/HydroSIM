@@ -4,6 +4,10 @@ The waveform layer is intentionally separate from transducer geometry and sector
 steering. It provides deterministic complex analytic/baseband samples suitable
 for didactic pulse-compression experiments without introducing electronics,
 noise, source level, or calibrated receive amplitude.
+
+Continuous waveform definitions and their discrete numerical realization are kept
+separate. Sampling adequacy is checked explicitly for the represented baseband
+bandwidth before discrete LFM samples are generated.
 """
 
 from __future__ import annotations
@@ -12,6 +16,8 @@ from math import pi
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
+
+from .numerical_resolution import SamplingAdequacy, assess_baseband_sampling
 
 
 class ContinuousWavePulse(BaseModel):
@@ -65,8 +71,8 @@ class WaveformAutocorrelation(BaseModel):
     """Normalized matched-filter response of a waveform to delayed copies of itself.
 
     ``normalized_amplitude`` is |R_ss(tau)| / R_ss(0). ``normalized_power`` is
-    its square and is the appropriate deterministic temporal weight when an
-    incoherent area-scattering power model is evaluated at matched-filter output.
+    its square. The result is a discrete numerical realization of a continuous
+    waveform correlation and therefore records its sample rate explicitly.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -75,6 +81,21 @@ class WaveformAutocorrelation(BaseModel):
     lag_seconds: tuple[FiniteFloat, ...]
     normalized_amplitude: tuple[FiniteFloat, ...]
     normalized_power: tuple[FiniteFloat, ...]
+
+
+def waveform_sampling_adequacy(pulse: WaveformPulse, *, sample_rate_hz: float) -> SamplingAdequacy:
+    """Return the Nyquist diagnostic for the represented complex baseband pulse.
+
+    A baseband CW pulse is constant and therefore has zero represented baseband
+    frequency. A symmetric LFM of bandwidth B occupies approximately -B/2..+B/2,
+    so the ideal Nyquist condition is ``sample_rate_hz >= B``.
+    """
+
+    maximum = 0.0 if isinstance(pulse, ContinuousWavePulse) else 0.5 * float(pulse.bandwidth_hz)
+    return assess_baseband_sampling(
+        sample_rate_hz=sample_rate_hz,
+        maximum_absolute_frequency_hz=maximum,
+    )
 
 
 def _sample_count(duration_seconds: float, sample_rate_hz: float) -> int:
@@ -104,6 +125,11 @@ def sample_lfm_baseband(pulse: LinearFMPulse, *, sample_rate_hz: float) -> np.nd
     k*tau and therefore sweeps from approximately -B/2 to +B/2.
     """
 
+    adequacy = waveform_sampling_adequacy(pulse, sample_rate_hz=sample_rate_hz)
+    if not adequacy.meets_nyquist:
+        raise ValueError(
+            "sample_rate_hz is below the Nyquist rate for the represented LFM baseband bandwidth"
+        )
     count = _sample_count(float(pulse.duration_seconds), sample_rate_hz)
     duration = float(pulse.duration_seconds)
     sweep_rate = float(pulse.sweep_rate_hz_per_second)
