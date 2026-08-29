@@ -27,3 +27,10 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+
+# Start CI linting with correctness-critical rules that can be enabled without
+# mixing this scientific checkpoint with a repository-wide style rewrite.
+# The rule set can be expanded incrementally once the existing compact legacy
+# formatting has been normalized deliberately.
+[tool.ruff.lint]
+select = ["E9", "F"]
