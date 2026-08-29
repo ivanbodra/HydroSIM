@@ -1,19 +1,15 @@
 """Integrated reference chain from TX sectors to matched-filtered RX beams.
 
-This module connects HydroSIM capabilities while keeping their scientific
-semantics explicit:
+This acquisition chain intentionally contains no bottom-backscatter or
+reflectivity model:
 
-    TX sector -> waveform -> layered propagation -> propagation amplitude loss
-              -> bottom interaction -> receive-beam bank -> matched filter
+    TX sector -> waveform -> layered propagation -> optional propagation loss
+              -> unit reference return -> receive-beam bank -> matched filter
 
-The first integration remains a stationary reciprocal reference. Each sector is
-traced along its steering direction to a requested depth in a horizontally
-stratified ocean, and the return is assumed to follow the same path back to a
-co-located receiver.
-
-Propagation loss and bottom interaction remain independent multiplicative
-pressure-like amplitude factors. If either model is omitted, its multiplier is
-unity, preserving geometry/timing experiments.
+The unit reference return is a timing/processing device, not a physical bottom
+response. It allows propagation, sector timing, waveform compression, and receive
+beam behavior to be demonstrated without pretending to predict seafloor
+backscatter.
 """
 
 from __future__ import annotations
@@ -26,11 +22,6 @@ from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
 
 from hydrosim.geometry import MillsCrossConfiguration
 
-from .bottom_interaction import (
-    BottomInteractionModel,
-    BottomInteractionResponse,
-    evaluate_bottom_interaction,
-)
 from .layered_propagation import LayeredRayPath, LayeredSoundSpeedProfile, trace_layered_ray_to_depth
 from .receive_beam_bank import evaluate_mills_cross_receive_beam_bank
 from .transmission_loss import (
@@ -61,7 +52,7 @@ class SectorWaveformAssignment(BaseModel):
 
 
 class SectorSignalChainResult(BaseModel):
-    """Integrated deterministic result for one transmit sector."""
+    """Deterministic acquisition result for one transmit sector."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -75,8 +66,7 @@ class SectorSignalChainResult(BaseModel):
     one_way_travel_time_seconds: FiniteFloat = Field(ge=0.0)
     reciprocal_twtt_seconds: FiniteFloat = Field(ge=0.0)
     propagation_loss: ReciprocalTransmissionLoss | None = None
-    bottom_interaction: BottomInteractionResponse | None = None
-    ideal_point_return_amplitude: FiniteFloat = Field(gt=0.0)
+    reference_return_amplitude: FiniteFloat = Field(gt=0.0)
     received_echo_amplitude: FiniteFloat = Field(gt=0.0)
     echo_arrival_offset_seconds: FiniteFloat = Field(ge=0.0)
     echo_delay_samples: int = Field(ge=0)
@@ -137,18 +127,13 @@ def simulate_sector_waveform_propagation_ping(
     sample_rate_hz: float,
     transducer_depth_m: float = 0.0,
     propagation_loss_model: PropagationLossModel | None = None,
-    bottom_interaction_model: BottomInteractionModel | None = None,
 ) -> SectorSignalChainPing:
-    """Run the integrated sector/waveform/refraction/amplitude/RX/MF chain.
+    """Run the sector/waveform/refraction/RX/matched-filter reference chain.
 
     Reciprocity is assumed for the inbound path, hence TWTT = 2*T_one_way.
-    Propagation loss scales the pressure-like waveform by its two-way amplitude
-    ratio. Bottom interaction then contributes an independent amplitude ratio,
-    either from point-target TS or integrated seafloor area scattering.
-
-    The same optional bottom-interaction model is applied to all sectors in this
-    reference integration. Sector-specific incidence/footprint models can replace
-    this convenience input when footprint geometry is introduced.
+    If a propagation-loss model is supplied, it scales the otherwise unit-amplitude
+    reference return. No bottom scattering, reflectivity, target strength, or
+    sediment response is evaluated here.
     """
 
     if sample_rate_hz <= 0.0:
@@ -160,12 +145,6 @@ def simulate_sector_waveform_propagation_ping(
     assignment_indices = {item.sector_index for item in waveform_plan.assignments}
     if assignment_indices != sector_indices:
         raise ValueError("waveform plan must assign exactly one pulse to every transmit sector")
-
-    shared_bottom = (
-        evaluate_bottom_interaction(bottom_interaction_model)
-        if bottom_interaction_model is not None
-        else None
-    )
 
     results: list[SectorSignalChainResult] = []
     for sector in sector_set.sectors:
@@ -183,24 +162,19 @@ def simulate_sector_waveform_propagation_ping(
         arrival_offset = float(sector.tx_delay_seconds) + twtt
 
         propagation_loss = None
-        propagation_amplitude = 1.0
+        reference_amplitude = 1.0
         if propagation_loss_model is not None:
             propagation_loss = reciprocal_transmission_loss(
                 one_way_path_length_m=float(path.path_length_m),
                 model=propagation_loss_model,
             )
-            propagation_amplitude = float(propagation_loss.two_way_amplitude_ratio)
-
-        bottom_amplitude = (
-            float(shared_bottom.amplitude_ratio) if shared_bottom is not None else 1.0
-        )
-        echo_amplitude = propagation_amplitude * bottom_amplitude
+            reference_amplitude = float(propagation_loss.two_way_amplitude_ratio)
 
         reference = _sample_pulse(pulse, sample_rate_hz=sample_rate_hz)
         echo_delay_samples = int(round(arrival_offset * float(sample_rate_hz)))
         received = np.zeros(echo_delay_samples + reference.size + 1, dtype=np.complex128)
         received[echo_delay_samples : echo_delay_samples + reference.size] = (
-            echo_amplitude * reference
+            reference_amplitude * reference
         )
         _, mf_summary = matched_filter(received, reference, sample_rate_hz=sample_rate_hz)
 
@@ -229,9 +203,8 @@ def simulate_sector_waveform_propagation_ping(
                 one_way_travel_time_seconds=one_way_time,
                 reciprocal_twtt_seconds=twtt,
                 propagation_loss=propagation_loss,
-                bottom_interaction=shared_bottom,
-                ideal_point_return_amplitude=propagation_amplitude,
-                received_echo_amplitude=echo_amplitude,
+                reference_return_amplitude=reference_amplitude,
+                received_echo_amplitude=reference_amplitude,
                 echo_arrival_offset_seconds=arrival_offset,
                 echo_delay_samples=echo_delay_samples,
                 strongest_receive_beam_index=bank.strongest_beam_index,
