@@ -31,6 +31,12 @@ from .element_signals import (
 )
 from .generation import generate_acquisition_sequence
 from .models import AcquisitionPing, AcquisitionSequence, PingSchedule
+from .multibeam_fan import (
+    MillsCrossMultibeamFan,
+    MultibeamFanBeam,
+    MultibeamFanMatrixSample,
+    simulate_mills_cross_multibeam_fan,
+)
 from .receive_beam_bank import (
     ReceiveBeamBankResponse,
     ReceiveBeamResponse,
@@ -66,6 +72,9 @@ __all__ = [
     "BeamTruthReturn",
     "CoherentReceiveSum",
     "ConstantSoundSpeedPropagation",
+    "MillsCrossMultibeamFan",
+    "MultibeamFanBeam",
+    "MultibeamFanMatrixSample",
     "NarrowbandReceiveTone",
     "OneWayBeamPatternResponse",
     "PingSchedule",
@@ -89,6 +98,7 @@ __all__ = [
     "scan_across_track_beam_pattern",
     "scan_mills_cross_two_way_pattern_2d",
     "sensor_angular_direction",
+    "simulate_mills_cross_multibeam_fan",
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
     "two_way_beam_pattern",
