@@ -12,12 +12,21 @@ Temporal weighting may be either a simple rectangular-pulse range shell or the
 normalized matched-filter power response |R_ss(dt)|^2 / |R_ss(0)|^2. The latter
 keeps CW and LFM pulse compression distinct and is the preferred deterministic
 reference for an incoherent area-scattering power model.
+
+For a horizontal seafloor the local incidence angle is retained independently for
+every projected cell. With vertical separation h and slant range R,
+
+    theta_i = acos(h / R_i),
+
+measured from the local seafloor normal. This prepares the spatial integration for
+explicit user-supplied S_b(theta) models without hiding an empirical angular law
+inside the footprint calculation.
 """
 
 from __future__ import annotations
 
 from bisect import bisect_left
-from math import sqrt, tan
+from math import acos, sqrt, tan
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
@@ -40,6 +49,7 @@ class ProjectedPatternCell(BaseModel):
     forward_center_m: FiniteFloat
     port_center_m: FiniteFloat
     slant_range_m: FiniteFloat = Field(gt=0.0)
+    incidence_angle_from_normal_rad: FiniteFloat = Field(ge=0.0)
     projected_area_m2: FiniteFloat = Field(gt=0.0)
     equivalent_area_contribution_m2: FiniteFloat = Field(ge=0.0)
     inside_half_power_contour: bool
@@ -141,6 +151,7 @@ def project_angular_pattern_to_flat_seafloor(
             forward = h * tan(float(along))
             port = h * tan(float(across))
             slant = sqrt(h * h + forward**2 + port**2)
+            incidence = acos(h / slant)
             grid_area += area
             equivalent_area += contribution
             if inside:
@@ -152,6 +163,7 @@ def project_angular_pattern_to_flat_seafloor(
                 along_track_angle_rad=along, across_track_angle_rad=across,
                 normalized_power=power, relative_power_to_peak=relative,
                 forward_center_m=forward, port_center_m=port, slant_range_m=slant,
+                incidence_angle_from_normal_rad=incidence,
                 projected_area_m2=area, equivalent_area_contribution_m2=contribution,
                 inside_half_power_contour=inside,
             ))
