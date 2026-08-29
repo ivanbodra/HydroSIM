@@ -37,6 +37,12 @@ from .element_signals import (
     ReceiveElementPhasor,
     coherent_receive_sum,
 )
+from .footprint import (
+    FlatSeafloorFootprintModel,
+    InsonifiedFootprint,
+    estimate_flat_seafloor_footprint,
+    seafloor_backscatter_from_footprint,
+)
 from .generation import generate_acquisition_sequence
 from .layered_propagation import (
     LayeredRayPath,
@@ -112,6 +118,8 @@ __all__ = [
     "CoherentReceiveSum",
     "ConstantSoundSpeedPropagation",
     "ContinuousWavePulse",
+    "FlatSeafloorFootprintModel",
+    "InsonifiedFootprint",
     "LayeredRayPath",
     "LayeredRaySegment",
     "LayeredSoundSpeedProfile",
@@ -146,6 +154,7 @@ __all__ = [
     "across_track_direction",
     "array_factor",
     "coherent_receive_sum",
+    "estimate_flat_seafloor_footprint",
     "evaluate_bottom_interaction",
     "evaluate_mills_cross_receive_beam_bank",
     "evaluate_point_target_strength",
@@ -163,6 +172,7 @@ __all__ = [
     "sample_lfm_baseband",
     "scan_across_track_beam_pattern",
     "scan_mills_cross_two_way_pattern_2d",
+    "seafloor_backscatter_from_footprint",
     "sensor_angular_direction",
     "simulate_mills_cross_multibeam_fan",
     "simulate_sector_waveform_propagation_ping",
