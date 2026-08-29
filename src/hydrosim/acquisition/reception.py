@@ -32,6 +32,7 @@ class ArrayElementTruthArrival(BaseModel):
     arrival_time: SimulationTime
     relative_to_array_center_seconds: FiniteFloat
     iterations: int = Field(ge=1)
+    fixed_point_residual_seconds: FiniteFloat = Field(default=0.0, ge=0.0)
 
 
 class ArrayTruthReception(BaseModel):
@@ -96,7 +97,7 @@ def simulate_truth_array_reception(
     propagation: ConstantSoundSpeedPropagation,
     sensor_frame: str = "T",
 ) -> ArrayTruthReception:
-    """Resolve one beam return at the moving receive-array centre and elements.
+    """Resolve one point-scattered return at the moving receive array.
 
     The physical bottom interaction point and outbound path are inherited from the
     already-computed :class:`BeamTruthReturn`. For each array element, HydroSIM
@@ -107,6 +108,9 @@ def simulate_truth_array_reception(
     independently. The resulting inter-element arrival-time differences are the
     geometric precursor to receive beamforming delays/phases; no beamforming weights
     or phase processing are applied here.
+
+    The returned element position is evaluated at exactly ``arrival_time``. The
+    remaining fixed-point equation error is recorded explicitly for each element.
 
     ``direction_to_bottom_array_frame`` points from the receive-array centre toward
     the acoustic source point on the bottom. It is deliberately named this way to
@@ -158,7 +162,8 @@ def simulate_truth_array_reception(
             )
             inbound = _distance(beam_return.bottom_point, element_position_navigation)
             updated = tx_seconds + (outbound + inbound) / c
-            if abs(updated - estimate) <= float(propagation.convergence_tolerance_seconds):
+            residual = abs(updated - estimate)
+            if residual <= float(propagation.convergence_tolerance_seconds):
                 arrivals.append(
                     ArrayElementTruthArrival(
                         index_x=element.index_x,
@@ -166,9 +171,10 @@ def simulate_truth_array_reception(
                         element_position_array_frame=element.position,
                         arrival_position_navigation=element_position_navigation,
                         inbound_range_m=inbound,
-                        arrival_time=SimulationTime(seconds=updated),
-                        relative_to_array_center_seconds=updated - center_seconds,
+                        arrival_time=estimate_time,
+                        relative_to_array_center_seconds=estimate - center_seconds,
                         iterations=iteration,
+                        fixed_point_residual_seconds=residual,
                     )
                 )
                 break
