@@ -95,6 +95,10 @@ from .refracted_pattern_footprint import (
     RefractedProjectedPatternCell,
     project_angular_pattern_through_layered_profile,
 )
+from .refracted_received_power import (
+    RefractedPropagationWeightedReturn,
+    integrate_refracted_propagation_weighted_return,
+)
 from .refracted_scattering import (
     RefractedMatchedFilterScatteringIntegration,
     integrate_refracted_matched_filter_seafloor_backscatter,
