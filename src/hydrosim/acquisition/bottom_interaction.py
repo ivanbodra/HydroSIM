@@ -4,19 +4,32 @@ This layer deliberately separates two physically different abstractions:
 
 * point-target strength (TS), expressed in dB for a discrete target; and
 * seafloor area backscatter, expressed as scattering strength per unit area
-  combined with an explicitly supplied insonified area.
+  combined with an explicitly defined scattering area.
+
+The area term is not necessarily a hard-edged physical footprint. It may represent
+a uniform geometric patch or an equivalent area obtained by integrating a
+normalized beam/pulse weighting over the seafloor. ``area_semantics`` records that
+choice explicitly so a -3 dB contour is never silently treated as the boundary
+between insonified and non-insonified bottom.
 
 No empirical angular backscatter law is hidden here. Incidence angle is retained
-as scientific metadata for the seafloor model, while the user/model supplies the
-scattering strength applicable at that incidence. Likewise, footprint/ensonified
-area is an explicit input and is not inferred from beamwidth or pulse length yet.
+as scientific metadata while the user/model supplies the scattering strength
+applicable at that incidence.
 """
 
 from __future__ import annotations
 
 from math import log10, pi
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
+
+
+SeafloorAreaSemantics = Literal[
+    "uniform_geometric_patch",
+    "equivalent_pattern_weighted",
+    "equivalent_pattern_and_pulse_weighted",
+]
 
 
 class PointTargetStrength(BaseModel):
@@ -28,15 +41,20 @@ class PointTargetStrength(BaseModel):
 
 
 class SeafloorAreaBackscatter(BaseModel):
-    """Area-scattering description for one insonified seafloor patch.
+    """Area-scattering description under an explicit area convention.
 
     ``scattering_strength_db_per_m2`` is the backscatter strength for one square
-    metre under the chosen convention/model. The integrated patch strength is
+    metre under the chosen convention/model. The integrated strength is
 
-        BS_patch = S_b + 10 log10(A / 1 m^2).
+        BS = S_b + 10 log10(A_equiv / 1 m^2).
 
-    The incidence angle is measured from the local seafloor normal. It is stored
-    explicitly but does not modify S_b automatically in this reference layer.
+    For ``uniform_geometric_patch``, ``insonified_area_m2`` is a literal uniform
+    patch area. For either ``equivalent_*`` semantic it is the area which, if
+    illuminated at the reference/peak weighting, gives the same integrated power
+    as the distributed beam or beam-times-pulse weighting.
+
+    The legacy field name ``insonified_area_m2`` is retained for API continuity;
+    ``area_semantics`` is normative for interpretation.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -44,6 +62,7 @@ class SeafloorAreaBackscatter(BaseModel):
     scattering_strength_db_per_m2: FiniteFloat
     insonified_area_m2: FiniteFloat = Field(gt=0.0)
     incidence_angle_from_normal_rad: FiniteFloat = Field(ge=0.0, le=pi / 2.0)
+    area_semantics: SeafloorAreaSemantics = "uniform_geometric_patch"
 
 
 class BottomInteractionResponse(BaseModel):
@@ -55,6 +74,7 @@ class BottomInteractionResponse(BaseModel):
     effective_backscatter_strength_db: FiniteFloat
     amplitude_ratio: FiniteFloat = Field(gt=0.0)
     insonified_area_m2: FiniteFloat | None = Field(default=None, gt=0.0)
+    area_semantics: SeafloorAreaSemantics | None = None
     incidence_angle_from_normal_rad: FiniteFloat | None = Field(default=None, ge=0.0, le=pi / 2.0)
 
 
@@ -72,7 +92,7 @@ def evaluate_point_target_strength(model: PointTargetStrength) -> BottomInteract
 def evaluate_seafloor_area_backscatter(
     model: SeafloorAreaBackscatter,
 ) -> BottomInteractionResponse:
-    """Integrate per-area seafloor scattering strength over an explicit patch."""
+    """Integrate per-area scattering strength over the explicitly defined area."""
 
     area = float(model.insonified_area_m2)
     if area <= 0.0:
@@ -83,6 +103,7 @@ def evaluate_seafloor_area_backscatter(
         effective_backscatter_strength_db=strength_db,
         amplitude_ratio=10.0 ** (strength_db / 20.0),
         insonified_area_m2=area,
+        area_semantics=model.area_semantics,
         incidence_angle_from_normal_rad=model.incidence_angle_from_normal_rad,
     )
 
