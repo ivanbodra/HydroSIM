@@ -2,17 +2,18 @@
 
 This module is deliberately downstream of bottom detection. A detector supplies
 measurement-space observables such as TWTT and an across-track receive angle. The
-reconstruction layer combines those observables with an explicit propagation
-assumption and the missing along-track transmit angle needed to define a 3-D Mills
-Cross direction.
+reconstruction layer combines those observables with explicit propagation and
+steering assumptions.
 
-Two reference reconstructions are provided:
+Three reference reconstructions are provided:
 
-* stationary reciprocal straight-ray propagation at constant sound speed; and
+* stationary reciprocal straight-ray propagation at constant sound speed;
 * stationary reciprocal propagation through a horizontally layered sound-speed
-  profile, using measured TWTT as the ray-tracing stopping condition.
+  profile, using measured TWTT as the ray-tracing stopping condition; and
+* the same layered reconstruction preceded by an explicit sound-speed-at-transducer
+  steering correction that preserves the imposed 3-D tangential slowness law.
 
-The layered reconstruction never replaces the profile with an average sound speed.
+The layered reconstructions never replace the profile with an average sound speed.
 """
 
 from __future__ import annotations
@@ -29,6 +30,10 @@ from .layered_propagation import (
     LayeredRayPath,
     LayeredSoundSpeedProfile,
     trace_layered_ray_for_travel_time,
+)
+from .sound_speed_at_transducer import (
+    SoundSpeedAtTransducerDirection,
+    resolve_sound_speed_at_transducer_direction,
 )
 from .sounding_observation import (
     ConstantSoundSpeedRangeObservation,
@@ -71,6 +76,25 @@ class LayeredSoundSpeedSounding(BaseModel):
     reconstruction_assumption: str = "stationary_reciprocal_layered_sound_speed_twtt_ray_trace"
 
 
+class SoundSpeedAtTransducerLayeredSounding(BaseModel):
+    """Layered sounding whose physical launch direction includes local-c steering."""
+
+    model_config = ConfigDict(frozen=True)
+
+    observation: DetectedAcousticObservation
+    sensor_pose: Pose
+    profile_start_depth_m: FiniteFloat = Field(ge=0.0)
+    configured_along_track_angle_rad: FiniteFloat
+    configured_across_track_angle_rad: FiniteFloat
+    configured_direction_sensor_frame: Vector3
+    sound_speed_at_transducer: SoundSpeedAtTransducerDirection
+    physical_initial_direction_destination_frame: Vector3
+    one_way_travel_time_seconds: FiniteFloat = Field(gt=0.0)
+    ray_path: LayeredRayPath
+    point: Vector3
+    reconstruction_assumption: str = "stationary_reciprocal_sound_speed_at_transducer_then_layered_twtt_ray_trace"
+
+
 def reconstruct_constant_sound_speed_sounding(
     observation: DetectedAcousticObservation,
     *,
@@ -78,17 +102,7 @@ def reconstruct_constant_sound_speed_sounding(
     along_track_angle_rad: float,
     sound_speed_mps: float,
 ) -> ConstantSoundSpeedSounding:
-    """Reconstruct one Cartesian sounding from TWTT and Mills-Cross angles.
-
-    The across-track angle must be present in ``observation``. The along-track
-    angle is a separate required input because a receive detection alone does not
-    encode the transmit-sector steering needed to define the full 3-D direction.
-
-    ``sensor_pose`` is the pose of the acoustic reference point in the destination
-    Cartesian frame at the reconstruction epoch. Motion compensation, lever-arm
-    application, latency, and sensor alignment belong upstream when constructing
-    that pose; they are not silently introduced here.
-    """
+    """Reconstruct one Cartesian sounding from TWTT and Mills-Cross angles."""
 
     if observation.detected_across_track_angle_rad is None:
         raise ValueError("detected across-track angle is required for Cartesian reconstruction")
@@ -122,46 +136,23 @@ def reconstruct_constant_sound_speed_sounding(
     )
 
 
-def reconstruct_layered_sound_speed_sounding(
-    observation: DetectedAcousticObservation,
+def _reconstruct_layered_from_physical_direction(
     *,
+    observation: DetectedAcousticObservation,
     sensor_pose: Pose,
-    along_track_angle_rad: float,
     profile: LayeredSoundSpeedProfile,
     profile_start_depth_m: float,
-) -> LayeredSoundSpeedSounding:
-    """Reconstruct a sounding by tracing the measured TWTT through the full SVP.
-
-    The current reference model assumes stationary reciprocal propagation, so the
-    one-way propagation time is ``TWTT/2``. The initial Mills-Cross direction is
-    rotated into the destination frame before refraction is evaluated because the
-    sound-speed layers are horizontal in that frame, not in the tilted sensor
-    frame. Therefore ``sensor_pose.frame`` must use +Z as the profile-depth/down
-    axis for this helper.
-
-    Horizontal azimuth is conserved by the horizontally layered model. The total
-    launch angle from vertical is derived from the full 3-D initial direction; it
-    is not obtained by independently refracting the along- and across-track angles.
-    No average sound speed is used.
-    """
-
-    if observation.detected_across_track_angle_rad is None:
-        raise ValueError("detected across-track angle is required for layered reconstruction")
-    if float(observation.twtt_seconds) <= 0.0:
-        raise ValueError("positive TWTT is required for layered reconstruction")
-
+    physical_direction_destination_frame: Vector3,
+) -> tuple[float, LayeredRayPath, Vector3]:
     start_depth = float(profile_start_depth_m)
     if start_depth < 0.0:
         raise ValueError("profile_start_depth_m must be non-negative")
 
-    along = float(along_track_angle_rad)
-    across = float(observation.detected_across_track_angle_rad)
-    direction_sensor = sensor_angular_direction(along, across)
-    rotation = rotation_matrix_from_rpy(sensor_pose.attitude)
-    direction_destination = rotate_vector(rotation, direction_sensor)
-
-    horizontal_norm = hypot(float(direction_destination.x), float(direction_destination.y))
-    down = float(direction_destination.z)
+    horizontal_norm = hypot(
+        float(physical_direction_destination_frame.x),
+        float(physical_direction_destination_frame.y),
+    )
+    down = float(physical_direction_destination_frame.z)
     if down <= 0.0:
         raise ValueError("initial acoustic direction must point downward in the profile frame")
     launch_angle = atan2(horizontal_norm, down)
@@ -176,8 +167,8 @@ def reconstruct_layered_sound_speed_sounding(
 
     horizontal_distance = float(path.horizontal_distance_m)
     if horizontal_norm > 1e-15:
-        horizontal_x = horizontal_distance * float(direction_destination.x) / horizontal_norm
-        horizontal_y = horizontal_distance * float(direction_destination.y) / horizontal_norm
+        horizontal_x = horizontal_distance * float(physical_direction_destination_frame.x) / horizontal_norm
+        horizontal_y = horizontal_distance * float(physical_direction_destination_frame.y) / horizontal_norm
     else:
         horizontal_x = 0.0
         horizontal_y = 0.0
@@ -188,15 +179,110 @@ def reconstruct_layered_sound_speed_sounding(
         y=float(sensor_pose.position.y) + horizontal_y,
         z=float(sensor_pose.position.z) + vertical_down,
     )
+    return one_way_time, path, point
+
+
+def reconstruct_layered_sound_speed_sounding(
+    observation: DetectedAcousticObservation,
+    *,
+    sensor_pose: Pose,
+    along_track_angle_rad: float,
+    profile: LayeredSoundSpeedProfile,
+    profile_start_depth_m: float,
+) -> LayeredSoundSpeedSounding:
+    """Reconstruct a sounding by tracing the measured TWTT through the full SVP.
+
+    This function assumes the supplied Mills-Cross angles already represent the
+    physical launch direction at the transducer. Use
+    ``reconstruct_layered_sounding_with_sound_speed_at_transducer`` when configured
+    steering angles must first be converted to the physical direction using an
+    explicit sound speed at the transducer.
+    """
+
+    if observation.detected_across_track_angle_rad is None:
+        raise ValueError("detected across-track angle is required for layered reconstruction")
+    if float(observation.twtt_seconds) <= 0.0:
+        raise ValueError("positive TWTT is required for layered reconstruction")
+
+    along = float(along_track_angle_rad)
+    across = float(observation.detected_across_track_angle_rad)
+    direction_sensor = sensor_angular_direction(along, across)
+    rotation = rotation_matrix_from_rpy(sensor_pose.attitude)
+    direction_destination = rotate_vector(rotation, direction_sensor)
+    one_way_time, path, point = _reconstruct_layered_from_physical_direction(
+        observation=observation,
+        sensor_pose=sensor_pose,
+        profile=profile,
+        profile_start_depth_m=profile_start_depth_m,
+        physical_direction_destination_frame=direction_destination,
+    )
 
     return LayeredSoundSpeedSounding(
         observation=observation,
         sensor_pose=sensor_pose,
-        profile_start_depth_m=start_depth,
+        profile_start_depth_m=float(profile_start_depth_m),
         along_track_angle_rad=along,
         across_track_angle_rad=across,
         initial_direction_sensor_frame=direction_sensor,
         initial_direction_destination_frame=direction_destination,
+        one_way_travel_time_seconds=one_way_time,
+        ray_path=path,
+        point=point,
+    )
+
+
+def reconstruct_layered_sounding_with_sound_speed_at_transducer(
+    observation: DetectedAcousticObservation,
+    *,
+    sensor_pose: Pose,
+    configured_along_track_angle_rad: float,
+    configured_sound_speed_at_transducer_mps: float,
+    physical_sound_speed_at_transducer_mps: float,
+    profile: LayeredSoundSpeedProfile,
+    profile_start_depth_m: float,
+) -> SoundSpeedAtTransducerLayeredSounding:
+    """Apply sound speed at transducer, then trace measured TWTT through the SVP.
+
+    The detected across-track angle and supplied along-track angle are interpreted
+    as configured/processing steering angles. They first define one 3-D configured
+    sensor-frame direction. The configured and physical sound speeds at the
+    transducer then preserve the imposed tangential slowness to recover the physical
+    launch direction. Only after that local steering step is the direction rotated
+    into the profile frame and propagated through the full SVP.
+    """
+
+    if observation.detected_across_track_angle_rad is None:
+        raise ValueError("detected across-track angle is required for layered reconstruction")
+    if float(observation.twtt_seconds) <= 0.0:
+        raise ValueError("positive TWTT is required for layered reconstruction")
+
+    along = float(configured_along_track_angle_rad)
+    across = float(observation.detected_across_track_angle_rad)
+    configured_direction = sensor_angular_direction(along, across)
+    resolved = resolve_sound_speed_at_transducer_direction(
+        configured_direction_array_frame=configured_direction,
+        configured_sound_speed_at_transducer_mps=configured_sound_speed_at_transducer_mps,
+        physical_sound_speed_at_transducer_mps=physical_sound_speed_at_transducer_mps,
+    )
+    rotation = rotation_matrix_from_rpy(sensor_pose.attitude)
+    physical_destination = rotate_vector(rotation, resolved.physical_direction_array_frame)
+    one_way_time, path, point = _reconstruct_layered_from_physical_direction(
+        observation=observation,
+        sensor_pose=sensor_pose,
+        profile=profile,
+        profile_start_depth_m=profile_start_depth_m,
+        physical_direction_destination_frame=physical_destination,
+    )
+
+    return SoundSpeedAtTransducerLayeredSounding(
+        observation=observation,
+        sensor_pose=sensor_pose,
+        profile_start_depth_m=float(profile_start_depth_m),
+        configured_along_track_angle_rad=along,
+        configured_across_track_angle_rad=across,
+        configured_direction_sensor_frame=configured_direction,
+        sound_speed_at_transducer=resolved,
+        physical_initial_direction_destination_frame=physical_destination,
         one_way_travel_time_seconds=one_way_time,
         ray_path=path,
         point=point,
