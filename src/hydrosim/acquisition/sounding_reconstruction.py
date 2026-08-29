@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from math import atan2, hypot
 
-from pydantic import BaseModel, ConfigDict, FiniteFloat
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
 from hydrosim.geometry import Pose, Vector3
 from hydrosim.geometry.rotations import rotate_vector, rotation_matrix_from_rpy
@@ -60,12 +60,12 @@ class LayeredSoundSpeedSounding(BaseModel):
 
     observation: DetectedAcousticObservation
     sensor_pose: Pose
-    profile_start_depth_m: FiniteFloat = FiniteFloat(0.0)
+    profile_start_depth_m: FiniteFloat = Field(ge=0.0)
     along_track_angle_rad: FiniteFloat
     across_track_angle_rad: FiniteFloat
     initial_direction_sensor_frame: Vector3
     initial_direction_destination_frame: Vector3
-    one_way_travel_time_seconds: FiniteFloat
+    one_way_travel_time_seconds: FiniteFloat = Field(gt=0.0)
     ray_path: LayeredRayPath
     point: Vector3
     reconstruction_assumption: str = "stationary_reciprocal_layered_sound_speed_twtt_ray_trace"
