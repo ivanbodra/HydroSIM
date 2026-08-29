@@ -16,6 +16,7 @@ from hydrosim.acquisition import (
     build_geometric_phase_ramp,
     coherent_receive_sum,
     compare_geometric_phase_ramp_refinement,
+    detect_bottom_from_geometric_phase_ramp,
     ideal_receive_steering,
     ideal_split_aperture_differential_phase,
     sensor_angular_direction,
@@ -108,6 +109,22 @@ def _illumination() -> RefractedPatternIllumination:
     )
 
 
+def _physical_ramp(sample_rate_hz: float = 4000.0) -> GeometricPhaseRamp:
+    return build_geometric_phase_ramp(
+        illumination=_illumination(),
+        receive_array=_array(),
+        definition=SplitApertureDefinition(),
+        pulse=ContinuousWavePulse(center_frequency_hz=150_000.0, duration_seconds=0.004),
+        frequency_hz=150_000.0,
+        sound_speed_mps=1500.0,
+        steering_along_track_angle_rad=0.0,
+        steering_across_track_angle_rad=0.0,
+        start_reference_one_way_travel_time_seconds=0.099,
+        sample_count=17,
+        sample_rate_hz=sample_rate_hz,
+    )
+
+
 def test_centroid_baseline_phase_matches_explicit_split_sum() -> None:
     array = _array()
     source_angle = radians(12.0)
@@ -193,3 +210,17 @@ def test_phase_ramp_convergence_compares_common_physical_epochs() -> None:
     assert diagnostic.compared_sample_count == 3
     assert diagnostic.max_absolute_circular_phase_change_rad < 0.03
     assert diagnostic.converged is True
+
+
+def test_geometric_phase_detector_estimates_symmetric_midpoint_twtt() -> None:
+    result = detect_bottom_from_geometric_phase_ramp(
+        _physical_ramp(),
+        search_start_sample=4,
+        search_end_sample=16,
+        fit_half_width_samples=2,
+    )
+    assert result.detection.detection_method == "phase_zero_crossing"
+    assert result.detection.twtt_seconds == pytest.approx(0.201, abs=5e-4)
+    assert result.detection.detected_across_track_angle_rad == pytest.approx(0.0)
+    assert result.detection.normalized_amplitude is not None
+    assert 0.0 <= result.detection.normalized_amplitude <= 1.0
