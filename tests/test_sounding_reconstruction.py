@@ -8,6 +8,7 @@ from hydrosim.acquisition import (
     SoundSpeedLayer,
     reconstruct_constant_sound_speed_sounding,
     reconstruct_layered_sound_speed_sounding,
+    reconstruct_layered_sounding_with_sound_speed_at_transducer,
 )
 from hydrosim.geometry import Attitude, Pose, Vector3
 
@@ -142,6 +143,43 @@ def test_layered_reconstruction_preserves_horizontal_azimuth_while_ray_bends() -
     assert sounding.point.x > 0.0
     assert sounding.point.y < 0.0
     assert sounding.point.z > 0.0
+
+
+def test_sound_speed_at_transducer_changes_physical_launch_before_svp_trace() -> None:
+    observation = _observation(across_track_angle_rad=radians(35.0), twtt_seconds=0.08)
+    pose = Pose(
+        position=Vector3(x=0.0, y=0.0, z=0.0),
+        attitude=Attitude(roll=0.0, pitch=0.0, yaw=0.0),
+        frame="N",
+    )
+
+    matched = reconstruct_layered_sounding_with_sound_speed_at_transducer(
+        observation,
+        sensor_pose=pose,
+        configured_along_track_angle_rad=radians(15.0),
+        configured_sound_speed_at_transducer_mps=1500.0,
+        physical_sound_speed_at_transducer_mps=1500.0,
+        profile=_layered_profile(),
+        profile_start_depth_m=0.0,
+    )
+    mismatched = reconstruct_layered_sounding_with_sound_speed_at_transducer(
+        observation,
+        sensor_pose=pose,
+        configured_along_track_angle_rad=radians(15.0),
+        configured_sound_speed_at_transducer_mps=1480.0,
+        physical_sound_speed_at_transducer_mps=1520.0,
+        profile=_layered_profile(),
+        profile_start_depth_m=0.0,
+    )
+
+    assert matched.sound_speed_at_transducer.physical_direction_array_frame.is_close(
+        matched.configured_direction_sensor_frame,
+        atol=1e-12,
+    )
+    assert mismatched.ray_path.launch_angle_from_vertical_rad > matched.ray_path.launch_angle_from_vertical_rad
+    assert mismatched.ray_path.horizontal_distance_m > matched.ray_path.horizontal_distance_m
+    assert mismatched.point.z < matched.point.z
+    assert mismatched.reconstruction_assumption == "stationary_reciprocal_sound_speed_at_transducer_then_layered_twtt_ray_trace"
 
 
 def test_layered_reconstruction_rejects_nonpositive_twtt() -> None:
