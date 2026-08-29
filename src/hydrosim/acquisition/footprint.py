@@ -9,22 +9,10 @@ sidelobes.
 Accordingly, the rectangular ``effective_area_m2`` produced here is an explicit
 beamwidth/pulse approximation. The preferred higher-fidelity pathway is the full
 2D TX×RX pattern projection, which integrates normalized power over the seafloor
-to obtain an equivalent insonified area.
+to obtain an equivalent contributing area for footprint demonstrations.
 
-For a horizontal seafloor at vertical separation h and beam-centre incidence
-angle theta measured from the local normal, the beam-limited across-track width is
-computed from the two half-power edge rays:
-
-    W_rx = h [tan(theta + beta_rx/2) - tan(theta - beta_rx/2)].
-
-The along-track width is evaluated analogously from the TX half-power beamwidth.
-For oblique incidence, the pulse-limited radial extent is approximated by
-
-    W_pulse = c tau / (2 sin(theta)),
-
-and the rectangular approximation uses min(W_rx, W_pulse) across-track. Near
-nadir this pulse projection is ill-conditioned, so the reference remains
-beam-limited.
+No bottom-scattering, sediment, target-strength, or reflectivity model belongs to
+this acquisition-layer calculation.
 """
 
 from __future__ import annotations
@@ -32,8 +20,6 @@ from __future__ import annotations
 from math import pi, sin, tan
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
-
-from .bottom_interaction import SeafloorAreaBackscatter
 
 
 class FlatSeafloorFootprintModel(BaseModel):
@@ -126,19 +112,4 @@ def estimate_flat_seafloor_footprint(
         effective_across_track_width_m=effective_across,
         effective_area_m2=along_width * effective_across,
         across_track_limiting_mechanism=mechanism,
-    )
-
-
-def seafloor_backscatter_from_footprint(
-    *,
-    scattering_strength_db_per_m2: float,
-    footprint: InsonifiedFootprint,
-) -> SeafloorAreaBackscatter:
-    """Use the rectangular approximation as an explicit uniform geometric patch."""
-
-    return SeafloorAreaBackscatter(
-        scattering_strength_db_per_m2=scattering_strength_db_per_m2,
-        insonified_area_m2=footprint.effective_area_m2,
-        incidence_angle_from_normal_rad=footprint.incidence_angle_from_normal_rad,
-        area_semantics="uniform_geometric_patch",
     )
