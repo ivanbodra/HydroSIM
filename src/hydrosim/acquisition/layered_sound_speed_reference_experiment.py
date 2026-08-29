@@ -15,30 +15,30 @@ Truth side:
 Processing side:
     physical receive wavefront
       -> angle estimated under c used by sonar
+      -> explicit zero-thickness transducer-depth boundary
       -> tangential slowness carried into the configured processing profile
       -> TWTT-driven refracted reconstruction
       -> calculated-minus-Truth sounding error.
 
 IMPORTANT SCOPE
 ---------------
-The sensor ``bias_mps`` in this reference currently perturbs the array steering/
-angle-estimation sound speed only. It does *not* modify the processing sound-speed
-profile and therefore must not be interpreted as a complete model of a fixed sensor
-offset in a real MBES. Some systems use the sound speed measured at transducer depth
-as the first value of the ray-bending profile; modelling that coupling requires a
-profile representation that can distinguish a transducer-depth boundary value from a
-finite-thickness water-column layer. HydroSIM's present piecewise-constant layers do
-not make that distinction without introducing an artificial layer thickness.
+``sensor.bias_mps`` perturbs the sound speed used for TX steering and RX angle
+mapping and, on the processing side, the explicit zero-thickness profile boundary.
+It does *not* rewrite any finite-thickness layer of ``processing_profile``. This
+models the common conceptual separation between the array-face value and the
+water-column profile without inventing a finite layer of sensor-biased water.
 
-Consequently, exact cancellation of a steering-only perturbation in the aligned,
+Consequently, exact cancellation of a transducer-value perturbation in the aligned,
 stationary reciprocal reference is a deliberately narrow numerical/scientific
 closure result, not a claim that sound-speed-at-transducer errors generally cancel.
-Tilted arrays, vessel attitude, multi-sector geometry, sensor/profile coupling, and
-water-column errors are outside this reference and can break that cancellation.
+Tilted arrays, vessel attitude, multi-sector geometry, temporal mismatch, and
+water-column profile errors can break that cancellation.
 
 The reference is intentionally stationary, monostatic, principal-plane, reciprocal,
 and horizontally layered. The sensor frame must be aligned with the profile/NED
 frame so this experiment isolates sound-speed effects rather than attitude errors.
+Scientific basis and source traceability are documented in
+``docs/science/sound_speed_at_transducer.md``.
 """
 
 from __future__ import annotations
@@ -91,10 +91,31 @@ class LayeredSoundSpeedReferenceExperiment(BaseModel):
     calculated_sounding: LayeredSoundSpeedAtTransducerSounding
     sounding_error: Vector3
     sounding_error_norm_m: FiniteFloat = Field(ge=0.0)
-    sound_speed_error_scope: str = "steering_only_sensor_measurement_perturbation"
+    sound_speed_error_scope: str = "array_and_zero_thickness_boundary_sensor_perturbation"
     experiment_assumption: str = (
         "stationary_monostatic_reciprocal_principal_plane_horizontal_layers_aligned_flat_array_flat_bottom"
     )
+
+
+class LayeredSoundSpeedErrorIsolationMatrix(BaseModel):
+    """Four controlled runs separating transducer-value and water-column errors.
+
+    ``reference`` has an ideal transducer sensor and the correct processing profile.
+    ``transducer_only`` applies the requested sensor bias while retaining the correct
+    finite-thickness profile. ``profile_only`` uses an ideal sensor with the supplied
+    perturbed processing profile. ``combined`` applies both perturbations.
+
+    The matrix intentionally reports results without assuming that every isolated
+    perturbation must create a non-zero sounding error in this narrow geometry.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    transducer_sensor_bias_mps: FiniteFloat
+    reference: LayeredSoundSpeedReferenceExperiment
+    transducer_only: LayeredSoundSpeedReferenceExperiment
+    profile_only: LayeredSoundSpeedReferenceExperiment
+    combined: LayeredSoundSpeedReferenceExperiment
 
 
 def _require_profile_aligned_pose(sensor_pose: Pose) -> None:
@@ -119,8 +140,9 @@ def run_layered_sound_speed_reference_experiment(
     profile depth. The sonar never receives that Truth value directly; it receives
     only the sensor observation and the resulting ``SoundSpeedAtTransducerUse``.
 
-    ``sensor.bias_mps`` changes array steering/angle-estimation state only in this
-    reference. It intentionally does not rewrite ``processing_profile``.
+    ``sensor.bias_mps`` changes the array steering/angle-estimation state and the
+    zero-thickness processing boundary. It intentionally does not rewrite
+    ``processing_profile`` finite-thickness layers.
     """
 
     _require_profile_aligned_pose(sensor_pose)
@@ -216,4 +238,56 @@ def run_layered_sound_speed_reference_experiment(
         calculated_sounding=calculated,
         sounding_error=error,
         sounding_error_norm_m=error_norm,
+    )
+
+
+def run_layered_sound_speed_error_isolation_matrix(
+    *,
+    sensor_pose: Pose,
+    terrain: FlatTerrain,
+    configured_across_track_angle_rad: float,
+    true_profile: LayeredSoundSpeedProfile,
+    perturbed_processing_profile: LayeredSoundSpeedProfile,
+    profile_start_depth_m: float,
+    transducer_sensor_bias_mps: float,
+) -> LayeredSoundSpeedErrorIsolationMatrix:
+    """Run controlled correct/incorrect transducer-value and profile combinations."""
+
+    common = dict(
+        sensor_pose=sensor_pose,
+        terrain=terrain,
+        configured_across_track_angle_rad=configured_across_track_angle_rad,
+        true_profile=true_profile,
+        profile_start_depth_m=profile_start_depth_m,
+    )
+    ideal_sensor = SoundSpeedSensorAtTransducer()
+    biased_sensor = SoundSpeedSensorAtTransducer(bias_mps=float(transducer_sensor_bias_mps))
+
+    reference = run_layered_sound_speed_reference_experiment(
+        processing_profile=true_profile,
+        sensor=ideal_sensor,
+        **common,
+    )
+    transducer_only = run_layered_sound_speed_reference_experiment(
+        processing_profile=true_profile,
+        sensor=biased_sensor,
+        **common,
+    )
+    profile_only = run_layered_sound_speed_reference_experiment(
+        processing_profile=perturbed_processing_profile,
+        sensor=ideal_sensor,
+        **common,
+    )
+    combined = run_layered_sound_speed_reference_experiment(
+        processing_profile=perturbed_processing_profile,
+        sensor=biased_sensor,
+        **common,
+    )
+
+    return LayeredSoundSpeedErrorIsolationMatrix(
+        transducer_sensor_bias_mps=float(transducer_sensor_bias_mps),
+        reference=reference,
+        transducer_only=transducer_only,
+        profile_only=profile_only,
+        combined=combined,
     )
