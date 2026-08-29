@@ -1,5 +1,12 @@
 """Dynamic acoustic acquisition infrastructure."""
 
+from .beamforming import (
+    ReceiveElementSteeringDelay,
+    ReceiveSteeringEvaluation,
+    ReceiveSteeringHypothesis,
+    evaluate_receive_steering,
+    ideal_receive_steering,
+)
 from .generation import generate_acquisition_sequence
 from .models import AcquisitionPing, AcquisitionSequence, PingSchedule
 from .reception import (
@@ -21,7 +28,12 @@ __all__ = [
     "BeamTruthReturn",
     "ConstantSoundSpeedPropagation",
     "PingSchedule",
+    "ReceiveElementSteeringDelay",
+    "ReceiveSteeringEvaluation",
+    "ReceiveSteeringHypothesis",
+    "evaluate_receive_steering",
     "generate_acquisition_sequence",
+    "ideal_receive_steering",
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
 ]
