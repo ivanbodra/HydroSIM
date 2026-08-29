@@ -1,6 +1,6 @@
 """Generic two-way beam-pattern composition.
 
-HydroSIM keeps transmit and receive apertures independent.  A Mills-Cross MBES is
+HydroSIM keeps transmit and receive apertures independent. A Mills-Cross MBES is
 therefore one configuration of this model, not a global assumption about MBES or
 sonars in general.
 
@@ -9,9 +9,8 @@ same physical direction, the reference two-way response is
 
     B_2w = B_tx * B_rx
 
-and normalized two-way power is |B_2w|^2.  TX and RX may use different arrays,
-steering directions, and complex element weights, but this first implementation
-requires one common narrowband frequency and sound speed.
+and normalized two-way power is |B_2w|^2. TX and RX may use different arrays,
+installation orientations, steering directions, and complex element weights.
 """
 
 from __future__ import annotations
@@ -32,6 +31,7 @@ class TwoWayBeamPatternResponse(BaseModel):
 
     transmit_array_name: str = Field(min_length=1)
     receive_array_name: str = Field(min_length=1)
+    direction_sensor_frame: Vector3 | None = None
     direction_navigation_frame: Vector3 | None = None
     transmit_direction_array_frame: Vector3
     receive_direction_array_frame: Vector3
@@ -57,19 +57,14 @@ def two_way_beam_pattern(
     sound_speed_mps: float,
     transmit_weights: Sequence[complex] | None = None,
     receive_weights: Sequence[complex] | None = None,
+    direction_sensor_frame: Vector3 | None = None,
     direction_navigation_frame: Vector3 | None = None,
 ) -> TwoWayBeamPatternResponse:
-    """Compose independent TX and RX one-way responses.
+    """Compose independent TX and RX one-way responses from local directions.
 
     The two direction arguments represent the *same physical field direction*
-    expressed separately in the TX-array and RX-array local frames.  Keeping those
-    vectors separate is essential when the apertures have different installation
-    rotations, including orthogonal Mills-Cross arrangements.
-
-    This function deliberately does not infer frame transforms.  Geometry/integration
-    code must transform a common physical direction into each aperture frame first.
-    That prevents a Mills-Cross-specific orientation from leaking into the generic
-    acoustic response model.
+    expressed separately in the TX-array and RX-array local frames. This low-level
+    form is useful when those local components are already available.
     """
 
     tx = one_way_beam_pattern(
@@ -97,6 +92,7 @@ def two_way_beam_pattern(
     return TwoWayBeamPatternResponse(
         transmit_array_name=transmit_array.name,
         receive_array_name=receive_array.name,
+        direction_sensor_frame=direction_sensor_frame,
         direction_navigation_frame=direction_navigation_frame,
         transmit_direction_array_frame=tx.source_direction_array_frame,
         receive_direction_array_frame=rx.source_direction_array_frame,
@@ -108,4 +104,53 @@ def two_way_beam_pattern(
         field_imag=field.imag,
         normalized_amplitude=amplitude,
         normalized_power=amplitude * amplitude,
+    )
+
+
+def two_way_beam_pattern_sensor_frame(
+    *,
+    transmit_array: TransducerArray,
+    receive_array: TransducerArray,
+    direction_sensor_frame: Vector3,
+    transmit_steering_direction_sensor_frame: Vector3,
+    receive_steering_direction_sensor_frame: Vector3,
+    frequency_hz: float,
+    sound_speed_mps: float,
+    transmit_weights: Sequence[complex] | None = None,
+    receive_weights: Sequence[complex] | None = None,
+) -> TwoWayBeamPatternResponse:
+    """Evaluate a two-way response from one common sensor-frame direction.
+
+    ``TransducerArray.orientation`` defines ``R_SA``, the fixed array-to-sensor
+    rotation. The same physical source direction is transformed independently:
+
+        u_A_tx = R_SA_tx.T @ u_S
+        u_A_rx = R_SA_rx.T @ u_S
+
+    Steering directions are transformed by the same rule. This is the explicit
+    orientation bridge required for co-aligned, skewed, and orthogonal TX/RX
+    installations, including Mills-Cross arrangements.
+    """
+
+    tx_direction = transmit_array.direction_from_sensor_frame(direction_sensor_frame)
+    rx_direction = receive_array.direction_from_sensor_frame(direction_sensor_frame)
+    tx_steering = transmit_array.direction_from_sensor_frame(
+        transmit_steering_direction_sensor_frame
+    )
+    rx_steering = receive_array.direction_from_sensor_frame(
+        receive_steering_direction_sensor_frame
+    )
+
+    return two_way_beam_pattern(
+        transmit_array=transmit_array,
+        receive_array=receive_array,
+        transmit_direction_array_frame=tx_direction,
+        receive_direction_array_frame=rx_direction,
+        transmit_steering_direction_array_frame=tx_steering,
+        receive_steering_direction_array_frame=rx_steering,
+        frequency_hz=frequency_hz,
+        sound_speed_mps=sound_speed_mps,
+        transmit_weights=transmit_weights,
+        receive_weights=receive_weights,
+        direction_sensor_frame=direction_sensor_frame,
     )
