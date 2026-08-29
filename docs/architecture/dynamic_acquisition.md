@@ -1,6 +1,6 @@
 # Dynamic Acquisition Event Model
 
-Version: 0.4.0
+Version: 0.5.0
 
 ## Purpose
 
@@ -28,6 +28,10 @@ receive-array pose at that epoch
 element-specific arrival epochs
         ↓
 receive steering hypothesis / delay law
+        ↓
+element phase at carrier frequency
+        ↓
+equal-weight coherent sum
 ```
 
 The acquisition scheduler records `tx_time`, `rx_start_time`, and `rx_end_time`, while the propagation layer produces an individual physical return epoch for each simulated beam. The receive-array layer then resolves the echo at each physical array element.
@@ -98,7 +102,7 @@ These inter-element time differences are the geometric precursor to receive beam
 
 ## Ideal receive steering layer
 
-The first receive-beamforming layer is intentionally limited to the deterministic delay law of an ideal far-field plane wave. It does not yet synthesize or sum waveforms.
+The first receive-beamforming layer uses the deterministic delay law of an ideal far-field plane wave.
 
 For a unit vector \(\mathbf{u}\) pointing from the receive-array centre toward the hypothesized acoustic source and element position \(\mathbf{r}_i\) relative to the array centre, the predicted arrival offset is
 
@@ -118,27 +122,86 @@ HydroSIM can compare these ideal predicted offsets against the Truth element-arr
 e_i=\Delta t_i^{Truth}-\Delta t_i^{pred}.
 \]
 
-The RMS and maximum absolute timing residuals provide a simple geometric measure of how well a steering hypothesis matches the received wavefront. This comparison is useful before introducing carrier frequency, phase, coherent summation, array factor, sidelobes, or detection statistics.
+The RMS and maximum absolute timing residuals provide a simple geometric measure of how well a steering hypothesis matches the received wavefront.
 
 Across-track steering retains the canonical HydroSIM convention: zero is the array-local +Z normal, positive angles are Port (-Y), and negative angles are Starboard (+Y).
 
+## Element phase and narrowband coherent sum
+
+The first signal-domain receive model treats each physical element as an equal-amplitude, ideal narrowband channel. It deliberately isolates phase coherence from element directivity, sensitivity, attenuation, noise, waveform envelope, and electronics.
+
+Using the complex-signal convention
+
+\[
+s(t)=e^{i2\pi f t},
+\]
+
+a Truth arrival offset \(\Delta t_i^{Truth}\) contributes the element phase
+
+\[
+\phi_i^{Truth}=-2\pi f\Delta t_i^{Truth}.
+\]
+
+Applying a steering compensation delay \(\tau_i\) contributes
+
+\[
+\phi_i^{steer}=-2\pi f\tau_i.
+\]
+
+The residual phase after steering is therefore
+
+\[
+\phi_i^{res}=\phi_i^{Truth}+\phi_i^{steer}.
+\]
+
+The initial equal-weight delay-and-sum beamformer forms
+
+\[
+B=\sum_{i=1}^{N} e^{i\phi_i^{res}},
+\]
+
+with normalized coherent magnitude
+
+\[
+A_N=\frac{|B|}{N}
+\]
+
+and normalized coherent power
+
+\[
+P_N=A_N^2.
+\]
+
+A perfectly matched steering law yields \(A_N=1\). A mismatch produces phase dispersion and a smaller coherent sum. At this stage the result is a normalized coherence measure, not received level, source level, target strength, or sonar-equation output.
+
+Because phase depends on frequency, the same timing mismatch becomes more consequential as carrier frequency increases. This is the first place where physical element spacing can naturally be interpreted relative to wavelength,
+
+\[
+\lambda=\frac{c}{f},
+\]
+
+which prepares the later array-factor, beamwidth, sidelobe, and grating-lobe models.
+
 ## Scope of the current propagation and receive model
 
-The current model represents geometric propagation, physical element arrival times, and ideal receive steering delays. It does not yet model:
+The current model represents geometric propagation, physical element arrival times, ideal receive steering delays, narrowband element phase, and equal-weight coherent summation. It does not yet model:
 
 - refraction through an SSP;
-- carrier phase or coherent waveform summation;
-- frequency-dependent array factor;
-- receive beamwidth, sidelobes, or grating lobes;
+- physical element directivity or sensitivity;
+- finite bandwidth or waveform envelope;
+- receive weighting / shading;
+- calibrated received amplitude;
+- frequency-dependent element response;
+- full angular array-factor scans, beamwidth, sidelobes, or grating lobes;
 - transmit/receive beam acceptance;
-- waveform shape;
 - bottom scattering strength;
 - pulse footprint;
 - detection threshold;
 - bottom-detection algorithm;
-- multipath.
+- multipath;
+- electronic channel noise or mismatch.
 
-Those are separate capabilities and must not be activated implicitly by the current geometric calculations.
+Those are separate capabilities and must not be activated implicitly by the current geometric and narrowband calculations.
 
 ## Scheduling
 
@@ -154,7 +217,7 @@ This scheduler is intentionally independent of beam generation and acoustic prop
 
 ## Truth-state invariant
 
-Acquisition event generation, beam-return propagation, and array reception use Truth motion. Receive steering hypotheses are processing constructs applied downstream of the Truth element arrivals.
+Acquisition event generation, beam-return propagation, and array reception use Truth motion. Receive steering hypotheses and coherent summation are processing constructs applied downstream of Truth element arrivals.
 
 ```text
 Truth motion
@@ -167,7 +230,9 @@ Truth bottom interaction + TWTT + beam return epoch
     ↓
 Truth moving-array element arrivals
     ↓
-receive steering hypothesis / timing residual
+receive steering hypothesis
+    ↓
+element phase + coherent sum
     ├── future Observed element/channel streams
     └── future Configured receive beamformer
 ```
@@ -180,14 +245,17 @@ HydroSIM does not extrapolate vessel motion silently. If a scheduled Tx, receive
 
 The model is designed to accept, without redefining the current semantics:
 
-- carrier frequency and phase-domain receive processing;
-- coherent delay-and-sum beamforming;
-- receive beam acceptance and array factor;
+- physical element directivity and sensitivity;
+- receive weighting / shading;
+- angular array-factor scans;
+- beamwidth, sidelobes, and grating lobes;
+- broadband waveform and matched-filter processing;
+- receive beam acceptance;
 - sector-specific transmit epochs;
 - layered and full ray tracing;
 - separate transmit and receive arrays;
 - ping-rate control from depth and listening time;
 - dual-head and multi-sector systems;
 - latency-distorted Observed streams;
-- waveform and bottom-detection models;
+- bottom-detection models;
 - RISC and other integration-error experiments.
