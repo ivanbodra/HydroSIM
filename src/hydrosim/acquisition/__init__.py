@@ -1,5 +1,11 @@
 """Dynamic acoustic acquisition infrastructure."""
 
+from .angular_pattern_2d import (
+    AngularPattern2DSample,
+    AngularPattern2DScan,
+    scan_mills_cross_two_way_pattern_2d,
+    sensor_angular_direction,
+)
 from .array_factor import ArrayFactorElementContribution, ArrayFactorResponse, array_factor
 from .beam_pattern import (
     AcrossTrackBeamPatternSample,
@@ -46,6 +52,8 @@ __all__ = [
     "AcquisitionSequence",
     "AcrossTrackBeamPatternSample",
     "AcrossTrackBeamPatternScan",
+    "AngularPattern2DSample",
+    "AngularPattern2DScan",
     "ArrayElementTruthArrival",
     "ArrayFactorElementContribution",
     "ArrayFactorResponse",
@@ -71,6 +79,8 @@ __all__ = [
     "one_way_beam_pattern",
     "rectangular_element_factor",
     "scan_across_track_beam_pattern",
+    "scan_mills_cross_two_way_pattern_2d",
+    "sensor_angular_direction",
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
     "two_way_beam_pattern",
