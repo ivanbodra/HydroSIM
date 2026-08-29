@@ -1,24 +1,30 @@
-"""Reference flat-seafloor insonified-footprint geometry.
+"""Reference flat-seafloor rectangular beamwidth approximation.
 
-This module estimates the effective seafloor patch used by the area-backscatter
-model from explicit beamwidth and pulse-duration inputs. It is intentionally a
-local flat-bottom approximation and does not replace full TX/RX beam-pattern
-integration over terrain.
+This module keeps a compact beamwidth-based approximation for didactic use and
+for comparisons with conventional sonar footprint formulae. It must not be read
+as a hard physical boundary of insonification: acoustic energy generally exists
+outside the -3 dB beamwidth, including the remainder of the main lobe and
+sidelobes.
 
-For a horizontal seafloor at vertical separation h and a beam-centre incidence
+Accordingly, the rectangular ``effective_area_m2`` produced here is an explicit
+beamwidth/pulse approximation. The preferred higher-fidelity pathway is the full
+2D TX×RX pattern projection, which integrates normalized power over the seafloor
+to obtain an equivalent insonified area.
+
+For a horizontal seafloor at vertical separation h and beam-centre incidence
 angle theta measured from the local normal, the beam-limited across-track width is
 computed from the two half-power edge rays:
 
     W_rx = h [tan(theta + beta_rx/2) - tan(theta - beta_rx/2)].
 
-The along-track width is evaluated analogously from the TX half-power beamwidth
-about its steering angle. For oblique incidence, the pulse-limited radial extent is
-approximated by
+The along-track width is evaluated analogously from the TX half-power beamwidth.
+For oblique incidence, the pulse-limited radial extent is approximated by
 
     W_pulse = c tau / (2 sin(theta)),
 
-and the effective across-track width is min(W_rx, W_pulse). Near nadir this pulse
-projection is ill-conditioned, so the first reference model remains beam-limited.
+and the rectangular approximation uses min(W_rx, W_pulse) across-track. Near
+nadir this pulse projection is ill-conditioned, so the reference remains
+beam-limited.
 """
 
 from __future__ import annotations
@@ -31,7 +37,7 @@ from .bottom_interaction import SeafloorAreaBackscatter
 
 
 class FlatSeafloorFootprintModel(BaseModel):
-    """Half-power beamwidth and pulse parameters for a local flat-bottom patch."""
+    """Half-power beamwidth and pulse parameters for the rectangular approximation."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -41,7 +47,7 @@ class FlatSeafloorFootprintModel(BaseModel):
 
 
 class InsonifiedFootprint(BaseModel):
-    """Reference rectangular effective patch on a horizontal seafloor."""
+    """Legacy-named rectangular beamwidth/pulse approximation on a flat bottom."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -77,7 +83,7 @@ def estimate_flat_seafloor_footprint(
     pulse_duration_seconds: float,
     sound_speed_mps: float,
 ) -> InsonifiedFootprint:
-    """Estimate a rectangular effective TX×RX/pulse footprint on a flat bottom."""
+    """Estimate the compact rectangular -3 dB/pulse approximation."""
 
     h = float(vertical_separation_m)
     theta = float(incidence_angle_from_normal_rad)
@@ -128,10 +134,11 @@ def seafloor_backscatter_from_footprint(
     scattering_strength_db_per_m2: float,
     footprint: InsonifiedFootprint,
 ) -> SeafloorAreaBackscatter:
-    """Build the existing area-backscatter model from a derived footprint."""
+    """Use the rectangular approximation as an explicit uniform geometric patch."""
 
     return SeafloorAreaBackscatter(
         scattering_strength_db_per_m2=scattering_strength_db_per_m2,
         insonified_area_m2=footprint.effective_area_m2,
         incidence_angle_from_normal_rad=footprint.incidence_angle_from_normal_rad,
+        area_semantics="uniform_geometric_patch",
     )
