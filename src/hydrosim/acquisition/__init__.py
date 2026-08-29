@@ -66,6 +66,12 @@ from .pattern_beamwidth import (
     derive_principal_plane_beamwidth,
     estimate_mills_cross_pattern_footprint,
 )
+from .pattern_footprint_2d import (
+    ProjectedPatternCell,
+    ProjectedPatternFootprint,
+    project_angular_pattern_to_flat_seafloor,
+    seafloor_backscatter_from_projected_pattern,
+)
 from .receive_beam_bank import (
     ReceiveBeamBankResponse,
     ReceiveBeamResponse,
@@ -144,6 +150,8 @@ __all__ = [
     "PingSchedule",
     "PointTargetStrength",
     "PrincipalPlaneBeamwidth",
+    "ProjectedPatternCell",
+    "ProjectedPatternFootprint",
     "PropagationLossModel",
     "ReceiveBeamBankResponse",
     "ReceiveBeamResponse",
@@ -180,6 +188,7 @@ __all__ = [
     "matched_filter",
     "one_way_beam_pattern",
     "one_way_transmission_loss",
+    "project_angular_pattern_to_flat_seafloor",
     "reciprocal_transmission_loss",
     "rectangular_element_factor",
     "sample_cw_baseband",
@@ -187,6 +196,7 @@ __all__ = [
     "scan_across_track_beam_pattern",
     "scan_mills_cross_two_way_pattern_2d",
     "seafloor_backscatter_from_footprint",
+    "seafloor_backscatter_from_projected_pattern",
     "sensor_angular_direction",
     "simulate_mills_cross_multibeam_fan",
     "simulate_sector_waveform_propagation_ping",
