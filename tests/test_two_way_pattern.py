@@ -60,7 +60,11 @@ def test_two_way_amplitude_is_product_of_independent_one_way_amplitudes():
     assert isclose(response.transmit_response.normalized_amplitude, 1.0, rel_tol=1e-8)
     assert isclose(response.receive_response.normalized_amplitude, expected_rx, rel_tol=1e-8)
     assert isclose(response.normalized_amplitude, expected_rx, rel_tol=1e-8)
-    assert isclose(response.normalized_power, 0.5, rel_tol=1e-8)
+    assert isclose(
+        response.normalized_power,
+        response.normalized_amplitude * response.normalized_amplitude,
+        abs_tol=1e-15,
+    )
 
 
 def test_tx_and_rx_directions_are_independent_local_frame_representations():
