@@ -1,0 +1,138 @@
+id: hydrosim.integration.principal_plane_array_tilt_symmetry_break
+version: 0.1.0
+scientific_status: controlled_reference_experiment
+language: en
+
+purpose: >-
+  Test where the narrow aligned sound-speed-at-transducer cancellation ceases to
+  hold by introducing an explicit principal-plane array tilt while keeping platform
+  attitude, finite-thickness profiles, and other experiment conditions controlled.
+
+state_categories:
+  truth_inputs:
+    - Truth
+  sonar_inputs:
+    - Observed
+    - Configured
+  diagnostics:
+    - Estimated
+    - Derived
+
+formulation:
+  array_frame_tx:
+    equations:
+      - "p_array = sin(theta_cfg) / c_used"
+      - "theta_phys_array = asin(c_true * p_array)"
+  truth_profile_frame:
+    equations:
+      - "theta_phys_profile = tau + theta_phys_array"
+      - "p_truth = sin(theta_phys_profile) / c_true"
+  array_frame_rx:
+    equations:
+      - "p_observed_array = sin(theta_phys_array) / c_true"
+      - "theta_est_array = asin(c_used * p_observed_array)"
+  processing_profile_frame:
+    equations:
+      - "theta_est_profile = tau + theta_est_array"
+      - "p_processing = sin(theta_est_profile) / c_used"
+
+variables:
+  theta_cfg:
+    description: configured principal-plane beam angle relative to the array normal
+    unit: rad
+  tau:
+    description: principal-plane array tilt relative to the horizontal-profile vertical
+    unit: rad
+  c_true:
+    description: true local sound speed at transducer depth
+    unit: m/s
+  c_used:
+    description: sound speed used by the sonar for steering and angle interpretation
+    unit: m/s
+  p_truth:
+    description: profile-frame Truth ray parameter at the start depth
+    unit: s/m
+  p_processing:
+    description: profile-frame processing ray parameter established at the zero-thickness boundary
+    unit: s/m
+
+coordinate_and_sign_conventions:
+  frame: "HydroSIM principal-plane reduction of the documented NED-like local frame"
+  tilt_sign: "positive tau is in the same signed direction as positive across-track angle"
+  platform_attitude: "held at zero in the reference experiment"
+
+validity_domain:
+  - one principal plane
+  - downward propagating angles strictly inside -pi/2 to pi/2
+  - reciprocal stationary propagation
+  - horizontal layered sound-speed profile
+  - flat-bottom controlled experiment
+
+assumptions:
+  - TX steering sound-speed mapping is performed in array angular coordinates
+  - RX angle estimation is performed in the same array angular coordinates
+  - the estimated direction is rotated into the profile frame before the processing boundary is applied
+  - finite-thickness Truth and processing profiles remain independently configurable
+  - array tilt is a geometry coordinate, not an error injected into only one A/B/C/D case
+
+known_limitations:
+  - this is not a full 3-D Mills-cross installation model
+  - TX and RX array frames are not yet represented independently
+  - vessel attitude and array installation offsets are intentionally separated
+  - multi-sector timing and sector association are outside this model
+  - the experiment demonstrates a mechanism and domain boundary, not a universal magnitude law for operational MBES systems
+
+scientific_interpretation:
+  zero_tilt: >-
+    In the narrow reciprocal reference, using the same biased transducer value in TX,
+    RX, and the zero-thickness boundary can preserve the profile-frame ray parameter.
+  nonzero_tilt: >-
+    Sound-speed angular mapping occurs in array coordinates while Snell propagation
+    is referenced to the horizontal profile frame. Rotation and the nonlinear
+    sound-speed angular mapping do not generally commute, so p_processing may differ
+    from p_truth.
+
+source_mapping:
+  - reference_id: kongsberg_em120_operator_manual_850_164112
+    locator: "limited sound-speed-at-transducer sensitivity for flat/horizontal transducer geometry"
+    evidence_level: direct_source_context
+  - reference_id: beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed
+    locator: "surface sound-speed effects and geometry complications in multibeam systems"
+    evidence_level: direct_source_context
+
+hydrosim_derivation:
+  evidence_level: model_derivation
+  statement: >-
+    The explicit principal-plane tilt experiment is a HydroSIM diagnostic construction
+    derived from array-frame steering/receive-angle semantics plus profile-frame Snell
+    propagation. The exact reduced experiment is not asserted to be a manufacturer
+    implementation.
+
+implementation:
+  modules:
+    - src/hydrosim/acquisition/layered_sound_speed_reference_experiment.py
+    - src/hydrosim/acquisition/layered_sound_speed_error_study.py
+  symbols:
+    - LayeredSoundSpeedReferenceExperiment.principal_plane_array_tilt_rad
+    - run_layered_sound_speed_reference_experiment
+    - run_layered_sound_speed_error_isolation_matrix
+    - run_layered_sound_speed_error_isolation_study
+
+validation:
+  tests:
+    - tests/test_layered_sound_speed_reference_experiment.py::test_transducer_boundary_sensor_perturbation_closes_in_narrow_aligned_reference
+    - tests/test_layered_sound_speed_reference_experiment.py::test_principal_plane_array_tilt_breaks_transducer_bias_cancellation_analytically
+    - tests/test_layered_sound_speed_reference_experiment.py::test_error_isolation_study_maps_tilt_as_explicit_symmetry_break_coordinate
+  analytical_anchor: >-
+    The non-zero-tilt test independently computes the physical array-frame steering
+    angle, both profile-frame angles, and the Truth versus processing ray parameters
+    from elementary trigonometric expressions. It does not use the layered ray tracer
+    to establish the expected parameter mismatch.
+
+related_models:
+  - hydrosim.propagation.sound_speed_zero_thickness_boundary
+  - hydrosim.propagation.layered_snell_piecewise_constant
+
+explanatory_documentation:
+  - docs/science/principal_plane_array_tilt.md
+  - docs/science/sound_speed_at_transducer.md

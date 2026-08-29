@@ -1,4 +1,4 @@
-from math import radians
+from math import asin, radians, sin
 
 import pytest
 
@@ -66,13 +66,51 @@ def test_transducer_boundary_sensor_perturbation_closes_in_narrow_aligned_refere
         sensor=SoundSpeedSensorAtTransducer(bias_mps=20.0),
     )
     assert result.sound_speed_error_scope == "array_and_zero_thickness_boundary_sensor_perturbation"
-    assert "aligned_flat_array" in result.experiment_assumption
+    assert "aligned_platform" in result.experiment_assumption
+    assert result.principal_plane_array_tilt_rad == pytest.approx(0.0)
     assert result.sensor_measurement.measured_sound_speed_mps == pytest.approx(1520.0)
     assert result.transmit_truth.physical_angle_rad != pytest.approx(radians(35.0))
     assert result.receive_angle_estimate.estimated_angle_rad == pytest.approx(radians(35.0))
     assert result.calculated_sounding.sounding.profile_boundary is not None
     assert result.calculated_sounding.sounding.profile_boundary.sound_speed_mps == pytest.approx(1520.0)
     assert result.sounding_error_norm_m == pytest.approx(0.0, abs=1e-9)
+
+
+def test_principal_plane_array_tilt_breaks_transducer_bias_cancellation_analytically() -> None:
+    configured = radians(35.0)
+    tilt = radians(8.0)
+    c_true = 1500.0
+    c_used = 1520.0
+
+    result = run_layered_sound_speed_reference_experiment(
+        sensor_pose=_pose(),
+        terrain=FlatTerrain(depth=100.0),
+        configured_across_track_angle_rad=configured,
+        true_profile=_true_profile(),
+        processing_profile=_true_profile(),
+        profile_start_depth_m=0.0,
+        sensor=SoundSpeedSensorAtTransducer(bias_mps=c_used - c_true),
+        principal_plane_array_tilt_rad=tilt,
+    )
+
+    # Independent principal-plane anchor. Steering/receive mapping occurs in array
+    # coordinates; Snell propagation uses the horizontal profile frame.
+    expected_physical_array_angle = asin((c_true / c_used) * sin(configured))
+    expected_physical_profile_angle = tilt + expected_physical_array_angle
+    expected_estimated_profile_angle = tilt + configured
+    truth_ray_parameter = sin(expected_physical_profile_angle) / c_true
+    processing_boundary_parameter = sin(expected_estimated_profile_angle) / c_used
+
+    assert result.transmit_truth.physical_angle_rad == pytest.approx(expected_physical_array_angle)
+    assert result.physical_launch_angle_profile_frame_rad == pytest.approx(
+        expected_physical_profile_angle
+    )
+    assert result.receive_angle_estimate.estimated_angle_rad == pytest.approx(configured)
+    assert result.estimated_receive_angle_profile_frame_rad == pytest.approx(
+        expected_estimated_profile_angle
+    )
+    assert processing_boundary_parameter != pytest.approx(truth_ray_parameter, abs=1e-9)
+    assert result.sounding_error_norm_m > 0.01
 
 
 def test_processing_profile_error_produces_sounding_error() -> None:
@@ -126,6 +164,7 @@ def test_error_isolation_study_reuses_matrix_over_explicit_angle_bias_grid() -> 
 
     assert study.configured_across_track_angles_rad == pytest.approx(angles)
     assert study.transducer_sensor_biases_mps == pytest.approx(biases)
+    assert study.principal_plane_array_tilts_rad == pytest.approx((0.0,))
     assert len(study.cases) == 4
     assert [case.configured_across_track_angle_rad for case in study.cases] == pytest.approx(
         (angles[0], angles[0], angles[1], angles[1])
@@ -133,9 +172,32 @@ def test_error_isolation_study_reuses_matrix_over_explicit_angle_bias_grid() -> 
     assert [case.transducer_sensor_bias_mps for case in study.cases] == pytest.approx(
         (biases[0], biases[1], biases[0], biases[1])
     )
+    assert all(case.principal_plane_array_tilt_rad == pytest.approx(0.0) for case in study.cases)
     assert all(case.matrix.reference.sounding_error_norm_m < 1e-9 for case in study.cases)
     assert all(case.matrix.transducer_only.sounding_error_norm_m < 1e-9 for case in study.cases)
     assert all(case.matrix.profile_only.sounding_error_norm_m > 0.1 for case in study.cases)
+
+
+def test_error_isolation_study_maps_tilt_as_explicit_symmetry_break_coordinate() -> None:
+    tilts = (0.0, radians(8.0))
+    study = run_layered_sound_speed_error_isolation_study(
+        sensor_pose=_pose(),
+        terrain=FlatTerrain(depth=100.0),
+        configured_across_track_angles_rad=(radians(35.0),),
+        transducer_sensor_biases_mps=(20.0,),
+        principal_plane_array_tilts_rad=tilts,
+        true_profile=_true_profile(),
+        perturbed_processing_profile=_perturbed_profile(),
+        profile_start_depth_m=0.0,
+    )
+
+    assert len(study.cases) == 2
+    assert [case.principal_plane_array_tilt_rad for case in study.cases] == pytest.approx(tilts)
+    aligned, tilted = study.cases
+    assert aligned.matrix.reference.sounding_error_norm_m < 1e-9
+    assert aligned.matrix.transducer_only.sounding_error_norm_m < 1e-9
+    assert tilted.matrix.reference.sounding_error_norm_m < 1e-9
+    assert tilted.matrix.transducer_only.sounding_error_norm_m > 0.01
 
 
 def test_error_isolation_study_rejects_empty_parameter_axes() -> None:
@@ -156,6 +218,13 @@ def test_error_isolation_study_rejects_empty_parameter_axes() -> None:
         run_layered_sound_speed_error_isolation_study(
             configured_across_track_angles_rad=(radians(30.0),),
             transducer_sensor_biases_mps=(),
+            **common,
+        )
+    with pytest.raises(ValueError, match="tilts.*must not be empty"):
+        run_layered_sound_speed_error_isolation_study(
+            configured_across_track_angles_rad=(radians(30.0),),
+            transducer_sensor_biases_mps=(20.0,),
+            principal_plane_array_tilts_rad=(),
             **common,
         )
 

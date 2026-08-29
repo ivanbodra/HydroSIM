@@ -8,13 +8,15 @@ Truth side:
       -> true local sound speed at transducer depth
       -> sensor measurement
       -> c used by sonar
-      -> TX delay-law consequence in Truth
+      -> TX delay-law consequence in the array principal plane
+      -> rotation from the tilted array frame into the profile frame
       -> refracted ray through the true profile
       -> reciprocal TWTT and physical return angle.
 
 Processing side:
     physical receive wavefront
-      -> angle estimated under c used by sonar
+      -> angle estimated under c used by sonar in the array principal plane
+      -> rotation into the profile frame
       -> explicit zero-thickness transducer-depth boundary
       -> tangential slowness carried into the configured processing profile
       -> TWTT-driven refracted reconstruction
@@ -28,22 +30,31 @@ It does *not* rewrite any finite-thickness layer of ``processing_profile``. This
 models the common conceptual separation between the array-face value and the
 water-column profile without inventing a finite layer of sensor-biased water.
 
-Consequently, exact cancellation of a transducer-value perturbation in the aligned,
+``principal_plane_array_tilt_rad`` is a controlled 2-D orientation parameter. It
+rotates the array principal-plane angular coordinate relative to the horizontal-layer
+profile frame before ray tracing and after receive-angle estimation. Positive tilt
+is defined in the same signed direction as positive across-track beam angle. This is
+an intentionally reduced principal-plane experiment, not a complete representation
+of a Mills-cross installation or vessel attitude.
+
+At zero tilt, exact cancellation of a transducer-value perturbation in the aligned,
 stationary reciprocal reference is a deliberately narrow numerical/scientific
 closure result, not a claim that sound-speed-at-transducer errors generally cancel.
-Tilted arrays, vessel attitude, multi-sector geometry, temporal mismatch, and
-water-column profile errors can break that cancellation.
+Non-zero array tilt is the first controlled symmetry break: because the sound-speed
+mapping is performed in array coordinates while Snell propagation is referenced to
+the horizontal profile frame, rotation and sound-speed scaling do not generally
+commute.
 
 The reference is intentionally stationary, monostatic, principal-plane, reciprocal,
-and horizontally layered. The sensor frame must be aligned with the profile/NED
-frame so this experiment isolates sound-speed effects rather than attitude errors.
-Scientific basis and source traceability are documented in
+and horizontally layered. Vessel/sensor attitude must remain aligned with the
+profile/NED frame so the experiment isolates array tilt and sound-speed effects from
+platform-attitude errors. Scientific basis and source traceability are documented in
 ``docs/science/sound_speed_at_transducer.md``.
 """
 
 from __future__ import annotations
 
-from math import copysign, sqrt
+from math import copysign, pi, sqrt
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
@@ -70,7 +81,7 @@ from .sounding_observation import DetectedAcousticObservation
 
 
 class LayeredSoundSpeedReferenceExperiment(BaseModel):
-    """Closed Truth-versus-processing comparison for the narrow reference regime."""
+    """Closed Truth-versus-processing comparison for the controlled reference regime."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -80,20 +91,24 @@ class LayeredSoundSpeedReferenceExperiment(BaseModel):
     true_target_depth_m: FiniteFloat = Field(gt=0.0)
     true_local_sound_speed_mps: FiniteFloat = Field(gt=0.0)
     configured_across_track_angle_rad: FiniteFloat
+    principal_plane_array_tilt_rad: FiniteFloat = 0.0
     sensor_measurement: SoundSpeedAtTransducerMeasurement
     sound_speed_used_by_sonar: SoundSpeedAtTransducerUse
     transmit_truth: PrincipalPlaneSteeringTruthComparison
+    physical_launch_angle_profile_frame_rad: FiniteFloat
     true_ray_path: LayeredRayPath
     truth_bottom_point: Vector3
     true_twtt_seconds: FiniteFloat = Field(gt=0.0)
     receive_angle_estimate: PrincipalPlaneReceiveAngleEstimate
+    estimated_receive_angle_profile_frame_rad: FiniteFloat
     observation: DetectedAcousticObservation
     calculated_sounding: LayeredSoundSpeedAtTransducerSounding
     sounding_error: Vector3
     sounding_error_norm_m: FiniteFloat = Field(ge=0.0)
     sound_speed_error_scope: str = "array_and_zero_thickness_boundary_sensor_perturbation"
     experiment_assumption: str = (
-        "stationary_monostatic_reciprocal_principal_plane_horizontal_layers_aligned_flat_array_flat_bottom"
+        "stationary_monostatic_reciprocal_principal_plane_horizontal_layers_"
+        "aligned_platform_explicit_array_tilt_flat_bottom"
     )
 
 
@@ -105,13 +120,14 @@ class LayeredSoundSpeedErrorIsolationMatrix(BaseModel):
     finite-thickness profile. ``profile_only`` uses an ideal sensor with the supplied
     perturbed processing profile. ``combined`` applies both perturbations.
 
-    The matrix intentionally reports results without assuming that every isolated
-    perturbation must create a non-zero sounding error in this narrow geometry.
+    All four cases use the same explicit principal-plane array tilt, so tilt is a
+    controlled geometry coordinate rather than an additional error source.
     """
 
     model_config = ConfigDict(frozen=True)
 
     transducer_sensor_bias_mps: FiniteFloat
+    principal_plane_array_tilt_rad: FiniteFloat = 0.0
     reference: LayeredSoundSpeedReferenceExperiment
     transducer_only: LayeredSoundSpeedReferenceExperiment
     profile_only: LayeredSoundSpeedReferenceExperiment
@@ -124,6 +140,13 @@ def _require_profile_aligned_pose(sensor_pose: Pose) -> None:
         raise ValueError("reference experiment requires sensor attitude aligned with profile frame")
 
 
+def _require_downward_principal_plane_angle(angle_rad: float, *, name: str) -> float:
+    angle = float(angle_rad)
+    if not (-0.5 * pi < angle < 0.5 * pi):
+        raise ValueError(f"{name} must satisfy -pi/2 < angle < pi/2")
+    return angle
+
+
 def run_layered_sound_speed_reference_experiment(
     *,
     sensor_pose: Pose,
@@ -133,12 +156,14 @@ def run_layered_sound_speed_reference_experiment(
     processing_profile: LayeredSoundSpeedProfile,
     profile_start_depth_m: float,
     sensor: SoundSpeedSensorAtTransducer = SoundSpeedSensorAtTransducer(),
+    principal_plane_array_tilt_rad: float = 0.0,
 ) -> LayeredSoundSpeedReferenceExperiment:
-    """Run the narrow layered Truth-versus-processing reference experiment.
+    """Run the controlled layered Truth-versus-processing reference experiment.
 
-    The local true sound speed is obtained from ``true_profile`` at the transducer
-    profile depth. The sonar never receives that Truth value directly; it receives
-    only the sensor observation and the resulting ``SoundSpeedAtTransducerUse``.
+    The configured beam angle is measured in the array principal-plane frame. The
+    optional array tilt rotates that frame relative to the horizontal profile frame.
+    TX sound-speed steering and RX sound-speed angle estimation are performed before
+    this frame rotation, matching their array-coordinate semantics.
 
     ``sensor.bias_mps`` changes the array steering/angle-estimation state and the
     zero-thickness processing boundary. It intentionally does not rewrite
@@ -165,24 +190,32 @@ def run_layered_sound_speed_reference_experiment(
     )
     used = use_measured_sound_speed_at_transducer(measurement)
     configured_angle = float(configured_across_track_angle_rad)
+    array_tilt = _require_downward_principal_plane_angle(
+        principal_plane_array_tilt_rad,
+        name="principal_plane_array_tilt_rad",
+    )
 
     transmit_truth = compare_principal_plane_steering_with_truth(
         configured_angle_rad=configured_angle,
         sound_speed_used_by_sonar_mps=float(used.sound_speed_mps),
         true_local_sound_speed_mps=true_local_c,
     )
-    physical_angle = float(transmit_truth.physical_angle_rad)
+    physical_array_angle = float(transmit_truth.physical_angle_rad)
+    physical_profile_angle = _require_downward_principal_plane_angle(
+        array_tilt + physical_array_angle,
+        name="physical launch angle in profile frame",
+    )
     true_path = trace_layered_ray_to_depth(
         profile=true_profile,
-        launch_angle_from_vertical_rad=abs(physical_angle),
+        launch_angle_from_vertical_rad=abs(physical_profile_angle),
         target_depth_m=target_depth,
         start_depth_m=start_depth,
     )
 
-    if abs(physical_angle) <= 1e-15:
+    if abs(physical_profile_angle) <= 1e-15:
         signed_horizontal = 0.0
     else:
-        signed_horizontal = -copysign(float(true_path.horizontal_distance_m), physical_angle)
+        signed_horizontal = -copysign(float(true_path.horizontal_distance_m), physical_profile_angle)
 
     truth_point = Vector3(
         x=float(sensor_pose.position.x),
@@ -191,16 +224,21 @@ def run_layered_sound_speed_reference_experiment(
     )
     true_twtt = 2.0 * float(true_path.travel_time_seconds)
 
+    # Reciprocal arrival is expressed in the array frame before RX angle mapping.
     receive_estimate = estimate_principal_plane_receive_angle(
-        physical_arrival_angle_rad=physical_angle,
+        physical_arrival_angle_rad=physical_array_angle,
         true_local_sound_speed_mps=true_local_c,
         sound_speed_used_by_sonar_mps=float(used.sound_speed_mps),
+    )
+    estimated_profile_angle = _require_downward_principal_plane_angle(
+        array_tilt + float(receive_estimate.estimated_angle_rad),
+        name="estimated receive angle in profile frame",
     )
     observation = DetectedAcousticObservation(
         parent_beam_index=0,
         detection_method="phase_zero_crossing",
         twtt_seconds=true_twtt,
-        detected_across_track_angle_rad=float(receive_estimate.estimated_angle_rad),
+        detected_across_track_angle_rad=estimated_profile_angle,
         quality=1.0,
     )
     calculated = reconstruct_layered_sound_speed_sounding_from_sonar_state(
@@ -227,13 +265,16 @@ def run_layered_sound_speed_reference_experiment(
         true_target_depth_m=target_depth,
         true_local_sound_speed_mps=true_local_c,
         configured_across_track_angle_rad=configured_angle,
+        principal_plane_array_tilt_rad=array_tilt,
         sensor_measurement=measurement,
         sound_speed_used_by_sonar=used,
         transmit_truth=transmit_truth,
+        physical_launch_angle_profile_frame_rad=physical_profile_angle,
         true_ray_path=true_path,
         truth_bottom_point=truth_point,
         true_twtt_seconds=true_twtt,
         receive_angle_estimate=receive_estimate,
+        estimated_receive_angle_profile_frame_rad=estimated_profile_angle,
         observation=observation,
         calculated_sounding=calculated,
         sounding_error=error,
@@ -250,6 +291,7 @@ def run_layered_sound_speed_error_isolation_matrix(
     perturbed_processing_profile: LayeredSoundSpeedProfile,
     profile_start_depth_m: float,
     transducer_sensor_bias_mps: float,
+    principal_plane_array_tilt_rad: float = 0.0,
 ) -> LayeredSoundSpeedErrorIsolationMatrix:
     """Run controlled correct/incorrect transducer-value and profile combinations."""
 
@@ -259,6 +301,7 @@ def run_layered_sound_speed_error_isolation_matrix(
         configured_across_track_angle_rad=configured_across_track_angle_rad,
         true_profile=true_profile,
         profile_start_depth_m=profile_start_depth_m,
+        principal_plane_array_tilt_rad=principal_plane_array_tilt_rad,
     )
     ideal_sensor = SoundSpeedSensorAtTransducer()
     biased_sensor = SoundSpeedSensorAtTransducer(bias_mps=float(transducer_sensor_bias_mps))
@@ -286,6 +329,7 @@ def run_layered_sound_speed_error_isolation_matrix(
 
     return LayeredSoundSpeedErrorIsolationMatrix(
         transducer_sensor_bias_mps=float(transducer_sensor_bias_mps),
+        principal_plane_array_tilt_rad=float(principal_plane_array_tilt_rad),
         reference=reference,
         transducer_only=transducer_only,
         profile_only=profile_only,
