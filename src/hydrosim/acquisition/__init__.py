@@ -15,7 +15,7 @@ from .bottom_detection import BeamDetections, BottomDetection, DetectionMethod, 
 from .element_factor import RectangularElementFactor, rectangular_element_factor
 from .element_signals import CoherentReceiveSum, NarrowbandReceiveTone, ReceiveElementPhasor, coherent_receive_sum
 from .footprint import FlatSeafloorFootprintModel, InsonifiedFootprint, estimate_flat_seafloor_footprint
-from .footprint_contribution import FootprintContributionCell, RefractedFootprintContribution, weight_refracted_footprint_by_matched_filter
+from .footprint_contribution import FootprintContributionCell, RefractedFootprintContribution, assess_refracted_footprint_convergence, weight_refracted_footprint_by_matched_filter
 from .generation import generate_acquisition_sequence
 from .layered_propagation import LayeredRayPath, LayeredRaySegment, LayeredSoundSpeedProfile, SoundSpeedLayer, trace_layered_ray_to_depth
 from .models import AcquisitionPing, AcquisitionSequence, PingSchedule
