@@ -66,6 +66,13 @@ from .sector_signal_chain import (
     SectorWaveformPlan,
     simulate_sector_waveform_propagation_ping,
 )
+from .transmission_loss import (
+    OneWayTransmissionLoss,
+    PropagationLossModel,
+    ReciprocalTransmissionLoss,
+    one_way_transmission_loss,
+    reciprocal_transmission_loss,
+)
 from .transmit_sectors import TransmitSector, TransmitSectorSet, make_uniform_transmit_sectors
 from .two_way_pattern import (
     TwoWayBeamPatternResponse,
@@ -106,13 +113,16 @@ __all__ = [
     "MultibeamFanMatrixSample",
     "NarrowbandReceiveTone",
     "OneWayBeamPatternResponse",
+    "OneWayTransmissionLoss",
     "PingSchedule",
+    "PropagationLossModel",
     "ReceiveBeamBankResponse",
     "ReceiveBeamResponse",
     "ReceiveElementPhasor",
     "ReceiveElementSteeringDelay",
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
+    "ReciprocalTransmissionLoss",
     "RectangularElementFactor",
     "SectorSignalChainPing",
     "SectorSignalChainResult",
@@ -132,6 +142,8 @@ __all__ = [
     "make_uniform_transmit_sectors",
     "matched_filter",
     "one_way_beam_pattern",
+    "one_way_transmission_loss",
+    "reciprocal_transmission_loss",
     "rectangular_element_factor",
     "sample_cw_baseband",
     "sample_lfm_baseband",
