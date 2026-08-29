@@ -19,6 +19,23 @@ Processing side:
       -> TWTT-driven refracted reconstruction
       -> calculated-minus-Truth sounding error.
 
+IMPORTANT SCOPE
+---------------
+The sensor ``bias_mps`` in this reference currently perturbs the array steering/
+angle-estimation sound speed only. It does *not* modify the processing sound-speed
+profile and therefore must not be interpreted as a complete model of a fixed sensor
+offset in a real MBES. Some systems use the sound speed measured at transducer depth
+as the first value of the ray-bending profile; modelling that coupling requires a
+profile representation that can distinguish a transducer-depth boundary value from a
+finite-thickness water-column layer. HydroSIM's present piecewise-constant layers do
+not make that distinction without introducing an artificial layer thickness.
+
+Consequently, exact cancellation of a steering-only perturbation in the aligned,
+stationary reciprocal reference is a deliberately narrow numerical/scientific
+closure result, not a claim that sound-speed-at-transducer errors generally cancel.
+Tilted arrays, vessel attitude, multi-sector geometry, sensor/profile coupling, and
+water-column errors are outside this reference and can break that cancellation.
+
 The reference is intentionally stationary, monostatic, principal-plane, reciprocal,
 and horizontally layered. The sensor frame must be aligned with the profile/NED
 frame so this experiment isolates sound-speed effects rather than attitude errors.
@@ -53,7 +70,7 @@ from .sounding_observation import DetectedAcousticObservation
 
 
 class LayeredSoundSpeedReferenceExperiment(BaseModel):
-    """Closed Truth-versus-processing comparison for layered sound-speed propagation."""
+    """Closed Truth-versus-processing comparison for the narrow reference regime."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -74,8 +91,9 @@ class LayeredSoundSpeedReferenceExperiment(BaseModel):
     calculated_sounding: LayeredSoundSpeedAtTransducerSounding
     sounding_error: Vector3
     sounding_error_norm_m: FiniteFloat = Field(ge=0.0)
+    sound_speed_error_scope: str = "steering_only_sensor_measurement_perturbation"
     experiment_assumption: str = (
-        "stationary_monostatic_reciprocal_principal_plane_horizontal_layers_flat_bottom"
+        "stationary_monostatic_reciprocal_principal_plane_horizontal_layers_aligned_flat_array_flat_bottom"
     )
 
 
@@ -95,11 +113,14 @@ def run_layered_sound_speed_reference_experiment(
     profile_start_depth_m: float,
     sensor: SoundSpeedSensorAtTransducer = SoundSpeedSensorAtTransducer(),
 ) -> LayeredSoundSpeedReferenceExperiment:
-    """Run a layered Truth-versus-processing sound-speed experiment.
+    """Run the narrow layered Truth-versus-processing reference experiment.
 
     The local true sound speed is obtained from ``true_profile`` at the transducer
     profile depth. The sonar never receives that Truth value directly; it receives
     only the sensor observation and the resulting ``SoundSpeedAtTransducerUse``.
+
+    ``sensor.bias_mps`` changes array steering/angle-estimation state only in this
+    reference. It intentionally does not rewrite ``processing_profile``.
     """
 
     _require_profile_aligned_pose(sensor_pose)
@@ -139,7 +160,6 @@ def run_layered_sound_speed_reference_experiment(
     if abs(physical_angle) <= 1e-15:
         signed_horizontal = 0.0
     else:
-        # HydroSIM positive across-track angle points Port, i.e. negative sensor/NED Y.
         signed_horizontal = -copysign(float(true_path.horizontal_distance_m), physical_angle)
 
     truth_point = Vector3(
