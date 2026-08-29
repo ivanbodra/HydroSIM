@@ -2,25 +2,26 @@
 
 A -3 dB contour is a beam descriptor, not a physical boundary of insonification.
 HydroSIM therefore retains the full sampled TX×RX power distribution and derives
-power-equivalent scattering areas from explicit spatial and temporal weighting.
+area-equivalent footprint descriptors from explicit spatial and temporal
+weighting.
 
 Spatial weighting:
 
     A_eq = integral (P / P_peak) dA
 
 Temporal weighting may be either a simple rectangular-pulse range shell or the
-normalized matched-filter power response |R_ss(dt)|^2 / |R_ss(0)|^2. The latter
-keeps CW and LFM pulse compression distinct and is the preferred deterministic
-reference for an incoherent area-scattering power model.
+normalized matched-filter power response |R_ss(dt)|^2 / |R_ss(0)|^2. These are
+footprint/contribution demonstrations only; no bottom backscatter, sediment,
+reflectivity, or target-strength model is implied.
 
 For a horizontal seafloor the local incidence angle is retained independently for
 every projected cell. With vertical separation h and slant range R,
 
     theta_i = acos(h / R_i),
 
-measured from the local seafloor normal. This prepares the spatial integration for
-explicit user-supplied S_b(theta) models without hiding an empirical angular law
-inside the footprint calculation.
+measured from the local seafloor normal. This geometry metadata can support later
+visualization or a separate sonar-equation demonstration without becoming a
+bottom-response model inside acquisition.
 """
 
 from __future__ import annotations
@@ -31,7 +32,6 @@ from math import acos, sqrt, tan
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
 from .angular_pattern_2d import AngularPattern2DScan
-from .bottom_interaction import SeafloorAreaBackscatter
 from .waveform import WaveformAutocorrelation, WaveformPulse, waveform_autocorrelation
 
 
@@ -91,7 +91,7 @@ class PulseGatedEquivalentArea(BaseModel):
 
 
 class MatchedFilterWeightedEquivalentArea(BaseModel):
-    """Pattern-times-matched-filter power-equivalent scattering area."""
+    """Pattern-times-matched-filter area-equivalent footprint descriptor."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -227,14 +227,7 @@ def weight_projected_pattern_by_matched_filter(
     *, illumination: ProjectedPatternIllumination, pulse: WaveformPulse,
     center_one_way_range_m: float, sample_rate_hz: float, sound_speed_mps: float,
 ) -> MatchedFilterWeightedEquivalentArea:
-    """Weight every projected cell by the matched-filter power response.
-
-    A cell at one-way range R differs from the reference range R0 by a two-way
-    delay ``dt = 2 (R - R0) / c``. For the current incoherent area-scattering
-    power abstraction its contribution is weighted by normalized
-    ``|R_ss(dt)|^2``. Cells outside the finite autocorrelation support contribute
-    zero. This is not a coherent rough-surface scattering simulation.
-    """
+    """Weight every projected cell by the matched-filter power response."""
 
     center, fs, c = float(center_one_way_range_m), float(sample_rate_hz), float(sound_speed_mps)
     if center <= 0.0 or fs <= 0.0 or c <= 0.0:
@@ -253,35 +246,3 @@ def weight_projected_pattern_by_matched_filter(
         contributing_cell_count=count, equivalent_insonified_area_m2=area,
         autocorrelation=ac,
     )
-
-
-def seafloor_backscatter_from_projected_pattern(*, scattering_strength_db_per_m2: float,
-    illumination: ProjectedPatternIllumination, incidence_angle_from_normal_rad: float) -> SeafloorAreaBackscatter:
-    area = float(illumination.equivalent_insonified_area_m2)
-    if area <= 0.0:
-        raise ValueError("projected pattern has zero equivalent insonified area")
-    return SeafloorAreaBackscatter(scattering_strength_db_per_m2=scattering_strength_db_per_m2,
-        insonified_area_m2=area, incidence_angle_from_normal_rad=incidence_angle_from_normal_rad,
-        area_semantics="equivalent_pattern_weighted")
-
-
-def seafloor_backscatter_from_pulse_gated_pattern(*, scattering_strength_db_per_m2: float,
-    gated_area: PulseGatedEquivalentArea, incidence_angle_from_normal_rad: float) -> SeafloorAreaBackscatter:
-    area = float(gated_area.equivalent_insonified_area_m2)
-    if area <= 0.0:
-        raise ValueError("pulse-gated pattern has zero equivalent insonified area")
-    return SeafloorAreaBackscatter(scattering_strength_db_per_m2=scattering_strength_db_per_m2,
-        insonified_area_m2=area, incidence_angle_from_normal_rad=incidence_angle_from_normal_rad,
-        area_semantics="equivalent_pattern_and_pulse_weighted")
-
-
-def seafloor_backscatter_from_matched_filter_weighted_pattern(*, scattering_strength_db_per_m2: float,
-    weighted_area: MatchedFilterWeightedEquivalentArea, incidence_angle_from_normal_rad: float) -> SeafloorAreaBackscatter:
-    """Build area backscatter from pattern-times-matched-filter equivalent area."""
-
-    area = float(weighted_area.equivalent_insonified_area_m2)
-    if area <= 0.0:
-        raise ValueError("matched-filter weighted pattern has zero equivalent insonified area")
-    return SeafloorAreaBackscatter(scattering_strength_db_per_m2=scattering_strength_db_per_m2,
-        insonified_area_m2=area, incidence_angle_from_normal_rad=incidence_angle_from_normal_rad,
-        area_semantics="equivalent_pattern_and_matched_filter_weighted")
