@@ -1,7 +1,7 @@
 """Numerical-resolution metadata for continuous physical models.
 
 HydroSIM distinguishes a continuous scientific model from its discrete numerical
-realization.  This module provides small reusable diagnostics for that boundary.
+realization. This module provides small reusable diagnostics for that boundary.
 It does not choose a scientific model; it records sampling and compares results
 under refinement.
 """
@@ -39,7 +39,7 @@ class SamplingAdequacy(BaseModel):
     sample_rate_hz: FiniteFloat = Field(gt=0.0)
     maximum_absolute_frequency_hz: FiniteFloat = Field(ge=0.0)
     nyquist_frequency_hz: FiniteFloat = Field(gt=0.0)
-    nyquist_ratio: FiniteFloat = Field(ge=0.0)
+    nyquist_ratio: FiniteFloat | None = Field(default=None, ge=0.0)
     meets_nyquist: bool
 
 
@@ -52,7 +52,7 @@ class ScalarConvergenceDiagnostic(BaseModel):
     coarse_value: FiniteFloat
     fine_value: FiniteFloat
     absolute_change: FiniteFloat = Field(ge=0.0)
-    relative_change: FiniteFloat = Field(ge=0.0)
+    relative_change: FiniteFloat | None = Field(default=None, ge=0.0)
     relative_tolerance: FiniteFloat = Field(ge=0.0)
     converged: bool
 
@@ -60,9 +60,10 @@ class ScalarConvergenceDiagnostic(BaseModel):
 def assess_baseband_sampling(*, sample_rate_hz: float, maximum_absolute_frequency_hz: float) -> SamplingAdequacy:
     """Assess whether a discrete baseband realization satisfies Nyquist.
 
-    The criterion is ``f_s / 2 >= f_max``.  Meeting Nyquist only prevents aliasing
+    The criterion is ``f_s / 2 >= f_max``. Meeting Nyquist only prevents aliasing
     in the ideal sampled representation; it does not guarantee adequate numerical
-    resolution for a particular observable.
+    resolution for a particular observable. ``nyquist_ratio`` is undefined for a
+    zero-bandwidth baseband signal and is then reported as ``None``.
     """
 
     fs = float(sample_rate_hz)
@@ -72,7 +73,7 @@ def assess_baseband_sampling(*, sample_rate_hz: float, maximum_absolute_frequenc
     if fmax < 0.0:
         raise ValueError("maximum_absolute_frequency_hz must be non-negative")
     nyquist = 0.5 * fs
-    ratio = nyquist / fmax if fmax > 0.0 else float("inf")
+    ratio = nyquist / fmax if fmax > 0.0 else None
     return SamplingAdequacy(
         sample_rate_hz=fs,
         maximum_absolute_frequency_hz=fmax,
@@ -83,7 +84,13 @@ def assess_baseband_sampling(*, sample_rate_hz: float, maximum_absolute_frequenc
 
 
 def compare_scalar_refinement(*, quantity_name: str, coarse_value: float, fine_value: float, relative_tolerance: float) -> ScalarConvergenceDiagnostic:
-    """Compare a scalar result from coarse and refined numerical realizations."""
+    """Compare a scalar result from coarse and refined numerical realizations.
+
+    Relative change uses the refined result as the reference scale. It is undefined
+    when the refined value is exactly zero and the two results differ; that case is
+    reported as ``relative_change=None`` and cannot satisfy a finite relative
+    convergence tolerance.
+    """
 
     tolerance = float(relative_tolerance)
     if tolerance < 0.0:
@@ -92,7 +99,15 @@ def compare_scalar_refinement(*, quantity_name: str, coarse_value: float, fine_v
     fine = float(fine_value)
     change = abs(fine - coarse)
     scale = abs(fine)
-    relative = change / scale if scale > 0.0 else (0.0 if change == 0.0 else float("inf"))
+    if scale > 0.0:
+        relative: float | None = change / scale
+        converged = relative <= tolerance
+    elif change == 0.0:
+        relative = 0.0
+        converged = True
+    else:
+        relative = None
+        converged = False
     return ScalarConvergenceDiagnostic(
         quantity_name=quantity_name,
         coarse_value=coarse,
@@ -100,5 +115,5 @@ def compare_scalar_refinement(*, quantity_name: str, coarse_value: float, fine_v
         absolute_change=change,
         relative_change=relative,
         relative_tolerance=tolerance,
-        converged=relative <= tolerance,
+        converged=converged,
     )
