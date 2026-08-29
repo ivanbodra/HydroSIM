@@ -1,4 +1,4 @@
-from math import isclose, radians
+from math import isclose, radians, sqrt
 
 from hydrosim.acquisition import (
     ArrayElementTruthArrival,
@@ -26,8 +26,22 @@ def _array() -> TransducerArray:
     )
 
 
-def _synthetic_reception(angle_rad: float) -> ArrayTruthReception:
-    array = _array()
+def _two_element_half_wavelength_array() -> TransducerArray:
+    return TransducerArray(
+        name="rx_two",
+        role="rx",
+        n_x=1,
+        n_y=2,
+        d_x=0.0,
+        d_y=0.005,
+        element_longitudinal_size=0.004,
+        element_transverse_size=0.004,
+        orientation=Attitude(roll=0.0, pitch=0.0, yaw=0.0),
+    )
+
+
+def _synthetic_reception(angle_rad: float, array: TransducerArray | None = None) -> ArrayTruthReception:
+    array = array or _array()
     truth_law = ideal_receive_steering(
         receive_array=array,
         across_track_angle_rad=angle_rad,
@@ -114,3 +128,44 @@ def test_frequency_changes_phase_sensitivity_for_same_timing_error():
     )
 
     assert low.normalized_magnitude > high.normalized_magnitude
+
+
+def test_two_element_half_wavelength_broadside_response_matches_closed_form():
+    """Independent check: two elements, d=lambda/2, source at +30 deg, steer 0.
+
+    The inter-element residual phase is pi*sin(30 deg)=pi/2. For two equal
+    phasors separated by phase Delta, normalized magnitude is |cos(Delta/2)|,
+    hence sqrt(2)/2. This value is derived independently of HydroSIM's delay law.
+    """
+
+    array = _two_element_half_wavelength_array()
+    result = coherent_receive_sum(
+        reception=_synthetic_reception(radians(30.0), array),
+        steering=ideal_receive_steering(
+            receive_array=array,
+            across_track_angle_rad=0.0,
+            sound_speed_mps=1500.0,
+        ),
+        tone=NarrowbandReceiveTone(frequency_hz=150_000.0),
+    )
+
+    assert isclose(result.normalized_magnitude, sqrt(2.0) / 2.0, abs_tol=1e-12)
+    assert isclose(result.coherent_power_normalized, 0.5, abs_tol=1e-12)
+
+
+def test_two_element_half_wavelength_opposite_steering_cancels():
+    """Independent check: +30 deg source steered to -30 deg gives Delta=pi."""
+
+    array = _two_element_half_wavelength_array()
+    result = coherent_receive_sum(
+        reception=_synthetic_reception(radians(30.0), array),
+        steering=ideal_receive_steering(
+            receive_array=array,
+            across_track_angle_rad=radians(-30.0),
+            sound_speed_mps=1500.0,
+        ),
+        tone=NarrowbandReceiveTone(frequency_hz=150_000.0),
+    )
+
+    assert isclose(result.normalized_magnitude, 0.0, abs_tol=1e-12)
+    assert isclose(result.coherent_power_normalized, 0.0, abs_tol=1e-12)
