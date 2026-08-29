@@ -47,6 +47,9 @@ class LinearFMPulse(BaseModel):
         return float(self.bandwidth_hz) / float(self.duration_seconds)
 
 
+WaveformPulse = ContinuousWavePulse | LinearFMPulse
+
+
 class MatchedFilterSummary(BaseModel):
     """Peak properties of a normalized matched-filter correlation."""
 
@@ -56,6 +59,22 @@ class MatchedFilterSummary(BaseModel):
     peak_lag_samples: int
     peak_lag_seconds: FiniteFloat
     normalized_peak_amplitude: FiniteFloat = Field(ge=0.0)
+
+
+class WaveformAutocorrelation(BaseModel):
+    """Normalized matched-filter response of a waveform to delayed copies of itself.
+
+    ``normalized_amplitude`` is |R_ss(tau)| / R_ss(0). ``normalized_power`` is
+    its square and is the appropriate deterministic temporal weight when an
+    incoherent area-scattering power model is evaluated at matched-filter output.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    sample_rate_hz: FiniteFloat = Field(gt=0.0)
+    lag_seconds: tuple[FiniteFloat, ...]
+    normalized_amplitude: tuple[FiniteFloat, ...]
+    normalized_power: tuple[FiniteFloat, ...]
 
 
 def _sample_count(duration_seconds: float, sample_rate_hz: float) -> int:
@@ -92,6 +111,44 @@ def sample_lfm_baseband(pulse: LinearFMPulse, *, sample_rate_hz: float) -> np.nd
     tau = t - 0.5 * duration
     phase = pi * sweep_rate * tau * tau
     return np.exp(1j * phase)
+
+
+def sample_waveform_baseband(pulse: WaveformPulse, *, sample_rate_hz: float) -> np.ndarray:
+    """Sample either supported analytic/baseband pulse."""
+
+    if isinstance(pulse, ContinuousWavePulse):
+        return sample_cw_baseband(pulse, sample_rate_hz=sample_rate_hz)
+    return sample_lfm_baseband(pulse, sample_rate_hz=sample_rate_hz)
+
+
+def waveform_autocorrelation(
+    pulse: WaveformPulse,
+    *,
+    sample_rate_hz: float,
+) -> WaveformAutocorrelation:
+    """Return the normalized matched-filter autocorrelation envelope and power.
+
+    The result is discrete at the waveform sampling interval. It intentionally
+    represents waveform/matched-filter physics only; no receiver bandwidth,
+    analogue electronics, sampling jitter, noise or detection threshold is added.
+    """
+
+    reference = sample_waveform_baseband(pulse, sample_rate_hz=sample_rate_hz)
+    raw = np.correlate(reference, reference, mode="full")
+    zero_lag_index = reference.size - 1
+    peak = float(abs(raw[zero_lag_index]))
+    if peak <= 0.0:
+        raise ValueError("waveform autocorrelation has zero peak")
+    amplitude = np.abs(raw) / peak
+    power = amplitude * amplitude
+    lag_samples = np.arange(-(reference.size - 1), reference.size, dtype=int)
+    lags = lag_samples.astype(float) / float(sample_rate_hz)
+    return WaveformAutocorrelation(
+        sample_rate_hz=sample_rate_hz,
+        lag_seconds=tuple(float(value) for value in lags),
+        normalized_amplitude=tuple(float(value) for value in amplitude),
+        normalized_power=tuple(float(value) for value in power),
+    )
 
 
 def matched_filter(
