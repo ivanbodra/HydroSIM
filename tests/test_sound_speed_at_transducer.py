@@ -2,129 +2,56 @@ from math import radians, sin
 
 import pytest
 
-from hydrosim.acquisition import (
-    SoundSpeedAtTransducerDirection,
-    SoundSpeedAtTransducerSteering,
-    ideal_receive_steering,
-    resolve_sound_speed_at_transducer_direction,
-    resolve_sound_speed_at_transducer_steering,
-    sensor_angular_direction,
+from hydrosim.acquisition.sound_speed_at_transducer import (
+    PrincipalPlaneSteeringTruthComparison,
+    SteeringTruthComparison,
+    compare_principal_plane_steering_with_truth,
+    compare_steering_direction_with_truth,
 )
-from hydrosim.geometry import Attitude, TransducerArray
+from hydrosim.acquisition.angular_pattern_2d import sensor_angular_direction
 
 
-def _receive_array() -> TransducerArray:
-    return TransducerArray(
-        name="rx_sound_speed_at_transducer",
-        role="rx",
-        n_x=1,
-        n_y=4,
-        d_x=0.0,
-        d_y=0.01,
-        element_longitudinal_size=0.005,
-        element_transverse_size=0.005,
-        orientation=Attitude(roll=0.0, pitch=0.0, yaw=0.0),
-    )
-
-
-def test_equal_sound_speeds_at_transducer_preserve_configured_angle() -> None:
+def test_equal_sonar_and_true_sound_speed_preserve_angle() -> None:
     angle = radians(35.0)
-    result = resolve_sound_speed_at_transducer_steering(
+    result = compare_principal_plane_steering_with_truth(
         configured_angle_rad=angle,
-        configured_sound_speed_at_transducer_mps=1500.0,
-        physical_sound_speed_at_transducer_mps=1500.0,
+        sound_speed_used_by_sonar_mps=1500.0,
+        true_local_sound_speed_mps=1500.0,
     )
-
-    assert isinstance(result, SoundSpeedAtTransducerSteering)
+    assert isinstance(result, PrincipalPlaneSteeringTruthComparison)
     assert result.physical_angle_rad == pytest.approx(angle)
     assert result.angle_error_rad == pytest.approx(0.0)
-    assert result.imposed_tangential_slowness_seconds_per_m == pytest.approx(sin(angle) / 1500.0)
 
 
-def test_higher_physical_sound_speed_at_transducer_increases_off_normal_angle() -> None:
+def test_erroneous_sonar_sound_speed_changes_physical_angle_in_truth() -> None:
     configured_angle = radians(40.0)
-    result = resolve_sound_speed_at_transducer_steering(
+    result = compare_principal_plane_steering_with_truth(
         configured_angle_rad=configured_angle,
-        configured_sound_speed_at_transducer_mps=1480.0,
-        physical_sound_speed_at_transducer_mps=1520.0,
+        sound_speed_used_by_sonar_mps=1480.0,
+        true_local_sound_speed_mps=1520.0,
     )
-
     assert result.physical_angle_rad > configured_angle
-    assert sin(result.physical_angle_rad) / 1520.0 == pytest.approx(
-        sin(configured_angle) / 1480.0
-    )
+    assert sin(result.physical_angle_rad) / 1520.0 == pytest.approx(sin(configured_angle) / 1480.0)
 
 
-def test_sound_speed_at_transducer_preserves_signed_steering_convention() -> None:
-    result = resolve_sound_speed_at_transducer_steering(
-        configured_angle_rad=radians(-30.0),
-        configured_sound_speed_at_transducer_mps=1500.0,
-        physical_sound_speed_at_transducer_mps=1470.0,
-    )
-
-    assert result.physical_angle_rad < 0.0
-    assert abs(result.physical_angle_rad) < radians(30.0)
-
-
-def test_receive_delay_law_uses_configured_sound_speed_at_transducer() -> None:
-    configured_angle = radians(45.0)
-    configured_c = 1480.0
-    physical_c = 1520.0
-
-    hypothesis = ideal_receive_steering(
-        receive_array=_receive_array(),
-        across_track_angle_rad=configured_angle,
-        sound_speed_mps=configured_c,
-    )
-    resolved = resolve_sound_speed_at_transducer_steering(
-        configured_angle_rad=configured_angle,
-        configured_sound_speed_at_transducer_mps=configured_c,
-        physical_sound_speed_at_transducer_mps=physical_c,
-    )
-
-    assert hypothesis.sound_speed_mps == pytest.approx(configured_c)
-    assert resolved.imposed_tangential_slowness_seconds_per_m == pytest.approx(
-        sin(configured_angle) / configured_c
-    )
-    assert sin(resolved.physical_angle_rad) / physical_c == pytest.approx(
-        resolved.imposed_tangential_slowness_seconds_per_m
-    )
-
-
-def test_full_3d_direction_scales_tangential_slowness_without_separate_angle_corrections() -> None:
+def test_full_3d_truth_direction_preserves_imposed_tangential_slowness() -> None:
     configured = sensor_angular_direction(radians(20.0), radians(35.0))
-    configured_c = 1480.0
-    physical_c = 1520.0
-
-    result = resolve_sound_speed_at_transducer_direction(
+    result = compare_steering_direction_with_truth(
         configured_direction_array_frame=configured,
-        configured_sound_speed_at_transducer_mps=configured_c,
-        physical_sound_speed_at_transducer_mps=physical_c,
+        sound_speed_used_by_sonar_mps=1480.0,
+        true_local_sound_speed_mps=1520.0,
     )
-
-    assert isinstance(result, SoundSpeedAtTransducerDirection)
+    assert isinstance(result, SteeringTruthComparison)
     physical = result.physical_direction_array_frame
-    assert physical.x / physical_c == pytest.approx(configured.x / configured_c)
-    assert physical.y / physical_c == pytest.approx(configured.y / configured_c)
-    assert physical.z > 0.0
+    assert physical.x / 1520.0 == pytest.approx(configured.x / 1480.0)
+    assert physical.y / 1520.0 == pytest.approx(configured.y / 1480.0)
     assert physical.x * physical.x + physical.y * physical.y + physical.z * physical.z == pytest.approx(1.0)
 
 
-def test_equal_sound_speed_at_transducer_preserves_full_3d_direction() -> None:
-    configured = sensor_angular_direction(radians(15.0), radians(-25.0))
-    result = resolve_sound_speed_at_transducer_direction(
-        configured_direction_array_frame=configured,
-        configured_sound_speed_at_transducer_mps=1500.0,
-        physical_sound_speed_at_transducer_mps=1500.0,
-    )
-
-    assert result.physical_direction_array_frame.is_close(configured, atol=1e-12)
-
-
-def test_nonpropagating_sound_speed_at_transducer_steering_law_is_rejected() -> None:
+def test_nonpropagating_truth_state_is_rejected() -> None:
     with pytest.raises(ValueError, match="non-propagating"):
-        resolve_sound_speed_at_transducer_steering(
+        compare_principal_plane_steering_with_truth(
             configured_angle_rad=radians(80.0),
-            configured_sound_speed_at_transducer_mps=1400.0,
-            physical_sound_speed_at_transducer_mps=1600.0,
+            sound_speed_used_by_sonar_mps=1400.0,
+            true_local_sound_speed_mps=1600.0,
         )
