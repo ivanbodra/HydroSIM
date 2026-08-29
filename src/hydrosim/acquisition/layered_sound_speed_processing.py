@@ -5,12 +5,17 @@ A layered ray tracer, however, needs a propagation direction consistent with the
 configured processing profile. The invariant carried between those two models is
 tangential slowness, not the angle itself.
 
-For a detected unit direction ``u_est`` and sonar-used sound speed ``c_used``::
+HydroSIM represents the transducer-depth value as an explicit zero-thickness
+``SoundSpeedProfileBoundary``. This keeps a point/boundary observation distinct from
+the first finite-thickness profile layer while making the interface refraction
+semantics visible and traceable.
 
-    p_x = u_est.x / c_used
-    p_y = u_est.y / c_used
+For a detected unit direction ``u_est`` and boundary sound speed ``c_boundary``::
 
-At the profile start, with configured profile sound speed ``c_profile``::
+    p_x = u_est.x / c_boundary
+    p_y = u_est.y / c_boundary
+
+At the first finite-thickness profile layer, with sound speed ``c_profile``::
 
     u_profile.x = c_profile * p_x
     u_profile.y = c_profile * p_y
@@ -31,6 +36,10 @@ from hydrosim.geometry import Pose, Vector3
 from .angular_pattern_2d import sensor_angular_direction
 from .layered_propagation import LayeredSoundSpeedProfile
 from .sound_speed_processing import SoundSpeedAtTransducerUse
+from .sound_speed_profile_boundary import (
+    SoundSpeedProfileBoundary,
+    profile_boundary_from_sound_speed_at_transducer,
+)
 from .sounding_observation import DetectedAcousticObservation
 from .sounding_reconstruction import (
     LayeredSoundSpeedSounding,
@@ -45,6 +54,7 @@ class LayeredReconstructionInitialDirection(BaseModel):
 
     detected_direction_sensor_frame: Vector3
     sound_speed_at_transducer: SoundSpeedAtTransducerUse
+    profile_boundary: SoundSpeedProfileBoundary
     profile_start_sound_speed_mps: FiniteFloat = Field(gt=0.0)
     tangential_slowness_x_seconds_per_m: FiniteFloat
     tangential_slowness_y_seconds_per_m: FiniteFloat
@@ -59,7 +69,7 @@ class LayeredSoundSpeedAtTransducerSounding(BaseModel):
     initial_direction_resolution: LayeredReconstructionInitialDirection
     sounding: LayeredSoundSpeedSounding
     reconstruction_assumption: str = (
-        "stationary_reciprocal_layered_sound_speed_tangential_slowness_from_sonar_state"
+        "stationary_reciprocal_layered_sound_speed_explicit_transducer_boundary_tangential_slowness"
     )
 
 
@@ -70,7 +80,13 @@ def resolve_layered_reconstruction_initial_direction(
     profile: LayeredSoundSpeedProfile,
     profile_start_depth_m: float,
 ) -> LayeredReconstructionInitialDirection:
-    """Map a detected direction into the configured profile using slowness continuity."""
+    """Map a detected direction across the explicit boundary into the profile.
+
+    The transducer value is a zero-thickness boundary state. It is not written into
+    the finite-thickness profile. Tangential slowness is preserved across the
+    boundary/profile interface, which makes the array-face-to-profile direction
+    change explicit without inventing a layer thickness.
+    """
 
     ux = float(detected_direction_sensor_frame.x)
     uy = float(detected_direction_sensor_frame.y)
@@ -81,10 +97,15 @@ def resolve_layered_reconstruction_initial_direction(
     if uz <= 0.0:
         raise ValueError("detected_direction_sensor_frame must point toward +Z/down")
 
-    c_used = float(sound_speed_at_transducer.sound_speed_mps)
-    profile_c = float(profile.layer_at_depth(float(profile_start_depth_m)).sound_speed_mps)
-    px = ux / c_used
-    py = uy / c_used
+    start_depth = float(profile_start_depth_m)
+    boundary = profile_boundary_from_sound_speed_at_transducer(
+        sound_speed_at_transducer=sound_speed_at_transducer,
+        depth_m=start_depth,
+    )
+    boundary_c = float(boundary.sound_speed_mps)
+    profile_c = float(profile.layer_at_depth(start_depth).sound_speed_mps)
+    px = ux / boundary_c
+    py = uy / boundary_c
     profile_x = profile_c * px
     profile_y = profile_c * py
     tangential_squared = profile_x * profile_x + profile_y * profile_y
@@ -97,6 +118,7 @@ def resolve_layered_reconstruction_initial_direction(
     return LayeredReconstructionInitialDirection(
         detected_direction_sensor_frame=detected_direction_sensor_frame,
         sound_speed_at_transducer=sound_speed_at_transducer,
+        profile_boundary=boundary,
         profile_start_sound_speed_mps=profile_c,
         tangential_slowness_x_seconds_per_m=px,
         tangential_slowness_y_seconds_per_m=py,
@@ -117,12 +139,11 @@ def reconstruct_layered_sound_speed_sounding_from_sonar_state(
     profile_start_depth_m: float,
     sound_speed_at_transducer: SoundSpeedAtTransducerUse,
 ) -> LayeredSoundSpeedAtTransducerSounding:
-    """Reconstruct using measured TWTT, detected angle, c-used, and processing SVP.
+    """Reconstruct using measured TWTT, detected angle, boundary c, and processing SVP.
 
-    Unlike the simpler reference wrapper in ``sounding_reconstruction``, this
-    function does not silently interpret the detected beam angle as a physical
-    launch angle in the first profile layer. It carries the tangential slowness
-    implied by the sonar-used sound speed into the configured profile.
+    The detected direction belongs to the explicit transducer-depth boundary state.
+    Tangential slowness is then carried into the first finite-thickness configured
+    profile layer before TWTT-driven ray tracing.
     """
 
     if observation.detected_across_track_angle_rad is None:
