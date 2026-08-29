@@ -126,7 +126,8 @@ def test_orthogonal_tx_rx_arrays_receive_distinct_local_components():
         spacing=wavelength / 2.0,
         orientation=Attitude(roll=0.0, pitch=0.0, yaw=pi / 2.0),
     )
-    physical_direction = Vector3(x=0.0, y=1.0, z=1.0)
+    component = 1.0 / sqrt(2.0)
+    physical_direction = Vector3(x=0.0, y=component, z=component)
     broadside_sensor = Vector3(x=0.0, y=0.0, z=1.0)
 
     response = two_way_beam_pattern_sensor_frame(
@@ -142,11 +143,11 @@ def test_orthogonal_tx_rx_arrays_receive_distinct_local_components():
     tx_local = response.transmit_direction_array_frame
     rx_local = response.receive_direction_array_frame
     assert isclose(tx_local.x, 0.0, abs_tol=1e-12)
-    assert isclose(tx_local.y, 1.0, abs_tol=1e-12)
-    assert isclose(rx_local.x, 1.0, abs_tol=1e-12)
+    assert isclose(tx_local.y, component, abs_tol=1e-12)
+    assert isclose(rx_local.x, component, abs_tol=1e-12)
     assert isclose(rx_local.y, 0.0, abs_tol=1e-12)
-    assert isclose(tx_local.z, 1.0, abs_tol=1e-12)
-    assert isclose(rx_local.z, 1.0, abs_tol=1e-12)
+    assert isclose(tx_local.z, component, abs_tol=1e-12)
+    assert isclose(rx_local.z, component, abs_tol=1e-12)
 
 
 def test_sensor_frame_api_matches_manual_local_transforms():
