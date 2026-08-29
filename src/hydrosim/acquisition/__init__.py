@@ -30,6 +30,13 @@ from .element_signals import (
     coherent_receive_sum,
 )
 from .generation import generate_acquisition_sequence
+from .layered_propagation import (
+    LayeredRayPath,
+    LayeredRaySegment,
+    LayeredSoundSpeedProfile,
+    SoundSpeedLayer,
+    trace_layered_ray_to_depth,
+)
 from .models import AcquisitionPing, AcquisitionSequence, PingSchedule
 from .multibeam_fan import (
     MillsCrossMultibeamFan,
@@ -58,6 +65,14 @@ from .two_way_pattern import (
     two_way_beam_pattern,
     two_way_beam_pattern_sensor_frame,
 )
+from .waveform import (
+    ContinuousWavePulse,
+    LinearFMPulse,
+    MatchedFilterSummary,
+    matched_filter,
+    sample_cw_baseband,
+    sample_lfm_baseband,
+)
 
 __all__ = [
     "AcquisitionPing",
@@ -73,6 +88,12 @@ __all__ = [
     "BeamTruthReturn",
     "CoherentReceiveSum",
     "ConstantSoundSpeedPropagation",
+    "ContinuousWavePulse",
+    "LayeredRayPath",
+    "LayeredRaySegment",
+    "LayeredSoundSpeedProfile",
+    "LinearFMPulse",
+    "MatchedFilterSummary",
     "MillsCrossMultibeamFan",
     "MultibeamFanBeam",
     "MultibeamFanMatrixSample",
@@ -86,6 +107,7 @@ __all__ = [
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
     "RectangularElementFactor",
+    "SoundSpeedLayer",
     "TransmitSector",
     "TransmitSectorSet",
     "TwoWayBeamPatternResponse",
@@ -97,14 +119,18 @@ __all__ = [
     "generate_acquisition_sequence",
     "ideal_receive_steering",
     "make_uniform_transmit_sectors",
+    "matched_filter",
     "one_way_beam_pattern",
     "rectangular_element_factor",
+    "sample_cw_baseband",
+    "sample_lfm_baseband",
     "scan_across_track_beam_pattern",
     "scan_mills_cross_two_way_pattern_2d",
     "sensor_angular_direction",
     "simulate_mills_cross_multibeam_fan",
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
+    "trace_layered_ray_to_depth",
     "two_way_beam_pattern",
     "two_way_beam_pattern_sensor_frame",
 ]
