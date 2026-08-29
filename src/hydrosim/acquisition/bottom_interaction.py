@@ -8,9 +8,9 @@ This layer deliberately separates two physically different abstractions:
 
 The area term is not necessarily a hard-edged physical footprint. It may represent
 a uniform geometric patch or an equivalent area obtained by integrating a
-normalized beam/pulse weighting over the seafloor. ``area_semantics`` records that
-choice explicitly so a -3 dB contour is never silently treated as the boundary
-between insonified and non-insonified bottom.
+normalized beam/pulse/matched-filter weighting over the seafloor. ``area_semantics``
+records that choice explicitly so a -3 dB contour is never silently treated as the
+boundary between insonified and non-insonified bottom.
 
 No empirical angular backscatter law is hidden here. Incidence angle is retained
 as scientific metadata while the user/model supplies the scattering strength
@@ -29,6 +29,7 @@ SeafloorAreaSemantics = Literal[
     "uniform_geometric_patch",
     "equivalent_pattern_weighted",
     "equivalent_pattern_and_pulse_weighted",
+    "equivalent_pattern_and_matched_filter_weighted",
 ]
 
 
@@ -49,9 +50,9 @@ class SeafloorAreaBackscatter(BaseModel):
         BS = S_b + 10 log10(A_equiv / 1 m^2).
 
     For ``uniform_geometric_patch``, ``insonified_area_m2`` is a literal uniform
-    patch area. For either ``equivalent_*`` semantic it is the area which, if
+    patch area. For any ``equivalent_*`` semantic it is the area which, if
     illuminated at the reference/peak weighting, gives the same integrated power
-    as the distributed beam or beam-times-pulse weighting.
+    as the distributed weighting specified by ``area_semantics``.
 
     The legacy field name ``insonified_area_m2`` is retained for API continuity;
     ``area_semantics`` is normative for interpretation.
