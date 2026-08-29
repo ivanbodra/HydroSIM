@@ -6,6 +6,14 @@ from .angular_pattern_2d import (
     scan_mills_cross_two_way_pattern_2d,
     sensor_angular_direction,
 )
+from .angular_scattering import (
+    AngularScatteringIntegration,
+    AngularScatteringStrengthSample,
+    AngularScatteringStrengthTable,
+    angular_scattering_bottom_response,
+    integrate_angular_seafloor_backscatter,
+    scattering_strength_at_incidence,
+)
 from .array_factor import ArrayFactorElementContribution, ArrayFactorResponse, array_factor
 from .beam_pattern import (
     AcrossTrackBeamPatternSample,
