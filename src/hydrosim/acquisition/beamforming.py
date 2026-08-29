@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 from hydrosim.geometry import TransducerArray, Vector3, rotate_vector, rotation_x
 
 from .reception import ArrayTruthReception
+from .sound_speed_processing import SoundSpeedAtTransducerUse, use_measured_sound_speed_at_transducer
 from .sound_speed_sensor import SoundSpeedAtTransducerMeasurement
 
 
@@ -120,23 +121,33 @@ def ideal_receive_steering(
     )
 
 
+def ideal_receive_steering_from_sound_speed_use(
+    *,
+    receive_array: TransducerArray,
+    across_track_angle_rad: float,
+    sound_speed_at_transducer: SoundSpeedAtTransducerUse,
+) -> ReceiveSteeringHypothesis:
+    """Build receive steering from the explicit sound-speed state used by the sonar."""
+
+    return ideal_receive_steering(
+        receive_array=receive_array,
+        across_track_angle_rad=across_track_angle_rad,
+        sound_speed_mps=float(sound_speed_at_transducer.sound_speed_mps),
+    )
+
+
 def ideal_receive_steering_from_sound_speed_measurement(
     *,
     receive_array: TransducerArray,
     across_track_angle_rad: float,
     sound_speed_measurement: SoundSpeedAtTransducerMeasurement,
 ) -> ReceiveSteeringHypothesis:
-    """Build receive steering using only the sound-speed value observed by the sonar.
+    """Convenience wrapper selecting the current sensor measurement for processing."""
 
-    This is the preferred boundary for sensor-driven processing. The function has no
-    access to simulation Truth; it delegates to ``ideal_receive_steering`` using the
-    measured sound speed available to the sonar.
-    """
-
-    return ideal_receive_steering(
+    return ideal_receive_steering_from_sound_speed_use(
         receive_array=receive_array,
         across_track_angle_rad=across_track_angle_rad,
-        sound_speed_mps=float(sound_speed_measurement.measured_sound_speed_mps),
+        sound_speed_at_transducer=use_measured_sound_speed_at_transducer(sound_speed_measurement),
     )
 
 
@@ -172,7 +183,7 @@ def evaluate_receive_steering(
     if residuals:
         rms = sqrt(sum(value * value for value in residuals) / len(residuals))
         maximum = max(abs(value) for value in residuals)
-    else:  # TransducerArray currently guarantees at least one element.
+    else:
         rms = 0.0
         maximum = 0.0
 
