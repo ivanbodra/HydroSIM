@@ -35,7 +35,11 @@ from .returns import (
     ConstantSoundSpeedPropagation,
     simulate_truth_beam_return,
 )
-from .two_way_pattern import TwoWayBeamPatternResponse, two_way_beam_pattern
+from .two_way_pattern import (
+    TwoWayBeamPatternResponse,
+    two_way_beam_pattern,
+    two_way_beam_pattern_sensor_frame,
+)
 
 __all__ = [
     "AcquisitionPing",
@@ -70,4 +74,5 @@ __all__ = [
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
     "two_way_beam_pattern",
+    "two_way_beam_pattern_sensor_frame",
 ]
