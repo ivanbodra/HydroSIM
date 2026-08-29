@@ -59,6 +59,13 @@ from .returns import (
     ConstantSoundSpeedPropagation,
     simulate_truth_beam_return,
 )
+from .sector_signal_chain import (
+    SectorSignalChainPing,
+    SectorSignalChainResult,
+    SectorWaveformAssignment,
+    SectorWaveformPlan,
+    simulate_sector_waveform_propagation_ping,
+)
 from .transmit_sectors import TransmitSector, TransmitSectorSet, make_uniform_transmit_sectors
 from .two_way_pattern import (
     TwoWayBeamPatternResponse,
@@ -107,6 +114,10 @@ __all__ = [
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
     "RectangularElementFactor",
+    "SectorSignalChainPing",
+    "SectorSignalChainResult",
+    "SectorWaveformAssignment",
+    "SectorWaveformPlan",
     "SoundSpeedLayer",
     "TransmitSector",
     "TransmitSectorSet",
@@ -128,6 +139,7 @@ __all__ = [
     "scan_mills_cross_two_way_pattern_2d",
     "sensor_angular_direction",
     "simulate_mills_cross_multibeam_fan",
+    "simulate_sector_waveform_propagation_ping",
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
     "trace_layered_ray_to_depth",
