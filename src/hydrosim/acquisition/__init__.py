@@ -58,6 +58,12 @@ from .multibeam_fan import (
     MultibeamFanMatrixSample,
     simulate_mills_cross_multibeam_fan,
 )
+from .pattern_beamwidth import (
+    MillsCrossFootprintBeamwidths,
+    PrincipalPlaneBeamwidth,
+    derive_mills_cross_footprint_beamwidths,
+    derive_principal_plane_beamwidth,
+)
 from .receive_beam_bank import (
     ReceiveBeamBankResponse,
     ReceiveBeamResponse,
@@ -125,6 +131,7 @@ __all__ = [
     "LayeredSoundSpeedProfile",
     "LinearFMPulse",
     "MatchedFilterSummary",
+    "MillsCrossFootprintBeamwidths",
     "MillsCrossMultibeamFan",
     "MultibeamFanBeam",
     "MultibeamFanMatrixSample",
@@ -133,6 +140,7 @@ __all__ = [
     "OneWayTransmissionLoss",
     "PingSchedule",
     "PointTargetStrength",
+    "PrincipalPlaneBeamwidth",
     "PropagationLossModel",
     "ReceiveBeamBankResponse",
     "ReceiveBeamResponse",
@@ -154,6 +162,8 @@ __all__ = [
     "across_track_direction",
     "array_factor",
     "coherent_receive_sum",
+    "derive_mills_cross_footprint_beamwidths",
+    "derive_principal_plane_beamwidth",
     "estimate_flat_seafloor_footprint",
     "evaluate_bottom_interaction",
     "evaluate_mills_cross_receive_beam_bank",
