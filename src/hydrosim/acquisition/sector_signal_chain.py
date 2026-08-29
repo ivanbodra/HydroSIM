@@ -1,21 +1,21 @@
 """Integrated reference chain from TX sectors to matched-filtered RX beams.
 
-This module connects previously independent HydroSIM capabilities without changing
-their scientific semantics:
+This module connects HydroSIM capabilities while keeping their scientific
+semantics explicit:
 
-    TX sector -> waveform -> layered propagation -> ideal point return
-              -> receive-beam bank -> matched filter
+    TX sector -> waveform -> layered propagation -> propagation amplitude loss
+              -> ideal point return -> receive-beam bank -> matched filter
 
-The first integration is deliberately a stationary reciprocal reference. Each
-sector is traced along its steering direction to a requested depth in a horizontally
+The first integration remains a stationary reciprocal reference. Each sector is
+traced along its steering direction to a requested depth in a horizontally
 stratified ocean, and the return is assumed to follow the same path back to a
-co-located receiver. The returned waveform has unit amplitude: spreading loss,
-absorption, scattering strength, noise, electronics and detection are still
-separate capabilities.
+co-located receiver.
 
-The layered propagation model is non-dispersive, so waveform centre frequency does
-not alter the geometric path. Frequency does affect the finite-aperture TX/RX beam
-patterns through the existing narrowband array model.
+When a ``PropagationLossModel`` is supplied, the ideal point return is scaled by
+spherical spreading plus an explicitly supplied absorption coefficient. Bottom
+scattering, target strength, source level, noise, electronics and detection remain
+separate capabilities. If no propagation-loss model is supplied, unit return
+amplitude is retained for backward-compatible geometry/timing experiments.
 """
 
 from __future__ import annotations
@@ -30,6 +30,11 @@ from hydrosim.geometry import MillsCrossConfiguration
 
 from .layered_propagation import LayeredRayPath, LayeredSoundSpeedProfile, trace_layered_ray_to_depth
 from .receive_beam_bank import evaluate_mills_cross_receive_beam_bank
+from .transmission_loss import (
+    PropagationLossModel,
+    ReciprocalTransmissionLoss,
+    reciprocal_transmission_loss,
+)
 from .transmit_sectors import TransmitSectorSet
 from .waveform import (
     ContinuousWavePulse,
@@ -66,6 +71,8 @@ class SectorSignalChainResult(BaseModel):
     propagation_path: LayeredRayPath
     one_way_travel_time_seconds: FiniteFloat = Field(ge=0.0)
     reciprocal_twtt_seconds: FiniteFloat = Field(ge=0.0)
+    propagation_loss: ReciprocalTransmissionLoss | None = None
+    ideal_point_return_amplitude: FiniteFloat = Field(gt=0.0)
     echo_arrival_offset_seconds: FiniteFloat = Field(ge=0.0)
     echo_delay_samples: int = Field(ge=0)
     strongest_receive_beam_index: int = Field(ge=0)
@@ -124,14 +131,19 @@ def simulate_sector_waveform_propagation_ping(
     receive_steering_across_track_angles_rad: Sequence[float],
     sample_rate_hz: float,
     transducer_depth_m: float = 0.0,
+    propagation_loss_model: PropagationLossModel | None = None,
 ) -> SectorSignalChainPing:
-    """Run the first integrated sector/waveform/refraction/RX/MF reference chain.
+    """Run the integrated sector/waveform/refraction/RX/MF reference chain.
 
-    The bottom interaction is an ideal unit-amplitude point return at the endpoint
-    of each sector's refracted path. Reciprocity is assumed for the inbound path,
-    hence TWTT = 2*T_one_way. Sector delay is relative to the ping TX reference and
-    is included in the synthesized echo arrival. The matched-filter timing is
-    sample-quantized; the resulting quantization error is exposed explicitly.
+    The bottom interaction remains an ideal point return at the endpoint of each
+    sector's refracted path. Reciprocity is assumed for the inbound path, hence
+    TWTT = 2*T_one_way. If ``propagation_loss_model`` is present, the returned
+    pressure-like analytic waveform is multiplied by the reciprocal propagation
+    amplitude ratio from spherical spreading plus absorption.
+
+    Sector delay is relative to the ping TX reference and is included in the
+    synthesized echo arrival. Matched-filter timing is sample-quantized and the
+    quantization error is exposed explicitly.
     """
 
     if sample_rate_hz <= 0.0:
@@ -159,10 +171,21 @@ def simulate_sector_waveform_propagation_ping(
         twtt = 2.0 * one_way_time
         arrival_offset = float(sector.tx_delay_seconds) + twtt
 
+        propagation_loss = None
+        echo_amplitude = 1.0
+        if propagation_loss_model is not None:
+            propagation_loss = reciprocal_transmission_loss(
+                one_way_path_length_m=float(path.path_length_m),
+                model=propagation_loss_model,
+            )
+            echo_amplitude = float(propagation_loss.two_way_amplitude_ratio)
+
         reference = _sample_pulse(pulse, sample_rate_hz=sample_rate_hz)
         echo_delay_samples = int(round(arrival_offset * float(sample_rate_hz)))
         received = np.zeros(echo_delay_samples + reference.size + 1, dtype=np.complex128)
-        received[echo_delay_samples : echo_delay_samples + reference.size] = reference
+        received[echo_delay_samples : echo_delay_samples + reference.size] = (
+            echo_amplitude * reference
+        )
         _, mf_summary = matched_filter(
             received,
             reference,
@@ -193,6 +216,8 @@ def simulate_sector_waveform_propagation_ping(
                 propagation_path=path,
                 one_way_travel_time_seconds=one_way_time,
                 reciprocal_twtt_seconds=twtt,
+                propagation_loss=propagation_loss,
+                ideal_point_return_amplitude=echo_amplitude,
                 echo_arrival_offset_seconds=arrival_offset,
                 echo_delay_samples=echo_delay_samples,
                 strongest_receive_beam_index=bank.strongest_beam_index,
