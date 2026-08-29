@@ -23,13 +23,20 @@ scientific_registry/
     └── golden_values/
 ```
 
-The first literature-driven integration model set is:
+Registry coverage is intentionally incremental. A directory listed above may remain empty until a model has reached sufficient scientific maturity to justify a stable record.
 
-`models/integration/dynamic_motion_residuals.yaml`
+Current registered model sets include:
 
-Its canonical explanatory document is:
+- `models/integration/dynamic_motion_residuals.yaml`;
+- `models/integration/risc_maingot_2019.yaml`;
+- `models/propagation/layered_snell_piecewise_constant.yaml`;
+- `models/propagation/sound_speed_zero_thickness_boundary.yaml`.
 
-`docs/science/dynamic_motion_residuals.md`
+Canonical explanatory documents currently include:
+
+- `docs/science/dynamic_motion_residuals.md`;
+- `docs/science/risc.md`;
+- `docs/science/sound_speed_at_transducer.md`.
 
 ## Minimum metadata for a scientific model
 
@@ -55,6 +62,7 @@ Each model record should contain, where applicable:
 - evidence level for each important scientific claim;
 - implementation path;
 - numerical validation cases;
+- independent analytical validation where feasible;
 - golden values where appropriate;
 - related models;
 - alternatives;
@@ -95,6 +103,18 @@ Reference
 ```
 
 The chain should also be navigable in reverse so that any scientific implementation can be traced back to its assumptions and literature basis.
+
+## Validation classes
+
+HydroSIM should distinguish validation evidence rather than treating all passing tests as equivalent.
+
+- `implementation_consistency`: checks API/state invariants and expected relationships internal to the implementation;
+- `closure`: checks that forward/inverse or depth/time formulations return to the same state;
+- `independent_analytical`: computes expected values directly from closed-form mathematics without calling the implementation under test as the expected-value generator;
+- `source_golden_value`: compares with a value explicitly published by an authoritative source;
+- `controlled_numerical_experiment`: explores a documented model where no sufficiently simple closed-form anchor is available.
+
+Closure is valuable, but it must not be described as independent physical validation when both paths share the same governing implementation assumptions.
 
 ## Observability
 
