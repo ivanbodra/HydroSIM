@@ -1,4 +1,4 @@
-version: 0.1.1
+version: 0.1.2
 language: en
 
 references:
@@ -107,3 +107,78 @@ references:
     notes: >-
       Primary reference for intrinsic acoustic time/angle measurement accuracy.
       Kept conceptually separate from integration-error models.
+
+  - id: beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed
+    type: journal_article
+    authors:
+      - Jonathan D. Beaudoin
+      - John E. Hughes Clarke
+      - Jason E. Bartlett
+    year: 2004
+    title: "Application of Surface Sound Speed Measurements in Post-processing for Multi-Sector Multibeam Echosounders"
+    publication: "The International Hydrographic Review"
+    volume: "5"
+    issue: "3"
+    pages: "17-32"
+    primary_url: "https://journals.lib.unb.ca/index.php/ihr/article/view/20675"
+    scope:
+      - surface sound speed
+      - multibeam steering
+      - multi-sector processing
+      - sector timing and association
+      - refraction correction
+    notes: >-
+      Primary literature for the interaction between surface sound-speed information,
+      beam steering and multi-sector multibeam processing. HydroSIM uses it to constrain
+      the validity domain of simple aligned reference cases rather than as evidence for
+      universal cancellation.
+
+  - id: nistad_improved_water_column_sound_speed_ray_tracing
+    type: journal_article
+    authors:
+      - J.-G. Nistad et al.
+    title: "Improved Techniques to Resolve the Water Column Sound Speed Structure for Multibeam Ray Tracing"
+    publication: "The International Hydrographic Review"
+    primary_url: "https://ihr.iho.int/articles/improved-techniques-to-resolve-the-water-column-sound-speed-structure-for-multibeam-ray-tracing/"
+    scope:
+      - water-column sound speed
+      - multibeam ray tracing
+      - refraction
+      - sound-speed structure
+    notes: >-
+      Hydrographic literature supporting explicit treatment of water-column sound-speed
+      structure in multibeam ray tracing. Exact formula/source locators should be tightened
+      as the propagation registry matures.
+
+  - id: kongsberg_em120_operator_manual_850_164112
+    type: manufacturer_manual
+    organization: "Kongsberg Maritime"
+    title: "EM 120 Operator Manual"
+    document_number: "850-164112"
+    primary_url: "https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/164112-em120-operator-manual.pdf"
+    scope:
+      - sound speed at transducer depth
+      - beam pointing
+      - ray bending
+      - flat transducer mounting
+      - real-time sound-speed measurement
+    notes: >-
+      Product-specific authoritative documentation. Used as supporting evidence for the
+      physical plausibility of limited sound-speed-at-transducer cancellation under narrow
+      flat/horizontal-array conditions, not as a universal sonar rule.
+
+  - id: kongsberg_em1002_operator_manual_850_160977
+    type: manufacturer_manual
+    organization: "Kongsberg"
+    title: "EM 1002 Operator Manual"
+    document_number: "850-160977"
+    scope:
+      - sound-speed profile
+      - sound speed at transducer
+      - beam steering
+      - first profile value
+    notes: >-
+      Product-specific support for workflows that use a sensor near the transducer face
+      for beam steering and as the first sound-speed-profile value. HydroSIM represents
+      the corresponding point value as an explicit zero-thickness boundary rather than
+      overwriting a finite-thickness layer.
