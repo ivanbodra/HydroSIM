@@ -41,7 +41,7 @@ The full 3-D reference model conserves both tangential components of slowness.
 
 Sound speed at the transducer and the sound-speed profile have related but distinct roles. The local scalar at the array affects electronic beam steering/angle interpretation. The sound-speed field through the water column controls ray bending together with travel time and the initial ray state.
 
-HydroSIM processing carries tangential slowness from the sonar angular observation into the configured processing profile. If the profile sound speed at the ray-tracing start depth is \(c_p\), then
+HydroSIM processing carries tangential slowness from the sonar angular observation into the configured processing profile. If the profile sound speed immediately below the ray-tracing start boundary is \(c_p\), then
 
 \[
 u_{x,p}=c_p p_x,\qquad u_{y,p}=c_p p_y,
@@ -51,9 +51,31 @@ with the downward normal component obtained from unit-vector closure. The layere
 
 No average sound speed is substituted for a layered profile in the layered reconstruction path.
 
+## Explicit zero-thickness start boundary
+
+HydroSIM now represents the transducer-depth value as an explicit `SoundSpeedProfileBoundary`, separate from the finite-thickness `LayeredSoundSpeedProfile`.
+
+For detected direction \(\mathbf u_d\) at a boundary sound speed \(c_b\), the ray parameter is established from
+
+\[
+p_x=\frac{u_{x,d}}{c_b},\qquad
+p_y=\frac{u_{y,d}}{c_b}.
+\]
+
+The first finite-thickness layer does not inherit \(c_b\). Instead, if that layer has sound speed \(c_1\), the direction just inside the layer follows
+
+\[
+u_{x,1}=c_1p_x,\qquad
+u_{y,1}=c_1p_y.
+\]
+
+Thus a sensor value measured at the array face can establish the ray parameter without being numerically spread through an arbitrary depth interval. The layered propagation solver accepts this boundary explicitly for both depth-driven and travel-time-driven tracing.
+
+This representation is a HydroSIM numerical/modeling choice motivated by the physical distinction between an array-face value and a water-column profile sample. It is not a claim that all manufacturers implement their internal ray tracing with an identical data structure.
+
 ## Narrow cancellation case
 
-A steering-only perturbation of the sound-speed measurement can cancel in a deliberately narrow HydroSIM reference case: stationary, monostatic, reciprocal propagation; aligned flat array; no roll/tilt; identical true and processing water-column profiles; and no artificial propagation of the sensor bias into the entire first profile layer.
+A perturbation of the transducer sound-speed measurement can cancel in a deliberately narrow HydroSIM reference case: stationary, monostatic, reciprocal propagation; aligned flat array; no roll/tilt; identical true and processing finite-thickness water-column profiles; and the same measured value used consistently for TX steering, RX angle mapping, and the zero-thickness processing boundary.
 
 This is a **reference-model closure property**, not a general statement that sound-speed-at-transducer errors cancel in multibeam sounding solutions.
 
@@ -61,11 +83,24 @@ Kongsberg documentation for flat, horizontally mounted EM 120 transducers states
 
 Beaudoin, Hughes Clarke, and Bartlett specifically analyze imperfect surface sound-speed information in multi-sector multibeam systems and identify operational complications including changing sector timing/boundaries and association of receive beams with transmit sectors. HydroSIM will therefore treat sector geometry and steering explicitly before generalizing the reference result.
 
+## Controlled error-isolation matrix
+
+HydroSIM provides a four-run reference matrix to separate two error classes without presupposing their signatures:
+
+| Case | Transducer sensor | Finite-thickness processing profile | Purpose |
+| --- | --- | --- | --- |
+| Reference | ideal | correct | numerical/scientific closure baseline |
+| Transducer only | biased | correct | isolates array-face / zero-thickness-boundary perturbation |
+| Profile only | ideal | perturbed | isolates water-column profile error |
+| Combined | biased | perturbed | exposes interaction between both perturbations |
+
+The matrix intentionally reports the resulting sounding error rather than encoding an assumption that each perturbation must produce a non-zero error. In the current narrow aligned reciprocal reference, the transducer-only case is expected to close, while a finite-thickness profile perturbation produces a controlled sounding error.
+
 ## Boundary value versus profile
 
-Some Kongsberg systems/documentation describe the transducer sound-speed sensor value as being used both for beam steering and as the first value in the active sound-speed profile. That product behavior must not be confused with HydroSIM's numerical representation.
+Some Kongsberg systems/documentation describe the transducer sound-speed sensor value as being used both for beam steering and as the first value in the active sound-speed profile. That product behavior must not be confused with HydroSIM's internal numerical representation.
 
-The current HydroSIM `LayeredSoundSpeedProfile` consists of finite-thickness constant-c layers. Replacing an entire first layer with a biased point sensor observation would incorrectly spread a local measurement perturbation through the layer thickness. Future profile-boundary work must represent the value at transducer depth without silently turning it into a finite-thickness water-column error.
+The current HydroSIM `LayeredSoundSpeedProfile` consists of finite-thickness constant-c layers. Replacing an entire first layer with a biased point sensor observation would incorrectly spread a local measurement perturbation through the layer thickness. The explicit zero-thickness boundary prevents that conflation while still allowing a product/workflow to use the measured transducer value as the ray-tracing start value.
 
 ## Source-to-model traceability
 
@@ -73,9 +108,10 @@ The current HydroSIM `LayeredSoundSpeedProfile` consists of finite-thickness con
 | --- | --- | --- |
 | Local sound speed at the array affects beam steering/beam pointing | Kongsberg EM documentation; Nistad et al. (IHR) | Model `c_used` explicitly in TX/RX array processing. |
 | Water-column sound-speed structure affects ray bending | Kongsberg EM documentation; Nistad et al. (IHR) | Keep profile/ray tracing separate from the local sensor observation. |
+| Tangential slowness / Snell ray parameter is the invariant across horizontal sound-speed interfaces | standard geometrical-acoustics/Snell formulation; Nistad et al. (IHR) | Carry slowness, not the raw numerical beam angle, from array processing into layered propagation. |
 | Multi-sector correction requires sector-specific information | Beaudoin, Hughes Clarke & Bartlett (2004) | Do not generalize a single aligned principal-plane closure to multi-sector MBES. |
 | Limited cancellation can occur for flat/horizontal arrays | Kongsberg EM 120 Operator Manual | Preserve as a narrow reference diagnostic only. |
-| Sensor value may be used as first profile value in some Kongsberg processing | Kongsberg EM 1002 Operator Manual | Product behavior is documented, but HydroSIM must implement it with a boundary representation compatible with its numerical profile model. |
+| Sensor value may be used as first profile value in some Kongsberg processing | Kongsberg EM 1002 Operator Manual | Represent the value as an explicit zero-thickness boundary instead of overwriting a finite-thickness layer. |
 
 ## References
 
