@@ -1,0 +1,110 @@
+id: hydrosim.propagation.layered_snell_piecewise_constant
+version: 0.1.0
+scientific_status: reference_model
+language: en
+
+purpose: >-
+  Propagate a ray through horizontally stratified, piecewise-constant sound-speed
+  layers using conserved tangential slowness (Snell ray parameter).
+
+state_categories:
+  inputs:
+    - Truth
+    - Configured
+  outputs:
+    - Derived
+
+formulation:
+  angle_reference: local_vertical
+  ray_parameter:
+    equation: "p = sin(theta_i) / c_i"
+    invariant: >-
+      p is conserved across horizontal interfaces while the ray remains on the
+      downward-propagating branch and no critical/turning condition is reached.
+  layer_angle:
+    equation: "theta_i = asin(p * c_i)"
+  horizontal_increment:
+    equation: "dx_i = dz_i * tan(theta_i)"
+  path_length_increment:
+    equation: "ds_i = dz_i / cos(theta_i)"
+  travel_time_increment:
+    equation: "dt_i = ds_i / c_i"
+
+variables:
+  p:
+    description: horizontal/tangential ray parameter
+    unit: s/m
+  theta_i:
+    description: ray angle from local vertical in layer i
+    unit: rad
+  c_i:
+    description: sound speed in layer i
+    unit: m/s
+  dz_i:
+    description: vertical thickness traversed in layer i
+    unit: m
+  dx_i:
+    description: horizontal distance accumulated in layer i
+    unit: m
+  ds_i:
+    description: path length accumulated in layer i
+    unit: m
+  dt_i:
+    description: travel time accumulated in layer i
+    unit: s
+
+coordinate_and_sign_conventions:
+  vertical_axis: "HydroSIM local +Z Down"
+  angle: "non-negative angle from local downward vertical in the current 2-D reference implementation"
+  horizontal_distance: "non-negative scalar magnitude in the reference propagation plane"
+
+validity_domain:
+  - horizontally stratified medium
+  - piecewise-constant sound speed in each finite-thickness layer
+  - downward propagation to a greater target depth
+  - no critical or turning condition within the traversed profile
+  - current implementation uses a 2-D propagation plane for scalar horizontal distance
+
+assumptions:
+  - geometrical acoustics
+  - sharp horizontal interfaces between constant-c layers
+  - no absorption, scattering, diffraction or multipath in the ray-geometry model
+
+known_limitations:
+  - no continuously varying gradient within a layer
+  - no curved or range-dependent interfaces
+  - no upward/turning-ray branch
+  - no full 3-D azimuthal ray path in this reference class
+
+source_mapping:
+  - reference_id: nistad_improved_water_column_sound_speed_ray_tracing
+    locator: "water-column sound-speed structure and multibeam ray-tracing context"
+    evidence_level: direct_source
+  - reference_id: beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed
+    locator: "multibeam sound-speed/refraction and sector-processing context"
+    evidence_level: direct_source
+
+implementation:
+  module: src/hydrosim/acquisition/layered_propagation.py
+  symbols:
+    - LayeredSoundSpeedProfile
+    - SoundSpeedLayer
+    - trace_layered_ray_to_depth
+    - trace_layered_ray_for_travel_time
+
+validation:
+  tests:
+    - tests/test_layered_propagation.py::test_constant_speed_layer_reduces_to_straight_ray_geometry
+    - tests/test_layered_propagation.py::test_two_layer_snell_solution_matches_closed_form_independent_values
+    - tests/test_layered_propagation.py::test_critical_condition_is_rejected_explicitly
+    - tests/test_layered_propagation.py::test_depth_and_travel_time_solvers_close_on_same_refracted_ray
+  analytical_anchor: >-
+    The two-layer test computes p, the refracted angle, horizontal distance, path
+    length and travel time directly from closed-form Snell geometry rather than
+    invoking a second HydroSIM propagation solver as the expected-value generator.
+
+related_models:
+  - hydrosim.propagation.sound_speed_zero_thickness_boundary
+
+explanatory_documentation:
+  - docs/science/sound_speed_at_transducer.md
