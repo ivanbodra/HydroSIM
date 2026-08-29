@@ -1,5 +1,6 @@
 """Dynamic acoustic acquisition infrastructure."""
 
+from .array_factor import ArrayFactorElementContribution, ArrayFactorResponse, array_factor
 from .beamforming import (
     ReceiveElementSteeringDelay,
     ReceiveSteeringEvaluation,
@@ -31,6 +32,8 @@ __all__ = [
     "AcquisitionPing",
     "AcquisitionSequence",
     "ArrayElementTruthArrival",
+    "ArrayFactorElementContribution",
+    "ArrayFactorResponse",
     "ArrayTruthReception",
     "BeamTruthReturn",
     "CoherentReceiveSum",
@@ -42,6 +45,7 @@ __all__ = [
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
     "RectangularElementFactor",
+    "array_factor",
     "coherent_receive_sum",
     "evaluate_receive_steering",
     "generate_acquisition_sequence",
