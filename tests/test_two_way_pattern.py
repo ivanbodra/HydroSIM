@@ -8,10 +8,10 @@ from hydrosim.geometry import TransducerArray, Vector3
 def _linear_array(*, name: str, count: int, spacing: float, element_size: float = 1e-6) -> TransducerArray:
     return TransducerArray(
         name=name,
-        element_count_x=1,
-        element_count_y=count,
-        longitudinal_spacing=0.0,
-        transverse_spacing=spacing,
+        n_x=1,
+        n_y=count,
+        d_x=0.0,
+        d_y=spacing,
         element_longitudinal_size=element_size,
         element_transverse_size=element_size,
     )
