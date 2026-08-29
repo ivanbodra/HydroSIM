@@ -21,10 +21,11 @@ def test_bottom_detection_recovers_arrival_and_twtt() -> None:
         tx_delay_seconds=tx_delay_samples / sample_rate,
     )
 
+    assert detection.detection_method == "amplitude_peak"
     assert detection.peak_lag_samples == arrival_samples
     assert detection.arrival_offset_seconds == pytest.approx(arrival_samples / sample_rate)
     assert detection.twtt_seconds == pytest.approx((arrival_samples - tx_delay_samples) / sample_rate)
-    assert detection.normalized_peak_amplitude == pytest.approx(1.0)
+    assert detection.normalized_amplitude == pytest.approx(1.0)
 
 
 def test_bottom_detection_rejects_arrival_before_transmit_epoch() -> None:
