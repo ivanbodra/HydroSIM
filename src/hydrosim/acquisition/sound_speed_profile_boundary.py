@@ -4,7 +4,7 @@ Scientific basis and source traceability:
     docs/science/sound_speed_at_transducer.md
 
 The value used by the sonar at the array and the finite-thickness water-column
-profile are distinct state. Some real systems can insert the transducer sensor value
+profile are distinct states. Some real systems can insert the transducer sensor value
 as the first profile value; HydroSIM must not emulate that by overwriting an entire
 constant-c layer, because that would spread a point/boundary observation through a
 finite depth interval.
@@ -12,12 +12,14 @@ finite depth interval.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
-from .layered_propagation import LayeredSoundSpeedProfile
 from .sound_speed_processing import SoundSpeedAtTransducerUse
+
+if TYPE_CHECKING:
+    from .layered_propagation import LayeredSoundSpeedProfile
 
 
 ProfileBoundarySource = Literal["processing_profile", "sound_speed_at_transducer"]
