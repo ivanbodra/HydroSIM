@@ -7,6 +7,7 @@ from hydrosim.acquisition import (
     SoundSpeedLayer,
     SoundSpeedSensorAtTransducer,
     run_layered_sound_speed_error_isolation_matrix,
+    run_layered_sound_speed_error_isolation_study,
     run_layered_sound_speed_reference_experiment,
 )
 from hydrosim.geometry import Attitude, FlatTerrain, Pose, Vector3
@@ -108,6 +109,55 @@ def test_error_isolation_matrix_separates_transducer_and_profile_perturbations()
     assert matrix.profile_only.sound_speed_used_by_sonar.sound_speed_mps == pytest.approx(1500.0)
     assert matrix.combined.sound_speed_used_by_sonar.sound_speed_mps == pytest.approx(1520.0)
     assert matrix.combined.processing_profile == _perturbed_profile()
+
+
+def test_error_isolation_study_reuses_matrix_over_explicit_angle_bias_grid() -> None:
+    angles = (radians(20.0), radians(35.0))
+    biases = (-10.0, 20.0)
+    study = run_layered_sound_speed_error_isolation_study(
+        sensor_pose=_pose(),
+        terrain=FlatTerrain(depth=100.0),
+        configured_across_track_angles_rad=angles,
+        transducer_sensor_biases_mps=biases,
+        true_profile=_true_profile(),
+        perturbed_processing_profile=_perturbed_profile(),
+        profile_start_depth_m=0.0,
+    )
+
+    assert study.configured_across_track_angles_rad == pytest.approx(angles)
+    assert study.transducer_sensor_biases_mps == pytest.approx(biases)
+    assert len(study.cases) == 4
+    assert [case.configured_across_track_angle_rad for case in study.cases] == pytest.approx(
+        (angles[0], angles[0], angles[1], angles[1])
+    )
+    assert [case.transducer_sensor_bias_mps for case in study.cases] == pytest.approx(
+        (biases[0], biases[1], biases[0], biases[1])
+    )
+    assert all(case.matrix.reference.sounding_error_norm_m < 1e-9 for case in study.cases)
+    assert all(case.matrix.transducer_only.sounding_error_norm_m < 1e-9 for case in study.cases)
+    assert all(case.matrix.profile_only.sounding_error_norm_m > 0.1 for case in study.cases)
+
+
+def test_error_isolation_study_rejects_empty_parameter_axes() -> None:
+    common = dict(
+        sensor_pose=_pose(),
+        terrain=FlatTerrain(depth=100.0),
+        true_profile=_true_profile(),
+        perturbed_processing_profile=_perturbed_profile(),
+        profile_start_depth_m=0.0,
+    )
+    with pytest.raises(ValueError, match="angles.*must not be empty"):
+        run_layered_sound_speed_error_isolation_study(
+            configured_across_track_angles_rad=(),
+            transducer_sensor_biases_mps=(20.0,),
+            **common,
+        )
+    with pytest.raises(ValueError, match="biases.*must not be empty"):
+        run_layered_sound_speed_error_isolation_study(
+            configured_across_track_angles_rad=(radians(30.0),),
+            transducer_sensor_biases_mps=(),
+            **common,
+        )
 
 
 def test_processing_side_states_do_not_expose_truth_profile() -> None:
