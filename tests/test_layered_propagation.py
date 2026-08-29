@@ -1,4 +1,4 @@
-from math import cos, pi, tan
+from math import asin, cos, pi, sin, tan
 
 import pytest
 
@@ -9,6 +9,7 @@ from hydrosim.acquisition.layered_propagation import (
     trace_layered_ray_for_travel_time,
     trace_layered_ray_to_depth,
 )
+from hydrosim.acquisition.sound_speed_profile_boundary import SoundSpeedProfileBoundary
 
 
 def test_constant_speed_layer_reduces_to_straight_ray_geometry() -> None:
@@ -26,6 +27,77 @@ def test_constant_speed_layer_reduces_to_straight_ray_geometry() -> None:
     assert path.path_length_m == pytest.approx(60.0 / cos(angle))
     assert path.travel_time_seconds == pytest.approx(path.path_length_m / 1500.0)
     assert len(path.segments) == 1
+
+
+def test_two_layer_snell_solution_matches_closed_form_independent_values() -> None:
+    c1 = 1500.0
+    c2 = 1540.0
+    dz1 = 40.0
+    dz2 = 60.0
+    theta1 = pi / 6.0
+    expected_ray_parameter = sin(theta1) / c1
+    expected_theta2 = asin(expected_ray_parameter * c2)
+
+    profile = LayeredSoundSpeedProfile(
+        layers=(
+            SoundSpeedLayer(top_depth_m=0.0, bottom_depth_m=dz1, sound_speed_mps=c1),
+            SoundSpeedLayer(top_depth_m=dz1, bottom_depth_m=dz1 + dz2, sound_speed_mps=c2),
+        )
+    )
+    path = trace_layered_ray_to_depth(
+        profile=profile,
+        launch_angle_from_vertical_rad=theta1,
+        target_depth_m=dz1 + dz2,
+    )
+
+    expected_horizontal = dz1 * tan(theta1) + dz2 * tan(expected_theta2)
+    expected_path_length = dz1 / cos(theta1) + dz2 / cos(expected_theta2)
+    expected_travel_time = dz1 / (c1 * cos(theta1)) + dz2 / (c2 * cos(expected_theta2))
+
+    assert path.ray_parameter_seconds_per_m == pytest.approx(expected_ray_parameter)
+    assert path.segments[0].angle_from_vertical_rad == pytest.approx(theta1)
+    assert path.segments[1].angle_from_vertical_rad == pytest.approx(expected_theta2)
+    assert sin(path.segments[0].angle_from_vertical_rad) / c1 == pytest.approx(
+        sin(path.segments[1].angle_from_vertical_rad) / c2
+    )
+    assert path.horizontal_distance_m == pytest.approx(expected_horizontal)
+    assert path.path_length_m == pytest.approx(expected_path_length)
+    assert path.travel_time_seconds == pytest.approx(expected_travel_time)
+
+
+def test_zero_thickness_boundary_sets_snell_parameter_without_replacing_first_layer() -> None:
+    boundary_c = 1480.0
+    layer_c = 1520.0
+    launch_angle = 0.30
+    dz = 80.0
+    expected_ray_parameter = sin(launch_angle) / boundary_c
+    expected_layer_angle = asin(expected_ray_parameter * layer_c)
+
+    profile = LayeredSoundSpeedProfile(
+        layers=(SoundSpeedLayer(top_depth_m=0.0, bottom_depth_m=dz, sound_speed_mps=layer_c),)
+    )
+    boundary = SoundSpeedProfileBoundary(
+        depth_m=0.0,
+        sound_speed_mps=boundary_c,
+        source="sound_speed_at_transducer",
+    )
+    path = trace_layered_ray_to_depth(
+        profile=profile,
+        launch_angle_from_vertical_rad=launch_angle,
+        target_depth_m=dz,
+        start_boundary=boundary,
+    )
+
+    expected_horizontal = dz * tan(expected_layer_angle)
+    expected_path_length = dz / cos(expected_layer_angle)
+    expected_travel_time = expected_path_length / layer_c
+
+    assert path.ray_parameter_seconds_per_m == pytest.approx(expected_ray_parameter)
+    assert path.segments[0].sound_speed_mps == pytest.approx(layer_c)
+    assert path.segments[0].angle_from_vertical_rad == pytest.approx(expected_layer_angle)
+    assert path.horizontal_distance_m == pytest.approx(expected_horizontal)
+    assert path.path_length_m == pytest.approx(expected_path_length)
+    assert path.travel_time_seconds == pytest.approx(expected_travel_time)
 
 
 def test_increasing_sound_speed_refracts_ray_away_from_vertical() -> None:
