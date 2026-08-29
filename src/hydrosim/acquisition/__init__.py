@@ -7,6 +7,7 @@ from .beamforming import (
     evaluate_receive_steering,
     ideal_receive_steering,
 )
+from .element_factor import RectangularElementFactor, rectangular_element_factor
 from .element_signals import (
     CoherentReceiveSum,
     NarrowbandReceiveTone,
@@ -40,10 +41,12 @@ __all__ = [
     "ReceiveElementSteeringDelay",
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
+    "RectangularElementFactor",
     "coherent_receive_sum",
     "evaluate_receive_steering",
     "generate_acquisition_sequence",
     "ideal_receive_steering",
+    "rectangular_element_factor",
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
 ]
