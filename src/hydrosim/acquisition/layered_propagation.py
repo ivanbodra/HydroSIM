@@ -99,6 +99,22 @@ class LayeredRayPath(BaseModel):
     segments: tuple[LayeredRaySegment, ...]
 
 
+class LayeredRayClosureDiagnostic(BaseModel):
+    """Depth-driven versus travel-time-driven closure for the same layered ray."""
+
+    model_config = ConfigDict(frozen=True)
+
+    depth_driven_path: LayeredRayPath
+    time_driven_path: LayeredRayPath
+    absolute_depth_closure_m: FiniteFloat = Field(ge=0.0)
+    absolute_horizontal_closure_m: FiniteFloat = Field(ge=0.0)
+    absolute_path_length_closure_m: FiniteFloat = Field(ge=0.0)
+    depth_tolerance_m: FiniteFloat = Field(ge=0.0)
+    horizontal_tolerance_m: FiniteFloat = Field(ge=0.0)
+    path_length_tolerance_m: FiniteFloat = Field(ge=0.0)
+    converged: bool
+
+
 def _validate_launch_angle(launch_angle_from_vertical_rad: float) -> float:
     angle = float(launch_angle_from_vertical_rad)
     if angle < 0.0 or angle >= 0.5 * 3.141592653589793:
@@ -257,8 +273,7 @@ def trace_layered_ray_for_travel_time(
         else:
             travel_time = full_travel_time
             path_length = full_path_length
-            dz = available_dz
-            horizontal = dz * tan(theta)
+            horizontal = available_dz * tan(theta)
             end_depth = layer_bottom
 
         segments.append(
@@ -291,4 +306,64 @@ def trace_layered_ray_for_travel_time(
         path_length_m=total_path,
         travel_time_seconds=total_time,
         segments=tuple(segments),
+    )
+
+
+def assess_layered_ray_time_depth_closure(
+    *,
+    profile: LayeredSoundSpeedProfile,
+    launch_angle_from_vertical_rad: float,
+    target_depth_m: float,
+    start_depth_m: float = 0.0,
+    depth_tolerance_m: float = 1e-9,
+    horizontal_tolerance_m: float = 1e-9,
+    path_length_tolerance_m: float = 1e-9,
+) -> LayeredRayClosureDiagnostic:
+    """Verify that travel-time stopping recovers a depth-driven reference ray.
+
+    A ray is first propagated to the requested depth. Its integrated one-way travel
+    time is then fed back to the travel-time-driven solver using the same profile,
+    launch angle, and start depth. Closure is evaluated in depth, horizontal range,
+    and acoustic path length. This is a numerical consistency diagnostic; it does
+    not introduce an average sound speed or a new physical propagation model.
+    """
+
+    depth_tol = float(depth_tolerance_m)
+    horizontal_tol = float(horizontal_tolerance_m)
+    path_tol = float(path_length_tolerance_m)
+    if depth_tol < 0.0 or horizontal_tol < 0.0 or path_tol < 0.0:
+        raise ValueError("closure tolerances must be non-negative")
+
+    depth_path = trace_layered_ray_to_depth(
+        profile=profile,
+        launch_angle_from_vertical_rad=launch_angle_from_vertical_rad,
+        target_depth_m=target_depth_m,
+        start_depth_m=start_depth_m,
+    )
+    time_path = trace_layered_ray_for_travel_time(
+        profile=profile,
+        launch_angle_from_vertical_rad=launch_angle_from_vertical_rad,
+        travel_time_seconds=float(depth_path.travel_time_seconds),
+        start_depth_m=start_depth_m,
+    )
+
+    depth_error = abs(float(time_path.target_depth_m) - float(depth_path.target_depth_m))
+    horizontal_error = abs(
+        float(time_path.horizontal_distance_m) - float(depth_path.horizontal_distance_m)
+    )
+    path_error = abs(float(time_path.path_length_m) - float(depth_path.path_length_m))
+    return LayeredRayClosureDiagnostic(
+        depth_driven_path=depth_path,
+        time_driven_path=time_path,
+        absolute_depth_closure_m=depth_error,
+        absolute_horizontal_closure_m=horizontal_error,
+        absolute_path_length_closure_m=path_error,
+        depth_tolerance_m=depth_tol,
+        horizontal_tolerance_m=horizontal_tol,
+        path_length_tolerance_m=path_tol,
+        converged=(
+            depth_error <= depth_tol
+            and horizontal_error <= horizontal_tol
+            and path_error <= path_tol
+        ),
     )
