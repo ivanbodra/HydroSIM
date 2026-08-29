@@ -2,6 +2,7 @@
 
 from .arrays import ArrayElement, TransducerArray
 from .beams import BeamDefinition, BeamRay, IdealFan, generate_ideal_fan, generate_ideal_fan_degrees
+from .mills_cross import MillsCrossConfiguration, make_reference_mills_cross, principal_axis_sensor_frame
 from .models import Attitude, Pose, Vector3
 from .rotations import (
     rotate_vector,
@@ -32,6 +33,7 @@ __all__ = [
     "BeamRay",
     "FlatTerrain",
     "IdealFan",
+    "MillsCrossConfiguration",
     "PlaneTerrain",
     "Pose",
     "RayIntersection",
@@ -45,6 +47,8 @@ __all__ = [
     "compare_true_and_configured_state_sounding",
     "generate_ideal_fan",
     "generate_ideal_fan_degrees",
+    "make_reference_mills_cross",
+    "principal_axis_sensor_frame",
     "rotate_vector",
     "rotation_matrix_from_rpy",
     "rotation_x",
