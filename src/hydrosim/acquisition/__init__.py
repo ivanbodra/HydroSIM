@@ -7,6 +7,12 @@ from .beamforming import (
     evaluate_receive_steering,
     ideal_receive_steering,
 )
+from .element_signals import (
+    CoherentReceiveSum,
+    NarrowbandReceiveTone,
+    ReceiveElementPhasor,
+    coherent_receive_sum,
+)
 from .generation import generate_acquisition_sequence
 from .models import AcquisitionPing, AcquisitionSequence, PingSchedule
 from .reception import (
@@ -26,11 +32,15 @@ __all__ = [
     "ArrayElementTruthArrival",
     "ArrayTruthReception",
     "BeamTruthReturn",
+    "CoherentReceiveSum",
     "ConstantSoundSpeedPropagation",
+    "NarrowbandReceiveTone",
     "PingSchedule",
+    "ReceiveElementPhasor",
     "ReceiveElementSteeringDelay",
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
+    "coherent_receive_sum",
     "evaluate_receive_steering",
     "generate_acquisition_sequence",
     "ideal_receive_steering",
