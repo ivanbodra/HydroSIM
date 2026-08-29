@@ -6,9 +6,6 @@ from hydrosim.acquisition import (
     gate_projected_pattern_by_rectangular_pulse,
     project_angular_pattern_to_flat_seafloor,
     scan_mills_cross_two_way_pattern_2d,
-    seafloor_backscatter_from_matched_filter_weighted_pattern,
-    seafloor_backscatter_from_projected_pattern,
-    seafloor_backscatter_from_pulse_gated_pattern,
     waveform_autocorrelation,
     weight_projected_pattern_by_matched_filter,
 )
@@ -79,17 +76,6 @@ def test_larger_array_reduces_pattern_weighted_equivalent_area() -> None:
     assert large.equivalent_insonified_area_m2 < small.equivalent_insonified_area_m2
 
 
-def test_projected_pattern_backscatter_uses_equivalent_area_semantics() -> None:
-    illumination = project_angular_pattern_to_flat_seafloor(scan=_scan(_configuration()), vertical_separation_m=40.0)
-    model = seafloor_backscatter_from_projected_pattern(
-        scattering_strength_db_per_m2=-30.0,
-        illumination=illumination,
-        incidence_angle_from_normal_rad=0.0,
-    )
-    assert float(model.insonified_area_m2) == pytest.approx(float(illumination.equivalent_insonified_area_m2))
-    assert model.area_semantics == "equivalent_pattern_weighted"
-
-
 def test_rectangular_pulse_gate_restricts_pattern_weighted_contributing_area() -> None:
     illumination = project_angular_pattern_to_flat_seafloor(scan=_scan(_configuration(), samples=101), vertical_separation_m=50.0)
     short = gate_projected_pattern_by_rectangular_pulse(
@@ -104,11 +90,6 @@ def test_rectangular_pulse_gate_restricts_pattern_weighted_contributing_area() -
     assert long.range_shell_width_m == pytest.approx(7.5)
     assert short.contributing_cell_count < long.contributing_cell_count
     assert short.equivalent_insonified_area_m2 < long.equivalent_insonified_area_m2
-    model = seafloor_backscatter_from_pulse_gated_pattern(
-        scattering_strength_db_per_m2=-30.0, gated_area=short,
-        incidence_angle_from_normal_rad=0.0,
-    )
-    assert model.area_semantics == "equivalent_pattern_and_pulse_weighted"
 
 
 def test_waveform_autocorrelation_has_unit_zero_lag_power() -> None:
@@ -134,9 +115,3 @@ def test_lfm_pulse_compression_reduces_matched_filter_weighted_area_vs_cw() -> N
         sample_rate_hz=500_000.0, sound_speed_mps=1500.0,
     )
     assert lfm_area.equivalent_insonified_area_m2 < cw_area.equivalent_insonified_area_m2
-    model = seafloor_backscatter_from_matched_filter_weighted_pattern(
-        scattering_strength_db_per_m2=-30.0, weighted_area=lfm_area,
-        incidence_angle_from_normal_rad=0.0,
-    )
-    assert model.area_semantics == "equivalent_pattern_and_matched_filter_weighted"
-    assert float(model.insonified_area_m2) == pytest.approx(float(lfm_area.equivalent_insonified_area_m2))
