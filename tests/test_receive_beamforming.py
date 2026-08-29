@@ -2,8 +2,11 @@ from math import isclose, radians
 
 from hydrosim.acquisition import (
     ConstantSoundSpeedPropagation,
+    SoundSpeedSensorAtTransducer,
     evaluate_receive_steering,
     ideal_receive_steering,
+    ideal_receive_steering_from_sound_speed_measurement,
+    measure_sound_speed_at_transducer,
     simulate_truth_array_reception,
     simulate_truth_beam_return,
 )
@@ -81,10 +84,24 @@ def test_positive_port_steering_predicts_port_elements_arrive_earlier():
     )
 
     offsets = [float(item.predicted_arrival_offset_seconds) for item in hypothesis.element_delays]
-    assert offsets[0] < 0.0  # first element is at negative Y: Port
+    assert offsets[0] < 0.0
     assert isclose(offsets[2], 0.0, abs_tol=1e-15)
-    assert offsets[-1] > 0.0  # last element is at positive Y: Starboard
+    assert offsets[-1] > 0.0
     assert isclose(offsets[0], -offsets[-1], abs_tol=1e-15)
+
+
+def test_sensor_measurement_feeds_receive_steering_without_truth_access():
+    measurement = measure_sound_speed_at_transducer(
+        true_local_sound_speed_mps=1497.0,
+        sensor=SoundSpeedSensorAtTransducer(bias_mps=3.0),
+    )
+    hypothesis = ideal_receive_steering_from_sound_speed_measurement(
+        receive_array=_array(),
+        across_track_angle_rad=radians(30.0),
+        sound_speed_measurement=measurement,
+    )
+    assert hypothesis.sound_speed_mps == 1500.0
+    assert not hasattr(measurement, "true_local_sound_speed_mps")
 
 
 def test_true_receive_pattern_matches_correct_steering_better_than_nadir():
