@@ -1,21 +1,16 @@
-"""Dynamic acoustic acquisition infrastructure."""
+"""Dynamic acoustic acquisition infrastructure.
+
+The acquisition public API models geometry, transducers, propagation, waveform,
+beamforming, timing, and footprint formation. Bottom backscatter belongs to the
+separate sonar-equation/demonstration layer and is intentionally not part of this
+forward-model surface.
+"""
 
 from .angular_pattern_2d import (
     AngularPattern2DSample,
     AngularPattern2DScan,
     scan_mills_cross_two_way_pattern_2d,
     sensor_angular_direction,
-)
-from .angular_scattering import (
-    AngularMatchedFilterScatteringIntegration,
-    AngularScatteringIntegration,
-    AngularScatteringStrengthSample,
-    AngularScatteringStrengthTable,
-    angular_matched_filter_scattering_bottom_response,
-    angular_scattering_bottom_response,
-    integrate_angular_matched_filter_seafloor_backscatter,
-    integrate_angular_seafloor_backscatter,
-    scattering_strength_at_incidence,
 )
 from .array_factor import ArrayFactorElementContribution, ArrayFactorResponse, array_factor
 from .beam_pattern import (
@@ -33,15 +28,6 @@ from .beamforming import (
     evaluate_receive_steering,
     ideal_receive_steering,
 )
-from .bottom_interaction import (
-    BottomInteractionResponse,
-    PointTargetStrength,
-    SeafloorAreaBackscatter,
-    SeafloorAreaSemantics,
-    evaluate_bottom_interaction,
-    evaluate_point_target_strength,
-    evaluate_seafloor_area_backscatter,
-)
 from .element_factor import RectangularElementFactor, rectangular_element_factor
 from .element_signals import (
     CoherentReceiveSum,
@@ -53,7 +39,11 @@ from .footprint import (
     FlatSeafloorFootprintModel,
     InsonifiedFootprint,
     estimate_flat_seafloor_footprint,
-    seafloor_backscatter_from_footprint,
+)
+from .footprint_contribution import (
+    FootprintContributionCell,
+    RefractedFootprintContribution,
+    weight_refracted_footprint_by_matched_filter,
 )
 from .generation import generate_acquisition_sequence
 from .layered_propagation import (
@@ -85,24 +75,12 @@ from .pattern_footprint_2d import (
     PulseGatedEquivalentArea,
     gate_projected_pattern_by_rectangular_pulse,
     project_angular_pattern_to_flat_seafloor,
-    seafloor_backscatter_from_matched_filter_weighted_pattern,
-    seafloor_backscatter_from_projected_pattern,
-    seafloor_backscatter_from_pulse_gated_pattern,
     weight_projected_pattern_by_matched_filter,
 )
 from .refracted_pattern_footprint import (
     RefractedPatternIllumination,
     RefractedProjectedPatternCell,
     project_angular_pattern_through_layered_profile,
-)
-from .refracted_received_power import (
-    RefractedPropagationWeightedReturn,
-    integrate_refracted_propagation_weighted_return,
-)
-from .refracted_scattering import (
-    RefractedMatchedFilterScatteringIntegration,
-    integrate_refracted_matched_filter_seafloor_backscatter,
-    refracted_matched_filter_scattering_bottom_response,
 )
 from .receive_beam_bank import (
     ReceiveBeamBankResponse,
