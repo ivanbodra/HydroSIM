@@ -5,6 +5,7 @@ import pytest
 from hydrosim.acquisition.layered_propagation import (
     LayeredSoundSpeedProfile,
     SoundSpeedLayer,
+    assess_layered_ray_time_depth_closure,
     trace_layered_ray_for_travel_time,
     trace_layered_ray_to_depth,
 )
@@ -101,4 +102,44 @@ def test_travel_time_stopping_rejects_time_beyond_profile() -> None:
             profile=profile,
             launch_angle_from_vertical_rad=0.0,
             travel_time_seconds=1.0,
+        )
+
+
+def test_depth_and_travel_time_solvers_close_on_same_refracted_ray() -> None:
+    profile = LayeredSoundSpeedProfile(
+        layers=(
+            SoundSpeedLayer(top_depth_m=0.0, bottom_depth_m=30.0, sound_speed_mps=1475.0),
+            SoundSpeedLayer(top_depth_m=30.0, bottom_depth_m=80.0, sound_speed_mps=1500.0),
+            SoundSpeedLayer(top_depth_m=80.0, bottom_depth_m=150.0, sound_speed_mps=1530.0),
+        )
+    )
+
+    diagnostic = assess_layered_ray_time_depth_closure(
+        profile=profile,
+        launch_angle_from_vertical_rad=0.55,
+        target_depth_m=112.5,
+        depth_tolerance_m=1e-9,
+        horizontal_tolerance_m=1e-9,
+        path_length_tolerance_m=1e-9,
+    )
+
+    assert diagnostic.depth_driven_path.travel_time_seconds == pytest.approx(
+        diagnostic.time_driven_path.travel_time_seconds
+    )
+    assert diagnostic.absolute_depth_closure_m <= 1e-9
+    assert diagnostic.absolute_horizontal_closure_m <= 1e-9
+    assert diagnostic.absolute_path_length_closure_m <= 1e-9
+    assert diagnostic.converged is True
+
+
+def test_closure_diagnostic_rejects_negative_tolerance() -> None:
+    profile = LayeredSoundSpeedProfile(
+        layers=(SoundSpeedLayer(top_depth_m=0.0, bottom_depth_m=100.0, sound_speed_mps=1500.0),)
+    )
+    with pytest.raises(ValueError, match="closure tolerances must be non-negative"):
+        assess_layered_ray_time_depth_closure(
+            profile=profile,
+            launch_angle_from_vertical_rad=0.2,
+            target_depth_m=50.0,
+            depth_tolerance_m=-1.0,
         )
