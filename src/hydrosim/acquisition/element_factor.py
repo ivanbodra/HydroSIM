@@ -21,6 +21,7 @@ class RectangularElementFactor(BaseModel):
 
     longitudinal_factor: FiniteFloat
     transverse_factor: FiniteFloat
+    signed_amplitude: FiniteFloat
     amplitude: FiniteFloat
     power: FiniteFloat
 
@@ -51,9 +52,10 @@ def rectangular_element_factor(
     where ``a`` and ``b`` are the longitudinal and transverse face dimensions,
     ``k = 2*pi/lambda``, and sinc(x)=sin(x)/x.
 
-    The returned ``amplitude`` is the absolute normalized pressure magnitude;
-    ``power`` is its square. This is a one-way element factor, not a complete
-    array or two-way sonar beam pattern.
+    ``signed_amplitude`` preserves the real pressure-sign reversal across aperture
+    nulls. ``amplitude`` is its absolute magnitude and ``power`` is its square.
+    This is a one-way element factor, not a complete array or two-way sonar beam
+    pattern.
     """
 
     if frequency_hz <= 0.0:
@@ -82,6 +84,7 @@ def rectangular_element_factor(
     return RectangularElementFactor(
         longitudinal_factor=longitudinal,
         transverse_factor=transverse,
+        signed_amplitude=signed,
         amplitude=amplitude,
         power=amplitude * amplitude,
     )
