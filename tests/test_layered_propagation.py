@@ -5,6 +5,7 @@ import pytest
 from hydrosim.acquisition.layered_propagation import (
     LayeredSoundSpeedProfile,
     SoundSpeedLayer,
+    trace_layered_ray_for_travel_time,
     trace_layered_ray_to_depth,
 )
 
@@ -67,4 +68,37 @@ def test_critical_condition_is_rejected_explicitly() -> None:
             profile=profile,
             launch_angle_from_vertical_rad=pi / 4.0,
             target_depth_m=20.0,
+        )
+
+
+def test_travel_time_stopping_reaches_partial_second_layer_without_average_speed() -> None:
+    profile = LayeredSoundSpeedProfile(
+        layers=(
+            SoundSpeedLayer(top_depth_m=0.0, bottom_depth_m=50.0, sound_speed_mps=1500.0),
+            SoundSpeedLayer(top_depth_m=50.0, bottom_depth_m=100.0, sound_speed_mps=1600.0),
+        )
+    )
+    travel_time = 50.0 / 1500.0 + 25.0 / 1600.0
+    path = trace_layered_ray_for_travel_time(
+        profile=profile,
+        launch_angle_from_vertical_rad=0.0,
+        travel_time_seconds=travel_time,
+    )
+
+    assert path.target_depth_m == pytest.approx(75.0)
+    assert path.path_length_m == pytest.approx(75.0)
+    assert path.travel_time_seconds == pytest.approx(travel_time)
+    assert len(path.segments) == 2
+    assert path.segments[1].end_depth_m == pytest.approx(75.0)
+
+
+def test_travel_time_stopping_rejects_time_beyond_profile() -> None:
+    profile = LayeredSoundSpeedProfile(
+        layers=(SoundSpeedLayer(top_depth_m=0.0, bottom_depth_m=10.0, sound_speed_mps=1500.0),)
+    )
+    with pytest.raises(ValueError, match="extends beyond"):
+        trace_layered_ray_for_travel_time(
+            profile=profile,
+            launch_angle_from_vertical_rad=0.0,
+            travel_time_seconds=1.0,
         )
