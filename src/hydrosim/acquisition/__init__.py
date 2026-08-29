@@ -27,7 +27,7 @@ from .receive_beam_bank import ReceiveBeamBankResponse, ReceiveBeamResponse, eva
 from .reception import ArrayElementTruthArrival, ArrayTruthReception, simulate_truth_array_reception
 from .returns import BeamTruthReturn, ConstantSoundSpeedPropagation, simulate_truth_beam_return
 from .sector_signal_chain import SectorSignalChainPing, SectorSignalChainResult, SectorWaveformAssignment, SectorWaveformPlan, simulate_sector_waveform_propagation_ping
-from .split_aperture import CenterElementPolicy, SplitApertureDefinition, SplitApertureResponse, SplitAxis, SubapertureCoherentSum, split_coherent_receive_sum
+from .split_aperture import CenterElementPolicy, SplitApertureDefinition, SplitAperturePhaseCenters, SplitApertureResponse, SplitAxis, SubapertureCoherentSum, split_aperture_phase_centers, split_coherent_receive_sum
 from .transmission_loss import OneWayTransmissionLoss, PropagationLossModel, ReciprocalTransmissionLoss, one_way_transmission_loss, reciprocal_transmission_loss
 from .transmit_sectors import TransmitSector, TransmitSectorSet, make_uniform_transmit_sectors
 from .two_way_pattern import TwoWayBeamPatternResponse, two_way_beam_pattern, two_way_beam_pattern_sensor_frame
