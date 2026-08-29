@@ -1,9 +1,9 @@
 """Physical transducer-array geometry for HydroSIM.
 
-This module represents the physical placement and size of transducer elements.
-It deliberately does not implement beamforming weights, phase steering, acoustic
-frequency, wavelength, or beam-pattern physics. Those belong to downstream
-models.
+This module represents the physical placement, size, and fixed installation
+orientation of transducer elements. It deliberately does not implement
+beamforming weights, phase steering, acoustic frequency, wavelength, or
+beam-pattern physics. Those belong to downstream models.
 
 Array-local coordinates follow the transducer/sensor Cartesian convention:
 +X longitudinal/forward, +Y transverse/starboard, +Z down. A centred regular
@@ -44,8 +44,15 @@ class TransducerArray(BaseModel):
     exists on that axis. For axes with more than one element, spacing must be
     strictly positive.
 
-    ``orientation`` is the fixed orientation of the array-local frame relative
-    to the containing transducer/sensor frame, using HydroSIM RPY conventions.
+    ``orientation`` defines the fixed array-to-sensor rotation ``R_SA`` using
+    HydroSIM RPY conventions. Therefore a vector expressed in array frame ``A``
+    is expressed in the containing sensor frame ``S`` as
+
+        v_S = R_SA @ v_A
+
+    and the inverse component transform is
+
+        v_A = R_SA.T @ v_S.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -116,8 +123,19 @@ class TransducerArray(BaseModel):
                 )
         return tuple(items)
 
+    def direction_to_sensor_frame(self, direction_array_frame: Vector3) -> Vector3:
+        """Express an array-local direction in the containing sensor frame."""
+
+        r_sensor_array = rotation_matrix_from_rpy(self.orientation)
+        return rotate_vector(r_sensor_array, direction_array_frame)
+
+    def direction_from_sensor_frame(self, direction_sensor_frame: Vector3) -> Vector3:
+        """Express a sensor-frame direction in this array's local frame."""
+
+        r_sensor_array = rotation_matrix_from_rpy(self.orientation)
+        return rotate_vector(r_sensor_array.T, direction_sensor_frame)
+
     def element_positions_sensor_frame(self) -> tuple[Vector3, ...]:
         """Return element-centre positions rotated into the sensor frame."""
 
-        matrix = rotation_matrix_from_rpy(self.orientation)
-        return tuple(rotate_vector(matrix, element.position) for element in self.elements())
+        return tuple(self.direction_to_sensor_frame(element.position) for element in self.elements())
