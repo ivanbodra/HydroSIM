@@ -7,6 +7,7 @@ from hydrosim.acquisition.waveform import (
     matched_filter,
     sample_cw_baseband,
     sample_lfm_baseband,
+    waveform_sampling_adequacy,
 )
 
 
@@ -30,6 +31,21 @@ def test_lfm_properties_and_constant_envelope() -> None:
     samples = sample_lfm_baseband(pulse, sample_rate_hz=100_000.0)
     assert samples.size == 1000
     assert np.allclose(np.abs(samples), 1.0)
+
+
+def test_lfm_sampling_adequacy_uses_complex_baseband_bandwidth() -> None:
+    pulse = LinearFMPulse(
+        center_frequency_hz=300_000.0,
+        bandwidth_hz=20_000.0,
+        duration_seconds=0.01,
+    )
+    adequate = waveform_sampling_adequacy(pulse, sample_rate_hz=100_000.0)
+    assert adequate.maximum_absolute_frequency_hz == pytest.approx(10_000.0)
+    assert adequate.meets_nyquist is True
+    assert adequate.nyquist_ratio == pytest.approx(5.0)
+
+    with pytest.raises(ValueError, match="below the Nyquist rate"):
+        sample_lfm_baseband(pulse, sample_rate_hz=10_000.0)
 
 
 def test_matched_filter_recovers_known_sample_delay() -> None:
