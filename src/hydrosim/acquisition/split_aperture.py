@@ -18,7 +18,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
-from hydrosim.geometry import TransducerArray
+from hydrosim.geometry import TransducerArray, Vector3
 
 from .element_signals import CoherentReceiveSum
 
@@ -34,6 +34,26 @@ class SplitApertureDefinition(BaseModel):
     axis: SplitAxis = "y"
     split_coordinate_m: FiniteFloat = 0.0
     center_element_policy: CenterElementPolicy = "exclude"
+
+
+class SplitAperturePhaseCenters(BaseModel):
+    """Geometric phase centres of the two receive subapertures.
+
+    The centres are simple arithmetic centroids of the physical element-centre
+    positions selected by ``SplitApertureDefinition``. They are a transparent
+    reference geometry, not a claim about any vendor's effective phase-centre
+    calibration or frequency-dependent receive electronics.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    definition: SplitApertureDefinition
+    negative_element_count: int = Field(gt=0)
+    positive_element_count: int = Field(gt=0)
+    negative_center_array_frame: Vector3
+    positive_center_array_frame: Vector3
+    negative_to_positive_baseline_array_frame: Vector3
+    baseline_length_m: FiniteFloat = Field(gt=0.0)
 
 
 class SubapertureCoherentSum(BaseModel):
@@ -89,6 +109,63 @@ def _membership(
     if policy == "positive":
         return False, True
     return True, True
+
+
+def _centroid(points: list[Vector3]) -> Vector3:
+    count = len(points)
+    if count == 0:
+        raise ValueError("cannot calculate an empty subaperture phase centre")
+    return Vector3(
+        x=sum(float(point.x) for point in points) / count,
+        y=sum(float(point.y) for point in points) / count,
+        z=sum(float(point.z) for point in points) / count,
+    )
+
+
+def split_aperture_phase_centers(
+    *,
+    receive_array: TransducerArray,
+    definition: SplitApertureDefinition = SplitApertureDefinition(),
+) -> SplitAperturePhaseCenters:
+    """Return the physical-element centroids of the two split subapertures."""
+
+    if receive_array.role not in {"rx", "txrx"}:
+        raise ValueError("receive_array must have role 'rx' or 'txrx'")
+
+    negative_points: list[Vector3] = []
+    positive_points: list[Vector3] = []
+    for element in receive_array.elements():
+        coordinate = float(element.position.x if definition.axis == "x" else element.position.y)
+        use_negative, use_positive = _membership(
+            coordinate,
+            split=float(definition.split_coordinate_m),
+            policy=definition.center_element_policy,
+        )
+        if use_negative:
+            negative_points.append(element.position)
+        if use_positive:
+            positive_points.append(element.position)
+
+    negative = _centroid(negative_points)
+    positive = _centroid(positive_points)
+    baseline = Vector3(
+        x=float(positive.x) - float(negative.x),
+        y=float(positive.y) - float(negative.y),
+        z=float(positive.z) - float(negative.z),
+    )
+    length = (float(baseline.x) ** 2 + float(baseline.y) ** 2 + float(baseline.z) ** 2) ** 0.5
+    if length <= 0.0:
+        raise ValueError("split-aperture phase centres must be spatially distinct")
+
+    return SplitAperturePhaseCenters(
+        definition=definition,
+        negative_element_count=len(negative_points),
+        positive_element_count=len(positive_points),
+        negative_center_array_frame=negative,
+        positive_center_array_frame=positive,
+        negative_to_positive_baseline_array_frame=baseline,
+        baseline_length_m=length,
+    )
 
 
 def split_coherent_receive_sum(
