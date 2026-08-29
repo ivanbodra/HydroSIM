@@ -13,9 +13,21 @@ and the integrated area-backscatter strength is
 
     BS = 10 log10(sum_i q_i).
 
+A temporally resolved form also multiplies each cell by the normalized matched-
+filter power response evaluated at its two-way delay relative to a reference
+range:
+
+    q_i = 10**(S_b(theta_i)/10)
+          * (P_i/P_peak) dA_i
+          * |R_ss(dt_i)|^2 / |R_ss(0)|^2,
+
+    dt_i = 2 (R_i - R_0) / c.
+
 The table is linearly interpolated in dB versus incidence angle. Extrapolation is
 not performed: the supplied table must cover every contributing incidence angle.
-This keeps the scientific assumption visible and replaceable.
+This keeps the scientific assumption visible and replaceable. The integration is
+a deterministic incoherent area-scattering power abstraction, not a coherent
+rough-surface or speckle model.
 """
 
 from __future__ import annotations
@@ -27,6 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
 
 from .bottom_interaction import BottomInteractionResponse
 from .pattern_footprint_2d import ProjectedPatternIllumination
+from .waveform import WaveformAutocorrelation, WaveformPulse, waveform_autocorrelation
 
 
 class AngularScatteringStrengthSample(BaseModel):
@@ -67,6 +80,22 @@ class AngularScatteringIntegration(BaseModel):
     amplitude_ratio: FiniteFloat = Field(gt=0.0)
 
 
+class AngularMatchedFilterScatteringIntegration(BaseModel):
+    """Beam, incidence, waveform and bottom-scattering integration."""
+
+    model_config = ConfigDict(frozen=True)
+
+    center_one_way_range_m: FiniteFloat = Field(gt=0.0)
+    sample_rate_hz: FiniteFloat = Field(gt=0.0)
+    sound_speed_mps: FiniteFloat = Field(gt=0.0)
+    contributing_cell_count: int = Field(gt=0)
+    minimum_incidence_angle_rad: FiniteFloat = Field(ge=0.0)
+    maximum_incidence_angle_rad: FiniteFloat = Field(ge=0.0)
+    integrated_backscatter_strength_db: FiniteFloat
+    amplitude_ratio: FiniteFloat = Field(gt=0.0)
+    autocorrelation: WaveformAutocorrelation
+
+
 def scattering_strength_at_incidence(
     table: AngularScatteringStrengthTable,
     incidence_angle_from_normal_rad: float,
@@ -93,6 +122,31 @@ def scattering_strength_at_incidence(
     s1 = float(right.scattering_strength_db_per_m2)
     fraction = (angle - a0) / (a1 - a0)
     return s0 + fraction * (s1 - s0)
+
+
+def _autocorrelation_power_at_lag(
+    autocorrelation: WaveformAutocorrelation,
+    lag_seconds: float,
+) -> float:
+    """Linearly interpolate normalized matched-filter power at one lag."""
+
+    lags = tuple(float(value) for value in autocorrelation.lag_seconds)
+    powers = tuple(float(value) for value in autocorrelation.normalized_power)
+    lag = float(lag_seconds)
+    if lag < lags[0] or lag > lags[-1]:
+        return 0.0
+    index = bisect_left(lags, lag)
+    if index == 0:
+        return powers[0]
+    if index == len(lags):
+        return powers[-1]
+    l0 = lags[index - 1]
+    l1 = lags[index]
+    p0 = powers[index - 1]
+    p1 = powers[index]
+    if l1 == l0:
+        return p0
+    return p0 + (lag - l0) * (p1 - p0) / (l1 - l0)
 
 
 def integrate_angular_seafloor_backscatter(
@@ -133,6 +187,69 @@ def integrate_angular_seafloor_backscatter(
     )
 
 
+def integrate_angular_matched_filter_seafloor_backscatter(
+    *,
+    illumination: ProjectedPatternIllumination,
+    scattering_table: AngularScatteringStrengthTable,
+    pulse: WaveformPulse,
+    center_one_way_range_m: float,
+    sample_rate_hz: float,
+    sound_speed_mps: float,
+) -> AngularMatchedFilterScatteringIntegration:
+    """Integrate S_b(theta), TX×RX pattern and matched-filter power per cell.
+
+    The spatial factor ``(P/P_peak) dA`` is already stored by the projected
+    illumination. The temporal factor is normalized matched-filter power at the
+    cell's two-way delay relative to ``center_one_way_range_m``. Only cells with
+    positive spatial and temporal contribution require angular-table coverage.
+    """
+
+    center = float(center_one_way_range_m)
+    fs = float(sample_rate_hz)
+    c = float(sound_speed_mps)
+    if center <= 0.0 or fs <= 0.0 or c <= 0.0:
+        raise ValueError("range, sample rate and sound speed must be positive")
+
+    autocorrelation = waveform_autocorrelation(pulse, sample_rate_hz=fs)
+    linear_sum = 0.0
+    incidences: list[float] = []
+    count = 0
+
+    for cell in illumination.cells:
+        spatial_area = float(cell.equivalent_area_contribution_m2)
+        if spatial_area <= 0.0:
+            continue
+        delay = 2.0 * (float(cell.slant_range_m) - center) / c
+        temporal_power = _autocorrelation_power_at_lag(autocorrelation, delay)
+        if temporal_power <= 0.0:
+            continue
+        incidence = float(cell.incidence_angle_from_normal_rad)
+        strength_db = scattering_strength_at_incidence(scattering_table, incidence)
+        linear_sum += (
+            (10.0 ** (strength_db / 10.0))
+            * spatial_area
+            * temporal_power
+        )
+        incidences.append(incidence)
+        count += 1
+
+    if linear_sum <= 0.0 or not incidences:
+        raise ValueError("angular matched-filter scattering integration has no positive contribution")
+
+    strength_db = 10.0 * log10(linear_sum)
+    return AngularMatchedFilterScatteringIntegration(
+        center_one_way_range_m=center,
+        sample_rate_hz=fs,
+        sound_speed_mps=c,
+        contributing_cell_count=count,
+        minimum_incidence_angle_rad=min(incidences),
+        maximum_incidence_angle_rad=max(incidences),
+        integrated_backscatter_strength_db=strength_db,
+        amplitude_ratio=10.0 ** (strength_db / 20.0),
+        autocorrelation=autocorrelation,
+    )
+
+
 def angular_scattering_bottom_response(
     integration: AngularScatteringIntegration,
 ) -> BottomInteractionResponse:
@@ -140,6 +257,18 @@ def angular_scattering_bottom_response(
 
     return BottomInteractionResponse(
         interaction_kind="seafloor_angular_area",
+        effective_backscatter_strength_db=integration.integrated_backscatter_strength_db,
+        amplitude_ratio=integration.amplitude_ratio,
+    )
+
+
+def angular_matched_filter_scattering_bottom_response(
+    integration: AngularMatchedFilterScatteringIntegration,
+) -> BottomInteractionResponse:
+    """Expose the complete deterministic cell integration as bottom response."""
+
+    return BottomInteractionResponse(
+        interaction_kind="seafloor_angular_area_matched_filter",
         effective_backscatter_strength_db=integration.integrated_backscatter_strength_db,
         amplitude_ratio=integration.amplitude_ratio,
     )
