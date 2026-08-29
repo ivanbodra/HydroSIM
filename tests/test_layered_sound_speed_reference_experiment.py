@@ -43,7 +43,7 @@ def test_identical_profiles_and_ideal_sensor_close_to_truth() -> None:
     assert len(result.true_ray_path.segments) == 2
 
 
-def test_sensor_bias_alone_closes_under_reciprocal_slowness_reference_model() -> None:
+def test_steering_only_sensor_perturbation_closes_in_narrow_aligned_reference() -> None:
     profile = _true_profile()
     result = run_layered_sound_speed_reference_experiment(
         sensor_pose=_pose(),
@@ -54,6 +54,8 @@ def test_sensor_bias_alone_closes_under_reciprocal_slowness_reference_model() ->
         profile_start_depth_m=0.0,
         sensor=SoundSpeedSensorAtTransducer(bias_mps=20.0),
     )
+    assert result.sound_speed_error_scope == "steering_only_sensor_measurement_perturbation"
+    assert "aligned_flat_array" in result.experiment_assumption
     assert result.sensor_measurement.measured_sound_speed_mps == pytest.approx(1520.0)
     assert result.transmit_truth.physical_angle_rad != pytest.approx(radians(35.0))
     assert result.receive_angle_estimate.estimated_angle_rad == pytest.approx(radians(35.0))
