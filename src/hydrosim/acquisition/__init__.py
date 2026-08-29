@@ -7,10 +7,13 @@ from .angular_pattern_2d import (
     sensor_angular_direction,
 )
 from .angular_scattering import (
+    AngularMatchedFilterScatteringIntegration,
     AngularScatteringIntegration,
     AngularScatteringStrengthSample,
     AngularScatteringStrengthTable,
+    angular_matched_filter_scattering_bottom_response,
     angular_scattering_bottom_response,
+    integrate_angular_matched_filter_seafloor_backscatter,
     integrate_angular_seafloor_backscatter,
     scattering_strength_at_incidence,
 )
