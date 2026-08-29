@@ -1,8 +1,9 @@
 """Dynamic acoustic acquisition infrastructure.
 
 The acquisition public API models geometry, transducers, propagation, waveform,
-beamforming, timing, beam spacing, bottom detection, and footprint formation.
-Bottom backscatter belongs to the separate sonar-equation/demonstration layer.
+beamforming, timing, beam spacing, bottom detection, numerical resolution, and
+footprint formation. Bottom backscatter belongs to the separate sonar-equation/
+demonstration layer.
 """
 
 from .angular_pattern_2d import AngularPattern2DSample, AngularPattern2DScan, scan_mills_cross_two_way_pattern_2d, sensor_angular_direction
@@ -19,6 +20,7 @@ from .generation import generate_acquisition_sequence
 from .layered_propagation import LayeredRayPath, LayeredRaySegment, LayeredSoundSpeedProfile, SoundSpeedLayer, trace_layered_ray_to_depth
 from .models import AcquisitionPing, AcquisitionSequence, PingSchedule
 from .multibeam_fan import MillsCrossMultibeamFan, MultibeamFanBeam, MultibeamFanMatrixSample, simulate_mills_cross_multibeam_fan
+from .numerical_resolution import DomainSemantics, ResolutionAxis, SamplingAdequacy, ScalarConvergenceDiagnostic, assess_baseband_sampling, compare_scalar_refinement
 from .pattern_beamwidth import MillsCrossFootprintBeamwidths, PatternDerivedFootprint, PrincipalPlaneBeamwidth, derive_mills_cross_footprint_beamwidths, derive_principal_plane_beamwidth, estimate_mills_cross_pattern_footprint
 from .pattern_footprint_2d import MatchedFilterWeightedEquivalentArea, ProjectedPatternCell, ProjectedPatternIllumination, PulseGatedEquivalentArea, gate_projected_pattern_by_rectangular_pulse, project_angular_pattern_to_flat_seafloor, weight_projected_pattern_by_matched_filter
 from .phase_detection import PhaseDetectionResult, PhaseRampFit, detect_bottom_from_phase_ramp, differential_phase
@@ -31,6 +33,6 @@ from .split_aperture import CenterElementPolicy, SplitApertureDefinition, SplitA
 from .transmission_loss import OneWayTransmissionLoss, PropagationLossModel, ReciprocalTransmissionLoss, one_way_transmission_loss, reciprocal_transmission_loss
 from .transmit_sectors import TransmitSector, TransmitSectorSet, make_uniform_transmit_sectors
 from .two_way_pattern import TwoWayBeamPatternResponse, two_way_beam_pattern, two_way_beam_pattern_sensor_frame
-from .waveform import ContinuousWavePulse, LinearFMPulse, MatchedFilterSummary, WaveformAutocorrelation, matched_filter, sample_cw_baseband, sample_lfm_baseband, sample_waveform_baseband, waveform_autocorrelation
+from .waveform import ContinuousWavePulse, LinearFMPulse, MatchedFilterSummary, WaveformAutocorrelation, matched_filter, sample_cw_baseband, sample_lfm_baseband, sample_waveform_baseband, waveform_autocorrelation, waveform_sampling_adequacy
 
 __all__ = [name for name in globals() if not name.startswith("_")]
