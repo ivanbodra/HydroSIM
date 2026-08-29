@@ -75,12 +75,12 @@ def test_integrated_chain_recovers_sector_delay_plus_reciprocal_twtt() -> None:
     assert sector.matched_filter.peak_lag_samples == sector.echo_delay_samples
     assert sector.matched_filter.normalized_peak_amplitude == pytest.approx(1.0)
     assert sector.propagation_loss is None
-    assert sector.ideal_point_return_amplitude == pytest.approx(1.0)
+    assert sector.reference_return_amplitude == pytest.approx(1.0)
     assert abs(float(sector.timing_quantization_error_seconds)) <= 0.5 / sample_rate
     assert sector.strongest_receive_beam_index == 1
 
 
-def test_propagation_loss_scales_echo_and_matched_filter_peak() -> None:
+def test_propagation_loss_scales_reference_return_and_matched_filter_peak() -> None:
     sectors = make_uniform_transmit_sectors(
         start_along_track_angle_rad=0.0,
         end_along_track_angle_rad=0.0,
@@ -101,7 +101,8 @@ def test_propagation_loss_scales_echo_and_matched_filter_peak() -> None:
     assert sector.propagation_loss is not None
     assert sector.propagation_loss.one_way.spreading_loss_db == pytest.approx(20.0)
     assert sector.propagation_loss.two_way_total_loss_db == pytest.approx(40.0)
-    assert sector.ideal_point_return_amplitude == pytest.approx(0.01)
+    assert sector.reference_return_amplitude == pytest.approx(0.01)
+    assert sector.received_echo_amplitude == pytest.approx(0.01)
     assert sector.matched_filter.normalized_peak_amplitude == pytest.approx(0.01)
 
 
