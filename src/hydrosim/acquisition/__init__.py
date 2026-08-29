@@ -1,6 +1,14 @@
 """Dynamic acoustic acquisition infrastructure."""
 
 from .array_factor import ArrayFactorElementContribution, ArrayFactorResponse, array_factor
+from .beam_pattern import (
+    AcrossTrackBeamPatternSample,
+    AcrossTrackBeamPatternScan,
+    OneWayBeamPatternResponse,
+    across_track_direction,
+    one_way_beam_pattern,
+    scan_across_track_beam_pattern,
+)
 from .beamforming import (
     ReceiveElementSteeringDelay,
     ReceiveSteeringEvaluation,
@@ -31,6 +39,8 @@ from .returns import (
 __all__ = [
     "AcquisitionPing",
     "AcquisitionSequence",
+    "AcrossTrackBeamPatternSample",
+    "AcrossTrackBeamPatternScan",
     "ArrayElementTruthArrival",
     "ArrayFactorElementContribution",
     "ArrayFactorResponse",
@@ -39,18 +49,22 @@ __all__ = [
     "CoherentReceiveSum",
     "ConstantSoundSpeedPropagation",
     "NarrowbandReceiveTone",
+    "OneWayBeamPatternResponse",
     "PingSchedule",
     "ReceiveElementPhasor",
     "ReceiveElementSteeringDelay",
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
     "RectangularElementFactor",
+    "across_track_direction",
     "array_factor",
     "coherent_receive_sum",
     "evaluate_receive_steering",
     "generate_acquisition_sequence",
     "ideal_receive_steering",
+    "one_way_beam_pattern",
     "rectangular_element_factor",
+    "scan_across_track_beam_pattern",
     "simulate_truth_array_reception",
     "simulate_truth_beam_return",
 ]
