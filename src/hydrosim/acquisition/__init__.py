@@ -52,6 +52,7 @@ from .returns import (
     ConstantSoundSpeedPropagation,
     simulate_truth_beam_return,
 )
+from .transmit_sectors import TransmitSector, TransmitSectorSet, make_uniform_transmit_sectors
 from .two_way_pattern import (
     TwoWayBeamPatternResponse,
     two_way_beam_pattern,
@@ -85,6 +86,8 @@ __all__ = [
     "ReceiveSteeringEvaluation",
     "ReceiveSteeringHypothesis",
     "RectangularElementFactor",
+    "TransmitSector",
+    "TransmitSectorSet",
     "TwoWayBeamPatternResponse",
     "across_track_direction",
     "array_factor",
@@ -93,6 +96,7 @@ __all__ = [
     "evaluate_receive_steering",
     "generate_acquisition_sequence",
     "ideal_receive_steering",
+    "make_uniform_transmit_sectors",
     "one_way_beam_pattern",
     "rectangular_element_factor",
     "scan_across_track_beam_pattern",
