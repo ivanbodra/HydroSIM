@@ -142,8 +142,11 @@ def reconstruct_layered_sound_speed_sounding_from_sonar_state(
     """Reconstruct using measured TWTT, detected angle, boundary c, and processing SVP.
 
     The detected direction belongs to the explicit transducer-depth boundary state.
-    Tangential slowness is then carried into the first finite-thickness configured
-    profile layer before TWTT-driven ray tracing.
+    The ray tracer therefore receives that detected direction together with the
+    zero-thickness boundary itself. ``profile_initial_direction_sensor_frame`` is
+    retained as a diagnostic representation of the refracted direction immediately
+    inside the first finite-thickness profile layer; it is no longer used as a
+    substitute for the boundary state.
     """
 
     if observation.detected_across_track_angle_rad is None:
@@ -161,11 +164,12 @@ def reconstruct_layered_sound_speed_sounding_from_sonar_state(
     sounding = reconstruct_layered_sound_speed_sounding_from_initial_direction(
         observation,
         sensor_pose=sensor_pose,
-        initial_direction_sensor_frame=resolution.profile_initial_direction_sensor_frame,
+        initial_direction_sensor_frame=detected_direction,
         profile=profile,
         profile_start_depth_m=profile_start_depth_m,
         along_track_angle_rad=along,
         across_track_angle_rad=across,
+        profile_boundary=resolution.profile_boundary,
     )
     return LayeredSoundSpeedAtTransducerSounding(
         initial_direction_resolution=resolution,
