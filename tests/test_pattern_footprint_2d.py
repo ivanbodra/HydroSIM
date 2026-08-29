@@ -1,9 +1,11 @@
 import pytest
 
 from hydrosim.acquisition import (
+    gate_projected_pattern_by_rectangular_pulse,
     project_angular_pattern_to_flat_seafloor,
     scan_mills_cross_two_way_pattern_2d,
     seafloor_backscatter_from_projected_pattern,
+    seafloor_backscatter_from_pulse_gated_pattern,
 )
 from hydrosim.geometry import make_reference_mills_cross
 
@@ -39,32 +41,49 @@ def _scan(configuration, *, tx_along=0.0, rx_across=0.0, samples=81):
     )
 
 
-def test_direct_half_power_projection_is_symmetric_at_broadside() -> None:
-    footprint = project_angular_pattern_to_flat_seafloor(
+def test_half_power_is_descriptor_not_insonification_boundary() -> None:
+    illumination = project_angular_pattern_to_flat_seafloor(
         scan=_scan(_configuration()),
         vertical_separation_m=50.0,
     )
 
-    assert footprint.included_cell_count > 0
-    assert footprint.effective_area_m2 > 0.0
-    assert footprint.forward_min_m == pytest.approx(-float(footprint.forward_max_m), rel=1e-12, abs=1e-12)
-    assert footprint.port_min_m == pytest.approx(-float(footprint.port_max_m), rel=1e-12, abs=1e-12)
+    assert illumination.half_power_cell_count > 0
+    assert illumination.half_power_area_m2 > 0.0
+    assert illumination.equivalent_insonified_area_m2 > 0.0
+    assert illumination.equivalent_insonified_area_m2 < illumination.sampled_grid_area_m2
+
+    outside = [cell for cell in illumination.cells if not cell.inside_half_power_contour]
+    assert outside
+    assert any(float(cell.equivalent_area_contribution_m2) > 0.0 for cell in outside)
+
+    assert illumination.half_power_forward_min_m == pytest.approx(
+        -float(illumination.half_power_forward_max_m), rel=1e-12, abs=1e-12
+    )
+    assert illumination.half_power_port_min_m == pytest.approx(
+        -float(illumination.half_power_port_max_m), rel=1e-12, abs=1e-12
+    )
 
 
-def test_combined_steering_moves_projected_footprint_forward_and_port() -> None:
-    footprint = project_angular_pattern_to_flat_seafloor(
+def test_combined_steering_moves_power_weighted_illumination_forward_and_port() -> None:
+    illumination = project_angular_pattern_to_flat_seafloor(
         scan=_scan(_configuration(), tx_along=0.08, rx_across=0.10, samples=101),
         vertical_separation_m=60.0,
     )
 
-    included = [cell for cell in footprint.cells if cell.included]
-    mean_forward = sum(float(cell.forward_center_m) for cell in included) / len(included)
-    mean_port = sum(float(cell.port_center_m) for cell in included) / len(included)
+    weight_sum = sum(float(cell.equivalent_area_contribution_m2) for cell in illumination.cells)
+    mean_forward = sum(
+        float(cell.forward_center_m) * float(cell.equivalent_area_contribution_m2)
+        for cell in illumination.cells
+    ) / weight_sum
+    mean_port = sum(
+        float(cell.port_center_m) * float(cell.equivalent_area_contribution_m2)
+        for cell in illumination.cells
+    ) / weight_sum
     assert mean_forward > 0.0
     assert mean_port > 0.0
 
 
-def test_larger_array_reduces_direct_projected_half_power_area() -> None:
+def test_larger_array_reduces_pattern_weighted_equivalent_area() -> None:
     small = project_angular_pattern_to_flat_seafloor(
         scan=_scan(_configuration(8), samples=101),
         vertical_separation_m=50.0,
@@ -74,19 +93,55 @@ def test_larger_array_reduces_direct_projected_half_power_area() -> None:
         vertical_separation_m=50.0,
     )
 
-    assert large.effective_area_m2 < small.effective_area_m2
+    assert large.equivalent_insonified_area_m2 < small.equivalent_insonified_area_m2
 
 
-def test_projected_area_can_feed_existing_seafloor_backscatter_model() -> None:
-    footprint = project_angular_pattern_to_flat_seafloor(
+def test_projected_pattern_backscatter_uses_equivalent_area_semantics() -> None:
+    illumination = project_angular_pattern_to_flat_seafloor(
         scan=_scan(_configuration()),
         vertical_separation_m=40.0,
     )
     model = seafloor_backscatter_from_projected_pattern(
         scattering_strength_db_per_m2=-30.0,
-        footprint=footprint,
+        illumination=illumination,
         incidence_angle_from_normal_rad=0.0,
     )
 
-    assert float(model.insonified_area_m2) == pytest.approx(float(footprint.effective_area_m2))
-    assert float(model.scattering_strength_db_per_m2) == pytest.approx(-30.0)
+    assert float(model.insonified_area_m2) == pytest.approx(
+        float(illumination.equivalent_insonified_area_m2)
+    )
+    assert model.area_semantics == "equivalent_pattern_weighted"
+
+
+def test_rectangular_pulse_gate_restricts_pattern_weighted_contributing_area() -> None:
+    illumination = project_angular_pattern_to_flat_seafloor(
+        scan=_scan(_configuration(), samples=101),
+        vertical_separation_m=50.0,
+    )
+    short = gate_projected_pattern_by_rectangular_pulse(
+        illumination=illumination,
+        center_one_way_range_m=50.0,
+        pulse_duration_seconds=0.001,
+        sound_speed_mps=1500.0,
+    )
+    long = gate_projected_pattern_by_rectangular_pulse(
+        illumination=illumination,
+        center_one_way_range_m=50.0,
+        pulse_duration_seconds=0.010,
+        sound_speed_mps=1500.0,
+    )
+
+    assert short.range_shell_width_m == pytest.approx(0.75)
+    assert long.range_shell_width_m == pytest.approx(7.5)
+    assert short.contributing_cell_count < long.contributing_cell_count
+    assert short.equivalent_insonified_area_m2 < long.equivalent_insonified_area_m2
+
+    model = seafloor_backscatter_from_pulse_gated_pattern(
+        scattering_strength_db_per_m2=-30.0,
+        gated_area=short,
+        incidence_angle_from_normal_rad=0.0,
+    )
+    assert model.area_semantics == "equivalent_pattern_and_pulse_weighted"
+    assert float(model.insonified_area_m2) == pytest.approx(
+        float(short.equivalent_insonified_area_m2)
+    )
