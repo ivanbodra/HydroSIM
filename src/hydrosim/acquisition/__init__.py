@@ -95,6 +95,11 @@ from .refracted_pattern_footprint import (
     RefractedProjectedPatternCell,
     project_angular_pattern_through_layered_profile,
 )
+from .refracted_scattering import (
+    RefractedMatchedFilterScatteringIntegration,
+    integrate_refracted_matched_filter_seafloor_backscatter,
+    refracted_matched_filter_scattering_bottom_response,
+)
 from .receive_beam_bank import (
     ReceiveBeamBankResponse,
     ReceiveBeamResponse,
