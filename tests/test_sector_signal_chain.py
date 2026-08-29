@@ -4,6 +4,7 @@ from hydrosim.acquisition import (
     ContinuousWavePulse,
     LayeredSoundSpeedProfile,
     LinearFMPulse,
+    PropagationLossModel,
     SectorWaveformAssignment,
     SectorWaveformPlan,
     SoundSpeedLayer,
@@ -34,14 +35,8 @@ def _constant_profile():
     )
 
 
-def test_integrated_chain_recovers_sector_delay_plus_reciprocal_twtt() -> None:
-    sectors = make_uniform_transmit_sectors(
-        start_along_track_angle_rad=0.0,
-        end_along_track_angle_rad=0.0,
-        sector_count=1,
-        first_tx_delay_seconds=0.001,
-    )
-    plan = SectorWaveformPlan(
+def _single_lfm_plan():
+    return SectorWaveformPlan(
         assignments=(
             SectorWaveformAssignment(
                 sector_index=0,
@@ -53,11 +48,20 @@ def test_integrated_chain_recovers_sector_delay_plus_reciprocal_twtt() -> None:
             ),
         )
     )
+
+
+def test_integrated_chain_recovers_sector_delay_plus_reciprocal_twtt() -> None:
+    sectors = make_uniform_transmit_sectors(
+        start_along_track_angle_rad=0.0,
+        end_along_track_angle_rad=0.0,
+        sector_count=1,
+        first_tx_delay_seconds=0.001,
+    )
     sample_rate = 200_000.0
     result = simulate_sector_waveform_propagation_ping(
         configuration=_configuration(),
         sector_set=sectors,
-        waveform_plan=plan,
+        waveform_plan=_single_lfm_plan(),
         profile=_constant_profile(),
         target_depth_m=30.0,
         receive_steering_across_track_angles_rad=(-0.2, 0.0, 0.2),
@@ -70,8 +74,35 @@ def test_integrated_chain_recovers_sector_delay_plus_reciprocal_twtt() -> None:
     assert sector.echo_arrival_offset_seconds == pytest.approx(0.001 + 2.0 * 30.0 / 1500.0)
     assert sector.matched_filter.peak_lag_samples == sector.echo_delay_samples
     assert sector.matched_filter.normalized_peak_amplitude == pytest.approx(1.0)
+    assert sector.propagation_loss is None
+    assert sector.ideal_point_return_amplitude == pytest.approx(1.0)
     assert abs(float(sector.timing_quantization_error_seconds)) <= 0.5 / sample_rate
     assert sector.strongest_receive_beam_index == 1
+
+
+def test_propagation_loss_scales_echo_and_matched_filter_peak() -> None:
+    sectors = make_uniform_transmit_sectors(
+        start_along_track_angle_rad=0.0,
+        end_along_track_angle_rad=0.0,
+        sector_count=1,
+    )
+    result = simulate_sector_waveform_propagation_ping(
+        configuration=_configuration(),
+        sector_set=sectors,
+        waveform_plan=_single_lfm_plan(),
+        profile=_constant_profile(),
+        target_depth_m=10.0,
+        receive_steering_across_track_angles_rad=(-0.2, 0.0, 0.2),
+        sample_rate_hz=200_000.0,
+        propagation_loss_model=PropagationLossModel(absorption_db_per_km=0.0),
+    )
+
+    sector = result.sectors[0]
+    assert sector.propagation_loss is not None
+    assert sector.propagation_loss.one_way.spreading_loss_db == pytest.approx(20.0)
+    assert sector.propagation_loss.two_way_total_loss_db == pytest.approx(40.0)
+    assert sector.ideal_point_return_amplitude == pytest.approx(0.01)
+    assert sector.matched_filter.normalized_peak_amplitude == pytest.approx(0.01)
 
 
 def test_each_sector_can_use_an_independent_waveform_and_refracted_path() -> None:
