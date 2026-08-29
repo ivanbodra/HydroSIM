@@ -1,4 +1,9 @@
-"""Truth beam-to-terrain propagation and beam-specific return epochs."""
+"""Truth pencil-ray-to-terrain propagation and beam-specific return epochs.
+
+The current reference model uses an ideal geometric ``BeamRay`` as a pencil-ray
+proxy. It does not yet represent the finite transmit footprint or the intersection
+of separate transmit and receive beam patterns found in a Mills-Cross MBES.
+"""
 
 from __future__ import annotations
 
@@ -23,7 +28,7 @@ class ConstantSoundSpeedPropagation(BaseModel):
 
 
 class BeamTruthReturn(BaseModel):
-    """One Truth beam interaction and its beam-specific receive epoch."""
+    """One Truth pencil-ray interaction and its array-centre receive epoch."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -38,6 +43,7 @@ class BeamTruthReturn(BaseModel):
     return_time: SimulationTime
     return_vessel_pose: Pose
     iterations: int = Field(ge=1)
+    fixed_point_residual_seconds: FiniteFloat = Field(default=0.0, ge=0.0)
 
 
 def _distance(a: Vector3, b: Vector3) -> float:
@@ -63,18 +69,29 @@ def simulate_truth_beam_return(
     propagation: ConstantSoundSpeedPropagation,
     sensor_frame: str = "T",
 ) -> BeamTruthReturn:
-    """Intersect one transmitted beam with terrain and solve its return epoch.
+    """Intersect one Truth pencil ray with terrain and solve its return epoch.
 
-    Outbound propagation follows the beam direction at ``tx_time``. The bottom
-    interaction point is therefore fixed by the transmitted Truth beam. Inbound
-    propagation is modeled as the Euclidean straight-ray distance from that point
-    to the moving receive sensor. The receive epoch satisfies
+    The supplied ``BeamRay`` is currently interpreted only as an ideal geometric
+    pencil ray. Its ``role`` metadata is not used to claim a physical TX or RX
+    beam-pattern model. This is deliberate until HydroSIM represents finite TX/RX
+    beam patterns and their intersection explicitly.
+
+    Outbound propagation follows the pencil-ray direction at ``tx_time``. The first
+    forward terrain intersection defines one fixed physical bottom interaction point.
+    The present return model treats that point as a point scatterer that can return
+    energy toward the displaced receive sensor; it is *not* a specular-mirror model
+    and it does not assume that the received energy retraces the outbound path.
+
+    In a homogeneous medium the receive epoch satisfies
 
         t_return = t_tx + (R_out + R_in(t_return)) / c
 
-    and is solved by fixed-point iteration. This is a geometric constant-sound-
-    speed reference model; receive beam acceptance, refraction, waveform physics,
-    scattering, and detection are intentionally separate future capabilities.
+    and is solved by fixed-point iteration. The returned pose and sensor origin are
+    evaluated at exactly ``return_time``. ``fixed_point_residual_seconds`` records
+    the remaining absolute timing residual of the implicit equation.
+
+    Refraction, finite footprint, scattering strength, receive acceptance, waveform
+    physics, and bottom detection remain separate capabilities.
     """
 
     tx_vessel_pose = poses.pose_at(tx_time)
@@ -87,16 +104,14 @@ def simulate_truth_beam_return(
     tx_direction = _beam_direction_in_navigation(tx_sensor_pose, beam)
     intersection = terrain.intersect_ray(tx_sensor_pose.position, tx_direction)
     if not intersection.valid or intersection.point is None or intersection.slant_range is None:
-        raise ValueError("truth beam does not intersect terrain in the forward direction")
+        raise ValueError("truth pencil ray does not intersect terrain in the forward direction")
 
     bottom_point = intersection.point
     outbound_range = float(intersection.slant_range)
     c = float(propagation.sound_speed_mps)
+    tx_seconds = float(tx_time.seconds)
 
-    estimate = float(tx_time.seconds) + 2.0 * outbound_range / c
-    return_pose: Pose | None = None
-    return_sensor_origin: Vector3 | None = None
-    inbound_range = outbound_range
+    estimate = tx_seconds + 2.0 * outbound_range / c
 
     for iteration in range(1, propagation.max_iterations + 1):
         estimate_time = SimulationTime(seconds=estimate)
@@ -109,8 +124,10 @@ def simulate_truth_beam_return(
         )
         return_sensor_origin = return_sensor_pose.position
         inbound_range = _distance(bottom_point, return_sensor_origin)
-        updated = float(tx_time.seconds) + (outbound_range + inbound_range) / c
-        if abs(updated - estimate) <= float(propagation.convergence_tolerance_seconds):
+        updated = tx_seconds + (outbound_range + inbound_range) / c
+        residual = abs(updated - estimate)
+
+        if residual <= float(propagation.convergence_tolerance_seconds):
             return BeamTruthReturn(
                 beam_index=beam.definition.index,
                 tx_time=tx_time,
@@ -119,10 +136,11 @@ def simulate_truth_beam_return(
                 return_sensor_origin=return_sensor_origin,
                 outbound_range_m=outbound_range,
                 inbound_range_m=inbound_range,
-                twtt_seconds=updated - float(tx_time.seconds),
-                return_time=SimulationTime(seconds=updated),
+                twtt_seconds=estimate - tx_seconds,
+                return_time=estimate_time,
                 return_vessel_pose=return_pose,
                 iterations=iteration,
+                fixed_point_residual_seconds=residual,
             )
         estimate = updated
 
