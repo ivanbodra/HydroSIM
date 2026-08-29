@@ -1,125 +1,34 @@
 """Dynamic acoustic acquisition infrastructure.
 
 The acquisition public API models geometry, transducers, propagation, waveform,
-beamforming, timing, bottom detection, and footprint formation. Bottom backscatter
-belongs to the separate sonar-equation/demonstration layer and is intentionally
-not part of this forward-model surface.
+beamforming, timing, beam spacing, bottom detection, and footprint formation.
+Bottom backscatter belongs to the separate sonar-equation/demonstration layer.
 """
 
-from .angular_pattern_2d import (
-    AngularPattern2DSample,
-    AngularPattern2DScan,
-    scan_mills_cross_two_way_pattern_2d,
-    sensor_angular_direction,
-)
+from .angular_pattern_2d import AngularPattern2DSample, AngularPattern2DScan, scan_mills_cross_two_way_pattern_2d, sensor_angular_direction
 from .array_factor import ArrayFactorElementContribution, ArrayFactorResponse, array_factor
-from .beam_pattern import (
-    AcrossTrackBeamPatternSample,
-    AcrossTrackBeamPatternScan,
-    OneWayBeamPatternResponse,
-    across_track_direction,
-    one_way_beam_pattern,
-    scan_across_track_beam_pattern,
-)
-from .beamforming import (
-    ReceiveElementSteeringDelay,
-    ReceiveSteeringEvaluation,
-    ReceiveSteeringHypothesis,
-    evaluate_receive_steering,
-    ideal_receive_steering,
-)
-from .bottom_detection import BottomDetection, detect_bottom_from_matched_filter
+from .beam_pattern import AcrossTrackBeamPatternSample, AcrossTrackBeamPatternScan, OneWayBeamPatternResponse, across_track_direction, one_way_beam_pattern, scan_across_track_beam_pattern
+from .beam_spacing import BeamSteeringPlan, make_equiangular_beam_plan, make_equidistant_beam_plan
+from .beamforming import ReceiveElementSteeringDelay, ReceiveSteeringEvaluation, ReceiveSteeringHypothesis, evaluate_receive_steering, ideal_receive_steering
+from .bottom_detection import BeamDetections, BottomDetection, DetectionMethod, detect_bottom_from_matched_filter
 from .element_factor import RectangularElementFactor, rectangular_element_factor
-from .element_signals import (
-    CoherentReceiveSum,
-    NarrowbandReceiveTone,
-    ReceiveElementPhasor,
-    coherent_receive_sum,
-)
-from .footprint import (
-    FlatSeafloorFootprintModel,
-    InsonifiedFootprint,
-    estimate_flat_seafloor_footprint,
-)
-from .footprint_contribution import (
-    FootprintContributionCell,
-    RefractedFootprintContribution,
-    weight_refracted_footprint_by_matched_filter,
-)
+from .element_signals import CoherentReceiveSum, NarrowbandReceiveTone, ReceiveElementPhasor, coherent_receive_sum
+from .footprint import FlatSeafloorFootprintModel, InsonifiedFootprint, estimate_flat_seafloor_footprint
+from .footprint_contribution import FootprintContributionCell, RefractedFootprintContribution, weight_refracted_footprint_by_matched_filter
 from .generation import generate_acquisition_sequence
-from .layered_propagation import (
-    LayeredRayPath,
-    LayeredRaySegment,
-    LayeredSoundSpeedProfile,
-    SoundSpeedLayer,
-    trace_layered_ray_to_depth,
-)
+from .layered_propagation import LayeredRayPath, LayeredRaySegment, LayeredSoundSpeedProfile, SoundSpeedLayer, trace_layered_ray_to_depth
 from .models import AcquisitionPing, AcquisitionSequence, PingSchedule
-from .multibeam_fan import (
-    MillsCrossMultibeamFan,
-    MultibeamFanBeam,
-    MultibeamFanMatrixSample,
-    simulate_mills_cross_multibeam_fan,
-)
-from .pattern_beamwidth import (
-    MillsCrossFootprintBeamwidths,
-    PatternDerivedFootprint,
-    PrincipalPlaneBeamwidth,
-    derive_mills_cross_footprint_beamwidths,
-    derive_principal_plane_beamwidth,
-    estimate_mills_cross_pattern_footprint,
-)
-from .pattern_footprint_2d import (
-    MatchedFilterWeightedEquivalentArea,
-    ProjectedPatternCell,
-    ProjectedPatternIllumination,
-    PulseGatedEquivalentArea,
-    gate_projected_pattern_by_rectangular_pulse,
-    project_angular_pattern_to_flat_seafloor,
-    weight_projected_pattern_by_matched_filter,
-)
-from .refracted_pattern_footprint import (
-    RefractedPatternIllumination,
-    RefractedProjectedPatternCell,
-    project_angular_pattern_through_layered_profile,
-)
-from .receive_beam_bank import (
-    ReceiveBeamBankResponse,
-    ReceiveBeamResponse,
-    evaluate_mills_cross_receive_beam_bank,
-)
-from .reception import (
-    ArrayElementTruthArrival,
-    ArrayTruthReception,
-    simulate_truth_array_reception,
-)
+from .multibeam_fan import MillsCrossMultibeamFan, MultibeamFanBeam, MultibeamFanMatrixSample, simulate_mills_cross_multibeam_fan
+from .pattern_beamwidth import MillsCrossFootprintBeamwidths, PatternDerivedFootprint, PrincipalPlaneBeamwidth, derive_mills_cross_footprint_beamwidths, derive_principal_plane_beamwidth, estimate_mills_cross_pattern_footprint
+from .pattern_footprint_2d import MatchedFilterWeightedEquivalentArea, ProjectedPatternCell, ProjectedPatternIllumination, PulseGatedEquivalentArea, gate_projected_pattern_by_rectangular_pulse, project_angular_pattern_to_flat_seafloor, weight_projected_pattern_by_matched_filter
+from .refracted_pattern_footprint import RefractedPatternIllumination, RefractedProjectedPatternCell, project_angular_pattern_through_layered_profile
+from .receive_beam_bank import ReceiveBeamBankResponse, ReceiveBeamResponse, evaluate_mills_cross_receive_beam_bank
+from .reception import ArrayElementTruthArrival, ArrayTruthReception, simulate_truth_array_reception
 from .returns import BeamTruthReturn, ConstantSoundSpeedPropagation, simulate_truth_beam_return
-from .sector_signal_chain import (
-    SectorSignalChainPing,
-    SectorSignalChainResult,
-    SectorWaveformAssignment,
-    SectorWaveformPlan,
-    simulate_sector_waveform_propagation_ping,
-)
-from .transmission_loss import (
-    OneWayTransmissionLoss,
-    PropagationLossModel,
-    ReciprocalTransmissionLoss,
-    one_way_transmission_loss,
-    reciprocal_transmission_loss,
-)
+from .sector_signal_chain import SectorSignalChainPing, SectorSignalChainResult, SectorWaveformAssignment, SectorWaveformPlan, simulate_sector_waveform_propagation_ping
+from .transmission_loss import OneWayTransmissionLoss, PropagationLossModel, ReciprocalTransmissionLoss, one_way_transmission_loss, reciprocal_transmission_loss
 from .transmit_sectors import TransmitSector, TransmitSectorSet, make_uniform_transmit_sectors
 from .two_way_pattern import TwoWayBeamPatternResponse, two_way_beam_pattern, two_way_beam_pattern_sensor_frame
-from .waveform import (
-    ContinuousWavePulse,
-    LinearFMPulse,
-    MatchedFilterSummary,
-    WaveformAutocorrelation,
-    matched_filter,
-    sample_cw_baseband,
-    sample_lfm_baseband,
-    sample_waveform_baseband,
-    waveform_autocorrelation,
-)
+from .waveform import ContinuousWavePulse, LinearFMPulse, MatchedFilterSummary, WaveformAutocorrelation, matched_filter, sample_cw_baseband, sample_lfm_baseband, sample_waveform_baseband, waveform_autocorrelation
 
 __all__ = [name for name in globals() if not name.startswith("_")]
