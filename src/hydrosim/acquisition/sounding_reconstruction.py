@@ -15,6 +15,8 @@ Two reference reconstructions are provided:
   profile, using measured TWTT as the ray-tracing stopping condition.
 
 The layered reconstruction never replaces the profile with an average sound speed.
+An optional zero-thickness ``SoundSpeedProfileBoundary`` can establish the initial
+ray parameter independently of the first finite-thickness profile layer.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ from .layered_propagation import (
     LayeredSoundSpeedProfile,
     trace_layered_ray_for_travel_time,
 )
+from .sound_speed_profile_boundary import SoundSpeedProfileBoundary
 from .sounding_observation import (
     ConstantSoundSpeedRangeObservation,
     DetectedAcousticObservation,
@@ -63,6 +66,7 @@ class LayeredSoundSpeedSounding(BaseModel):
     observation: DetectedAcousticObservation
     sensor_pose: Pose
     profile_start_depth_m: FiniteFloat = Field(ge=0.0)
+    profile_boundary: SoundSpeedProfileBoundary | None = None
     along_track_angle_rad: FiniteFloat
     across_track_angle_rad: FiniteFloat
     initial_direction_sensor_frame: Vector3
@@ -123,12 +127,16 @@ def reconstruct_layered_sound_speed_sounding_from_initial_direction(
     profile_start_depth_m: float,
     along_track_angle_rad: float,
     across_track_angle_rad: float,
+    profile_boundary: SoundSpeedProfileBoundary | None = None,
 ) -> LayeredSoundSpeedSounding:
-    """Reconstruct from an already estimated physical initial direction.
+    """Reconstruct from an estimated direction and optional explicit start boundary.
 
-    The supplied direction is processing state, not Truth state. This helper makes
-    the boundary explicit and allows angle-estimation algorithms to feed a 3-D
-    direction without repeating the layered ray-tracing implementation.
+    The supplied direction and optional boundary are processing state, not Truth
+    state. If ``profile_boundary`` is supplied, the direction is interpreted at that
+    zero-thickness boundary and the ray tracer establishes tangential slowness using
+    the boundary sound speed before entering the first finite-thickness profile layer.
+    Without a boundary, legacy behavior is preserved and the first profile-layer
+    sound speed establishes the ray parameter.
     """
 
     if float(observation.twtt_seconds) <= 0.0:
@@ -151,6 +159,7 @@ def reconstruct_layered_sound_speed_sounding_from_initial_direction(
         launch_angle_from_vertical_rad=launch_angle,
         travel_time_seconds=one_way_time,
         start_depth_m=start_depth,
+        start_boundary=profile_boundary,
     )
 
     horizontal_distance = float(path.horizontal_distance_m)
@@ -172,6 +181,7 @@ def reconstruct_layered_sound_speed_sounding_from_initial_direction(
         observation=observation,
         sensor_pose=sensor_pose,
         profile_start_depth_m=start_depth,
+        profile_boundary=profile_boundary,
         along_track_angle_rad=float(along_track_angle_rad),
         across_track_angle_rad=float(across_track_angle_rad),
         initial_direction_sensor_frame=initial_direction_sensor_frame,
