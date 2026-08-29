@@ -1,6 +1,6 @@
 """Discretization-aware geometric split-aperture phase-ramp demonstration.
 
-This module deliberately does not synthesize physical seafloor backscatter.  It
+This module deliberately does not synthesize physical seafloor backscatter. It
 uses the already sampled TX×RX footprint only as a non-negative geometric/time
 weight over arrival directions and computes the circular mean of the ideal
 split-aperture differential phase expected from those directions.
@@ -11,7 +11,7 @@ array-factor sign convention gives
 
     dphi = -k (u - u_s) . b,
 
-where ``k = 2*pi*f/c``.  The minus sign follows directly from
+where ``k = 2*pi*f/c``. The minus sign follows directly from
 ``arg(z_negative * conj(z_positive))``.
 
 At one temporal sample ``t`` the continuous directional/area average is realized
@@ -33,7 +33,7 @@ assessed before interpreting the phase ramp.
 from __future__ import annotations
 
 from cmath import exp, phase
-from math import pi, sqrt
+from math import atan2, cos, pi, sin
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
@@ -76,8 +76,34 @@ class GeometricPhaseRamp(BaseModel):
     samples: tuple[GeometricPhaseRampSample, ...]
 
 
+class PhaseRampConvergenceDiagnostic(BaseModel):
+    """Difference between coarse and refined phase-ramp realizations.
+
+    Phase is circular, so sample differences are wrapped to ``[-pi, pi]`` before
+    the maximum and RMS metrics are calculated. Samples for which either
+    realization has zero weighted area are excluded because phase is undefined
+    there in the physical interpretation.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    compared_sample_count: int = Field(ge=1)
+    max_absolute_circular_phase_change_rad: FiniteFloat = Field(ge=0.0)
+    rms_circular_phase_change_rad: FiniteFloat = Field(ge=0.0)
+    max_absolute_resultant_change: FiniteFloat = Field(ge=0.0)
+    phase_tolerance_rad: FiniteFloat = Field(ge=0.0)
+    resultant_tolerance: FiniteFloat = Field(ge=0.0)
+    converged: bool
+
+
 def _dot(a: Vector3, b: Vector3) -> float:
     return float(a.x * b.x + a.y * b.y + a.z * b.z)
+
+
+def _circular_difference(a: float, b: float) -> float:
+    """Return the signed shortest angular difference ``a-b`` in radians."""
+
+    return atan2(sin(float(a) - float(b)), cos(float(a) - float(b)))
 
 
 def ideal_split_aperture_differential_phase(
@@ -123,7 +149,7 @@ def build_geometric_phase_ramp(
 ) -> GeometricPhaseRamp:
     """Build a sampled geometric phase ramp from a refracted footprint.
 
-    The temporal grid samples *one-way reference time*.  Because matched-filter
+    The temporal grid samples *one-way reference time*. Because matched-filter
     weighting is evaluated in two-way lag, adjacent reference samples are spaced
     by ``1/(2*sample_rate_hz)`` so the implied TWTT grid spacing is ``1/fs``.
     """
@@ -141,8 +167,8 @@ def build_geometric_phase_ramp(
     across_values = sorted({float(cell.across_track_angle_rad) for cell in illumination.cells})
     if len(along_values) < 2 or len(across_values) < 2:
         raise ValueError("phase-ramp footprint requires at least two angular samples per axis")
-    da = min(b - a for a, b in zip(along_values, along_values[1:], strict=True))
-    dc = min(b - a for a, b in zip(across_values, across_values[1:], strict=True))
+    da = min(b - a for a, b in zip(along_values, along_values[1:], strict=False))
+    dc = min(b - a for a, b in zip(across_values, across_values[1:], strict=False))
 
     autocorrelation = waveform_autocorrelation(pulse, sample_rate_hz=fs)
     steering = sensor_angular_direction(
@@ -238,4 +264,104 @@ def build_geometric_phase_ramp(
             nominal_spacing=1.0 / fs,
         ),
         samples=tuple(samples),
+    )
+
+
+def compare_geometric_phase_ramp_refinement(
+    *,
+    coarse: GeometricPhaseRamp,
+    fine: GeometricPhaseRamp,
+    phase_tolerance_rad: float,
+    resultant_tolerance: float,
+) -> PhaseRampConvergenceDiagnostic:
+    """Compare phase ramps only at common physical epochs under refinement.
+
+    The refined realization may improve spatial resolution, temporal resolution,
+    or both, but it must not be coarser on any of the three recorded axes. Common
+    epochs are matched by one-way reference travel time rather than by sample
+    index. This avoids comparing different physical times when temporal sampling
+    changes.
+    """
+
+    phase_tol = float(phase_tolerance_rad)
+    resultant_tol = float(resultant_tolerance)
+    if phase_tol < 0.0 or resultant_tol < 0.0:
+        raise ValueError("convergence tolerances must be non-negative")
+
+    scalar_pairs = (
+        (coarse.frequency_hz, fine.frequency_hz, "frequency_hz"),
+        (coarse.sound_speed_mps, fine.sound_speed_mps, "sound_speed_mps"),
+        (coarse.steering_along_track_angle_rad, fine.steering_along_track_angle_rad, "along-track steering"),
+        (coarse.steering_across_track_angle_rad, fine.steering_across_track_angle_rad, "across-track steering"),
+    )
+    if coarse.array_name != fine.array_name:
+        raise ValueError("phase-ramp refinements must use the same receive array")
+    for coarse_value, fine_value, name in scalar_pairs:
+        if abs(float(coarse_value) - float(fine_value)) > 1e-12:
+            raise ValueError(f"phase-ramp refinements must use the same {name}")
+
+    coarse_axes = (
+        coarse.along_track_resolution,
+        coarse.across_track_resolution,
+        coarse.temporal_resolution,
+    )
+    fine_axes = (
+        fine.along_track_resolution,
+        fine.across_track_resolution,
+        fine.temporal_resolution,
+    )
+    refined_any = False
+    for coarse_axis, fine_axis in zip(coarse_axes, fine_axes, strict=True):
+        if float(fine_axis.nominal_spacing) > float(coarse_axis.nominal_spacing) + 1e-15:
+            raise ValueError("fine phase ramp must not be coarser on any resolution axis")
+        if float(fine_axis.nominal_spacing) < float(coarse_axis.nominal_spacing) - 1e-15:
+            refined_any = True
+    if not refined_any:
+        raise ValueError("fine phase ramp must refine at least one resolution axis")
+
+    fine_by_time = {
+        round(float(sample.reference_one_way_travel_time_seconds), 12): sample
+        for sample in fine.samples
+    }
+    phase_changes: list[float] = []
+    resultant_changes: list[float] = []
+    for coarse_sample in coarse.samples:
+        key = round(float(coarse_sample.reference_one_way_travel_time_seconds), 12)
+        fine_sample = fine_by_time.get(key)
+        if fine_sample is None:
+            continue
+        if (
+            float(coarse_sample.equivalent_weighted_area_m2) <= 0.0
+            or float(fine_sample.equivalent_weighted_area_m2) <= 0.0
+        ):
+            continue
+        phase_changes.append(
+            abs(
+                _circular_difference(
+                    float(fine_sample.differential_phase_rad),
+                    float(coarse_sample.differential_phase_rad),
+                )
+            )
+        )
+        resultant_changes.append(
+            abs(
+                float(fine_sample.circular_resultant_magnitude)
+                - float(coarse_sample.circular_resultant_magnitude)
+            )
+        )
+
+    if not phase_changes:
+        raise ValueError("phase-ramp refinements have no common weighted temporal samples")
+
+    max_phase = max(phase_changes)
+    rms_phase = (sum(value * value for value in phase_changes) / len(phase_changes)) ** 0.5
+    max_resultant = max(resultant_changes)
+    return PhaseRampConvergenceDiagnostic(
+        compared_sample_count=len(phase_changes),
+        max_absolute_circular_phase_change_rad=max_phase,
+        rms_circular_phase_change_rad=rms_phase,
+        max_absolute_resultant_change=max_resultant,
+        phase_tolerance_rad=phase_tol,
+        resultant_tolerance=resultant_tol,
+        converged=max_phase <= phase_tol and max_resultant <= resultant_tol,
     )
