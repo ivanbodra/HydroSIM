@@ -1,7 +1,7 @@
 import pytest
 
 from hydrosim.acquisition.layered_propagation import LayeredSoundSpeedProfile, SoundSpeedLayer
-from hydrosim.acquisition.sound_speed_processing import manual_sound_speed_at_transducer
+from hydrosim.acquisition.sound_speed_processing import use_manual_sound_speed_at_transducer
 from hydrosim.acquisition.sound_speed_profile_boundary import (
     profile_boundary_from_profile,
     profile_boundary_from_sound_speed_at_transducer,
@@ -25,7 +25,7 @@ def test_profile_boundary_can_come_from_processing_profile() -> None:
 
 def test_transducer_boundary_does_not_modify_finite_thickness_profile_layer() -> None:
     profile = _profile()
-    used = manual_sound_speed_at_transducer(1502.0)
+    used = use_manual_sound_speed_at_transducer(1502.0)
     boundary = profile_boundary_from_sound_speed_at_transducer(
         sound_speed_at_transducer=used,
         depth_m=0.0,
