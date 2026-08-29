@@ -79,7 +79,8 @@ def detect_bottom_from_sampled_phase(
     ``sample_times_seconds`` supplies the physical epoch of every phase sample and
     may therefore represent a non-zero origin or a non-unit sample spacing.
     ``strength`` is used only to select among multiple valid zero crossings; when
-    omitted, every sample has unit strength. The local phase fit itself remains
+    omitted, every sample has unit strength. A sign change with zero support on
+    both adjacent samples is ignored. The local phase fit itself remains
     unweighted and diagnostic.
     """
 
@@ -119,7 +120,8 @@ def detect_bottom_from_sampled_phase(
         if p0 == 0.0 or p1 == 0.0 or p0 * p1 < 0.0:
             i = search_start_sample + j
             crossing_strength = float(strengths[i] + strengths[i + 1])
-            candidates.append((crossing_strength, i))
+            if crossing_strength > 0.0:
+                candidates.append((crossing_strength, i))
     if not candidates:
         raise ValueError("no differential-phase zero crossing in search window")
 
