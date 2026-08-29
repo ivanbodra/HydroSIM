@@ -60,9 +60,11 @@ from .multibeam_fan import (
 )
 from .pattern_beamwidth import (
     MillsCrossFootprintBeamwidths,
+    PatternDerivedFootprint,
     PrincipalPlaneBeamwidth,
     derive_mills_cross_footprint_beamwidths,
     derive_principal_plane_beamwidth,
+    estimate_mills_cross_pattern_footprint,
 )
 from .receive_beam_bank import (
     ReceiveBeamBankResponse,
@@ -138,6 +140,7 @@ __all__ = [
     "NarrowbandReceiveTone",
     "OneWayBeamPatternResponse",
     "OneWayTransmissionLoss",
+    "PatternDerivedFootprint",
     "PingSchedule",
     "PointTargetStrength",
     "PrincipalPlaneBeamwidth",
@@ -165,6 +168,7 @@ __all__ = [
     "derive_mills_cross_footprint_beamwidths",
     "derive_principal_plane_beamwidth",
     "estimate_flat_seafloor_footprint",
+    "estimate_mills_cross_pattern_footprint",
     "evaluate_bottom_interaction",
     "evaluate_mills_cross_receive_beam_bank",
     "evaluate_point_target_strength",
