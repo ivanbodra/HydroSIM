@@ -1,0 +1,116 @@
+id: hydrosim.propagation.sound_speed_zero_thickness_boundary
+version: 0.1.0
+scientific_status: hydrosim_modeling_choice_with_physical_basis
+language: en
+
+purpose: >-
+  Represent sound speed used at the transducer/profile start depth as an explicit
+  zero-thickness processing boundary, distinct from the first finite-thickness
+  water-column layer.
+
+state_categories:
+  inputs:
+    - Observed
+    - Configured
+  outputs:
+    - Derived
+
+formulation:
+  principal_plane_boundary_parameter:
+    equation: "p = sin(theta_b) / c_b"
+  vector_tangential_slowness:
+    equations:
+      - "p_x = u_x,b / c_b"
+      - "p_y = u_y,b / c_b"
+  entry_into_first_layer:
+    equations:
+      - "u_x,1 = c_1 * p_x"
+      - "u_y,1 = c_1 * p_y"
+      - "u_z,1 = sqrt(1 - u_x,1^2 - u_y,1^2)"
+
+variables:
+  c_b:
+    description: sound speed assigned to the zero-thickness start boundary
+    unit: m/s
+  c_1:
+    description: sound speed of the first finite-thickness processing layer
+    unit: m/s
+  p_x:
+    description: along-track tangential slowness component
+    unit: s/m
+  p_y:
+    description: across-track tangential slowness component
+    unit: s/m
+  u_b:
+    description: detected/estimated unit direction at the boundary
+    unit: dimensionless
+  u_1:
+    description: refracted unit direction immediately inside the first finite-thickness layer
+    unit: dimensionless
+
+coordinate_and_sign_conventions:
+  frame: "HydroSIM vessel/local conventions documented in docs/conventions.md"
+  vertical_component: "+Z Down for the downward-processing branch"
+
+validity_domain:
+  - geometrical-acoustics initial boundary condition
+  - horizontal first profile interface in the current layered reference model
+  - positive sound speeds and propagating, non-critical direction
+
+assumptions:
+  - the boundary has zero numerical thickness
+  - the boundary value establishes tangential slowness but does not replace c_1
+  - the same processing-state semantics apply whether c_b comes from a sensor, manual value, held value or profile-derived value
+
+known_limitations:
+  - this is a HydroSIM numerical representation, not a claim about manufacturers' internal data structures
+  - product-specific workflows may describe the transducer value as the first profile value
+  - multisector and tilted-array generalization requires explicit sector/array geometry
+
+source_mapping:
+  - reference_id: kongsberg_em1002_operator_manual_850_160977
+    locator: "sound speed at transducer used for beam steering and as first profile value"
+    evidence_level: direct_source
+  - reference_id: kongsberg_em120_operator_manual_850_164112
+    locator: "sound speed at transducer depth, beam pointing and ray bending"
+    evidence_level: direct_source
+  - reference_id: beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed
+    locator: "surface sound-speed effects in multi-sector multibeam processing"
+    evidence_level: direct_source
+  - reference_id: nistad_improved_water_column_sound_speed_ray_tracing
+    locator: "water-column sound-speed structure and ray-tracing context"
+    evidence_level: direct_source
+
+hydrosim_derivation:
+  evidence_level: derived_from_source
+  statement: >-
+    HydroSIM preserves the physical distinction between an array-face/start value and
+    a finite-thickness profile sample by representing c_b as a zero-thickness boundary.
+    The exact data structure is a HydroSIM modeling choice.
+
+implementation:
+  modules:
+    - src/hydrosim/acquisition/sound_speed_profile_boundary.py
+    - src/hydrosim/acquisition/layered_sound_speed_processing.py
+    - src/hydrosim/acquisition/layered_propagation.py
+  symbols:
+    - SoundSpeedProfileBoundary
+    - profile_boundary_from_profile
+    - profile_boundary_from_sound_speed_at_transducer
+    - prepare_layered_reconstruction_initial_direction
+
+validation:
+  tests:
+    - tests/test_layered_propagation.py::test_zero_thickness_boundary_sets_snell_parameter_without_replacing_first_layer
+    - tests/test_layered_sound_speed_reference_experiment.py::test_transducer_boundary_sensor_perturbation_changes_internal_states_but_closes_reference_case
+    - tests/test_layered_sound_speed_reference_experiment.py::test_error_isolation_matrix_keeps_transducer_and_profile_error_sources_separate
+  analytical_anchor: >-
+    The boundary test independently computes p from c_b, computes the first-layer
+    angle from asin(p*c_1), and then computes closed-form distance, path length and
+    travel time while separately asserting that the finite-thickness layer retains c_1.
+
+related_models:
+  - hydrosim.propagation.layered_snell_piecewise_constant
+
+explanatory_documentation:
+  - docs/science/sound_speed_at_transducer.md
