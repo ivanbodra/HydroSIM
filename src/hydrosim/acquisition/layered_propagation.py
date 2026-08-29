@@ -1,9 +1,10 @@
 """Piecewise-constant layered sound-speed ray tracing.
 
 This is HydroSIM's first refracting propagation model. It preserves the ray
-parameter across horizontal interfaces and traces a downward ray to a requested
-depth. The model is intentionally two-dimensional in the vertical propagation
-plane; azimuth remains unchanged in a horizontally stratified ocean.
+parameter across horizontal interfaces and traces a downward ray either to a
+requested depth or for a requested one-way acoustic travel time. The model is
+intentionally two-dimensional in the vertical propagation plane; azimuth remains
+unchanged in a horizontally stratified ocean.
 
 For angle theta measured from local vertical and sound speed c,
 
@@ -11,11 +12,14 @@ For angle theta measured from local vertical and sound speed c,
 
 is conserved. Within each constant-c layer the ray is straight. Refraction occurs
 at interfaces through the updated theta satisfying sin(theta)=p*c.
+
+No average sound speed is required by the propagation solver. Travel time is
+integrated directly from the layer-specific sound speeds and ray geometry.
 """
 
 from __future__ import annotations
 
-from math import asin, cos, sin, sqrt, tan
+from math import asin, cos, sin, tan
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
 
@@ -95,6 +99,20 @@ class LayeredRayPath(BaseModel):
     segments: tuple[LayeredRaySegment, ...]
 
 
+def _validate_launch_angle(launch_angle_from_vertical_rad: float) -> float:
+    angle = float(launch_angle_from_vertical_rad)
+    if angle < 0.0 or angle >= 0.5 * 3.141592653589793:
+        raise ValueError("launch angle must satisfy 0 <= angle < pi/2")
+    return angle
+
+
+def _layer_angle(ray_parameter: float, sound_speed_mps: float) -> float:
+    sine_theta = float(ray_parameter) * float(sound_speed_mps)
+    if sine_theta >= 1.0:
+        raise ValueError("ray reaches a critical/turning condition in the layered profile")
+    return asin(sine_theta)
+
+
 def trace_layered_ray_to_depth(
     *,
     profile: LayeredSoundSpeedProfile,
@@ -113,10 +131,7 @@ def trace_layered_ray_to_depth(
     rejected explicitly rather than silently clamped.
     """
 
-    angle = float(launch_angle_from_vertical_rad)
-    if angle < 0.0 or angle >= 0.5 * 3.141592653589793:
-        raise ValueError("launch angle must satisfy 0 <= angle < pi/2")
-
+    angle = _validate_launch_angle(launch_angle_from_vertical_rad)
     start = float(start_depth_m)
     target = float(target_depth_m)
     if target <= start:
@@ -146,10 +161,7 @@ def trace_layered_ray_to_depth(
             continue
 
         c = float(layer.sound_speed_mps)
-        sine_theta = p * c
-        if sine_theta >= 1.0:
-            raise ValueError("ray reaches a critical/turning condition in the layered profile")
-        theta = asin(sine_theta)
+        theta = _layer_angle(p, c)
         cosine_theta = cos(theta)
         horizontal = dz * tan(theta)
         path_length = dz / cosine_theta
@@ -178,6 +190,101 @@ def trace_layered_ray_to_depth(
     return LayeredRayPath(
         start_depth_m=start,
         target_depth_m=target,
+        launch_angle_from_vertical_rad=angle,
+        ray_parameter_seconds_per_m=p,
+        horizontal_distance_m=total_horizontal,
+        path_length_m=total_path,
+        travel_time_seconds=total_time,
+        segments=tuple(segments),
+    )
+
+
+def trace_layered_ray_for_travel_time(
+    *,
+    profile: LayeredSoundSpeedProfile,
+    launch_angle_from_vertical_rad: float,
+    travel_time_seconds: float,
+    start_depth_m: float = 0.0,
+) -> LayeredRayPath:
+    """Trace a refracting ray until a measured one-way travel time is exhausted.
+
+    Travel time is the stopping condition. The full sound-speed profile controls
+    refraction and propagation in every traversed layer; no arithmetic, harmonic,
+    or other average sound speed is substituted for the profile.
+
+    The requested time must end within the supplied profile. If it would propagate
+    beyond the deepest layer, the function fails explicitly instead of extending
+    the last sound speed silently.
+    """
+
+    angle = _validate_launch_angle(launch_angle_from_vertical_rad)
+    requested_time = float(travel_time_seconds)
+    if requested_time <= 0.0:
+        raise ValueError("travel_time_seconds must be positive")
+
+    start = float(start_depth_m)
+    start_layer = profile.layer_at_depth(start)
+    p = sin(angle) / float(start_layer.sound_speed_mps)
+
+    segments: list[LayeredRaySegment] = []
+    total_horizontal = 0.0
+    total_path = 0.0
+    total_time = 0.0
+    current_depth = start
+    remaining_time = requested_time
+
+    for layer_index, layer in enumerate(profile.layers):
+        layer_top = float(layer.top_depth_m)
+        layer_bottom = float(layer.bottom_depth_m)
+        if remaining_time <= 1e-15:
+            break
+        if layer_bottom <= current_depth or layer_top > current_depth + 1e-9:
+            continue
+
+        c = float(layer.sound_speed_mps)
+        theta = _layer_angle(p, c)
+        cosine_theta = cos(theta)
+        available_dz = layer_bottom - current_depth
+        full_path_length = available_dz / cosine_theta
+        full_travel_time = full_path_length / c
+
+        if remaining_time < full_travel_time - 1e-15:
+            travel_time = remaining_time
+            path_length = c * travel_time
+            dz = path_length * cosine_theta
+            horizontal = path_length * sin(theta)
+            end_depth = current_depth + dz
+        else:
+            travel_time = full_travel_time
+            path_length = full_path_length
+            dz = available_dz
+            horizontal = dz * tan(theta)
+            end_depth = layer_bottom
+
+        segments.append(
+            LayeredRaySegment(
+                layer_index=layer_index,
+                start_depth_m=current_depth,
+                end_depth_m=end_depth,
+                sound_speed_mps=c,
+                angle_from_vertical_rad=theta,
+                horizontal_distance_m=horizontal,
+                path_length_m=path_length,
+                travel_time_seconds=travel_time,
+            )
+        )
+        total_horizontal += horizontal
+        total_path += path_length
+        total_time += travel_time
+        remaining_time -= travel_time
+        current_depth = end_depth
+
+    if remaining_time > 1e-12:
+        raise ValueError("travel time extends beyond the supplied sound-speed profile")
+
+    return LayeredRayPath(
+        start_depth_m=start,
+        target_depth_m=current_depth,
         launch_angle_from_vertical_rad=angle,
         ray_parameter_seconds_per_m=p,
         horizontal_distance_m=total_horizontal,
