@@ -22,7 +22,11 @@ from hydrosim.geometry import MillsCrossConfiguration, TransducerArray
 
 from .angular_pattern_2d import sensor_angular_direction
 from .beam_pattern import one_way_beam_pattern
-from .footprint import FlatSeafloorFootprintModel
+from .footprint import (
+    FlatSeafloorFootprintModel,
+    InsonifiedFootprint,
+    estimate_flat_seafloor_footprint,
+)
 
 PrincipalPlane = Literal["along_track", "across_track"]
 
@@ -161,6 +165,15 @@ class MillsCrossFootprintBeamwidths(BaseModel):
     footprint_model: FlatSeafloorFootprintModel
 
 
+class PatternDerivedFootprint(BaseModel):
+    """Flat-bottom footprint plus the physical beamwidth derivation that produced it."""
+
+    model_config = ConfigDict(frozen=True)
+
+    beamwidths: MillsCrossFootprintBeamwidths
+    footprint: InsonifiedFootprint
+
+
 def derive_mills_cross_footprint_beamwidths(
     *,
     configuration: MillsCrossConfiguration,
@@ -213,3 +226,41 @@ def derive_mills_cross_footprint_beamwidths(
         receive_across_track=rx,
         footprint_model=model,
     )
+
+
+def estimate_mills_cross_pattern_footprint(
+    *,
+    configuration: MillsCrossConfiguration,
+    transmit_steering_along_track_angle_rad: float,
+    receive_steering_across_track_angle_rad: float,
+    vertical_separation_m: float,
+    pulse_duration_seconds: float,
+    frequency_hz: float,
+    sound_speed_mps: float,
+    scan_half_span_rad: float = 0.35,
+    sample_count: int = 2001,
+    transmit_weights: Sequence[complex] | None = None,
+    receive_weights: Sequence[complex] | None = None,
+) -> PatternDerivedFootprint:
+    """Derive physical -3 dB widths and immediately project their flat-bottom footprint."""
+
+    widths = derive_mills_cross_footprint_beamwidths(
+        configuration=configuration,
+        transmit_steering_along_track_angle_rad=transmit_steering_along_track_angle_rad,
+        receive_steering_across_track_angle_rad=receive_steering_across_track_angle_rad,
+        frequency_hz=frequency_hz,
+        sound_speed_mps=sound_speed_mps,
+        scan_half_span_rad=scan_half_span_rad,
+        sample_count=sample_count,
+        transmit_weights=transmit_weights,
+        receive_weights=receive_weights,
+    )
+    footprint = estimate_flat_seafloor_footprint(
+        model=widths.footprint_model,
+        vertical_separation_m=vertical_separation_m,
+        transmit_along_track_center_angle_rad=transmit_steering_along_track_angle_rad,
+        incidence_angle_from_normal_rad=abs(float(receive_steering_across_track_angle_rad)),
+        pulse_duration_seconds=pulse_duration_seconds,
+        sound_speed_mps=sound_speed_mps,
+    )
+    return PatternDerivedFootprint(beamwidths=widths, footprint=footprint)
