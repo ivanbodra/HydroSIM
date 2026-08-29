@@ -5,6 +5,7 @@ from hydrosim.acquisition import (
     LayeredSoundSpeedProfile,
     LinearFMPulse,
     SoundSpeedLayer,
+    assess_refracted_footprint_convergence,
     project_angular_pattern_through_layered_profile,
     scan_mills_cross_two_way_pattern_2d,
     weight_refracted_footprint_by_matched_filter,
@@ -124,3 +125,69 @@ def test_reference_cell_has_unit_temporal_weight() -> None:
         key=lambda cell: abs(float(cell.one_way_travel_time_seconds) - reference_time),
     )
     assert reference_cell.matched_filter_power_weight == pytest.approx(1.0, abs=1e-12)
+
+
+def test_spatial_refinement_diagnostic_compares_same_footprint_observable() -> None:
+    coarse_illumination = _illumination(samples=21)
+    fine_illumination = _illumination(samples=41)
+    reference_time = _reference_time(coarse_illumination)
+    assert _reference_time(fine_illumination) == pytest.approx(reference_time, abs=1e-15)
+
+    pulse = LinearFMPulse(
+        center_frequency_hz=150_000.0,
+        bandwidth_hz=80_000.0,
+        duration_seconds=0.001,
+    )
+    coarse = weight_refracted_footprint_by_matched_filter(
+        illumination=coarse_illumination,
+        pulse=pulse,
+        reference_one_way_travel_time_seconds=reference_time,
+        sample_rate_hz=400_000.0,
+    )
+    fine = weight_refracted_footprint_by_matched_filter(
+        illumination=fine_illumination,
+        pulse=pulse,
+        reference_one_way_travel_time_seconds=reference_time,
+        sample_rate_hz=400_000.0,
+    )
+    diagnostic = assess_refracted_footprint_convergence(
+        coarse=coarse,
+        fine=fine,
+        relative_tolerance=0.05,
+    )
+
+    expected_change = abs(
+        float(fine.equivalent_contributing_area_m2)
+        - float(coarse.equivalent_contributing_area_m2)
+    )
+    expected_relative = expected_change / float(fine.equivalent_contributing_area_m2)
+    assert diagnostic.quantity_name == "equivalent_contributing_area_m2"
+    assert diagnostic.absolute_change == pytest.approx(expected_change)
+    assert diagnostic.relative_change == pytest.approx(expected_relative)
+    assert diagnostic.converged is (expected_relative <= 0.05)
+
+
+def test_spatial_convergence_rejects_temporal_resolution_change() -> None:
+    coarse_illumination = _illumination(samples=11)
+    fine_illumination = _illumination(samples=21)
+    reference_time = _reference_time(coarse_illumination)
+    pulse = ContinuousWavePulse(center_frequency_hz=150_000.0, duration_seconds=0.001)
+    coarse = weight_refracted_footprint_by_matched_filter(
+        illumination=coarse_illumination,
+        pulse=pulse,
+        reference_one_way_travel_time_seconds=reference_time,
+        sample_rate_hz=200_000.0,
+    )
+    fine = weight_refracted_footprint_by_matched_filter(
+        illumination=fine_illumination,
+        pulse=pulse,
+        reference_one_way_travel_time_seconds=reference_time,
+        sample_rate_hz=400_000.0,
+    )
+
+    with pytest.raises(ValueError, match="same sample rate"):
+        assess_refracted_footprint_convergence(
+            coarse=coarse,
+            fine=fine,
+            relative_tolerance=0.05,
+        )
