@@ -90,6 +90,11 @@ from .pattern_footprint_2d import (
     seafloor_backscatter_from_pulse_gated_pattern,
     weight_projected_pattern_by_matched_filter,
 )
+from .refracted_pattern_footprint import (
+    RefractedPatternIllumination,
+    RefractedProjectedPatternCell,
+    project_angular_pattern_through_layered_profile,
+)
 from .receive_beam_bank import (
     ReceiveBeamBankResponse,
     ReceiveBeamResponse,
