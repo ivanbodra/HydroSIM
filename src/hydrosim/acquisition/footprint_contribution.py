@@ -15,6 +15,11 @@ and its area-equivalent contribution is
 
 No S_b, target strength, sediment class, or reflectivity coefficient appears here.
 The result is not received power and must not be interpreted as backscatter.
+
+The continuous-area interpretation is approximated numerically by the projected
+angular cells. ``assess_refracted_footprint_convergence`` compares the same
+observable under spatial refinement so discretization change is not confused with
+physical change.
 """
 
 from __future__ import annotations
@@ -23,6 +28,7 @@ from bisect import bisect_left
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
+from .numerical_resolution import ScalarConvergenceDiagnostic, compare_scalar_refinement
 from .refracted_pattern_footprint import RefractedPatternIllumination
 from .waveform import WaveformAutocorrelation, WaveformPulse, waveform_autocorrelation
 
@@ -139,4 +145,36 @@ def weight_refracted_footprint_by_matched_filter(
         equivalent_contributing_area_m2=equivalent_area,
         cells=tuple(cells),
         autocorrelation=autocorrelation,
+    )
+
+
+def assess_refracted_footprint_convergence(
+    *,
+    coarse: RefractedFootprintContribution,
+    fine: RefractedFootprintContribution,
+    relative_tolerance: float,
+) -> ScalarConvergenceDiagnostic:
+    """Compare equivalent contributing area under spatial-grid refinement.
+
+    The two results must use the same temporal sample rate and the same reference
+    one-way travel time.  This deliberately isolates spatial discretization from
+    temporal discretization.  The ``fine`` realization must contain more cells
+    than ``coarse``.
+    """
+
+    if fine.total_cell_count <= coarse.total_cell_count:
+        raise ValueError("fine footprint realization must contain more cells than coarse")
+    if abs(float(fine.sample_rate_hz) - float(coarse.sample_rate_hz)) > 1e-12:
+        raise ValueError("coarse and fine footprint results must use the same sample rate")
+    if abs(
+        float(fine.reference_one_way_travel_time_seconds)
+        - float(coarse.reference_one_way_travel_time_seconds)
+    ) > 1e-12:
+        raise ValueError("coarse and fine footprint results must use the same reference travel time")
+
+    return compare_scalar_refinement(
+        quantity_name="equivalent_contributing_area_m2",
+        coarse_value=float(coarse.equivalent_contributing_area_m2),
+        fine_value=float(fine.equivalent_contributing_area_m2),
+        relative_tolerance=relative_tolerance,
     )
