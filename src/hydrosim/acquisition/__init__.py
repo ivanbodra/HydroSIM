@@ -1,9 +1,9 @@
 """Dynamic acoustic acquisition infrastructure.
 
 The acquisition public API models geometry, transducers, propagation, waveform,
-beamforming, timing, and footprint formation. Bottom backscatter belongs to the
-separate sonar-equation/demonstration layer and is intentionally not part of this
-forward-model surface.
+beamforming, timing, bottom detection, and footprint formation. Bottom backscatter
+belongs to the separate sonar-equation/demonstration layer and is intentionally
+not part of this forward-model surface.
 """
 
 from .angular_pattern_2d import (
@@ -28,6 +28,7 @@ from .beamforming import (
     evaluate_receive_steering,
     ideal_receive_steering,
 )
+from .bottom_detection import BottomDetection, detect_bottom_from_matched_filter
 from .element_factor import RectangularElementFactor, rectangular_element_factor
 from .element_signals import (
     CoherentReceiveSum,
