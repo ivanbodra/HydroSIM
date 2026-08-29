@@ -10,7 +10,7 @@ from .angular_pattern_2d import AngularPattern2DSample, AngularPattern2DScan, sc
 from .array_factor import ArrayFactorElementContribution, ArrayFactorResponse, array_factor
 from .beam_pattern import AcrossTrackBeamPatternSample, AcrossTrackBeamPatternScan, OneWayBeamPatternResponse, across_track_direction, one_way_beam_pattern, scan_across_track_beam_pattern
 from .beam_spacing import BeamSteeringPlan, make_equiangular_beam_plan, make_equidistant_beam_plan
-from .beamforming import ReceiveElementSteeringDelay, ReceiveSteeringEvaluation, ReceiveSteeringHypothesis, evaluate_receive_steering, ideal_receive_steering
+from .beamforming import ReceiveElementSteeringDelay, ReceiveSteeringEvaluation, ReceiveSteeringHypothesis, evaluate_receive_steering, ideal_receive_steering, ideal_receive_steering_from_sound_speed_measurement
 from .bottom_detection import BeamDetections, BottomDetection, DetectionMethod, detect_bottom_from_matched_filter
 from .element_factor import RectangularElementFactor, rectangular_element_factor
 from .element_signals import CoherentReceiveSum, NarrowbandReceiveTone, ReceiveElementPhasor, coherent_receive_sum
