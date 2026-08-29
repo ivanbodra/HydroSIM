@@ -1,4 +1,4 @@
-from math import isclose, pi
+from math import isclose
 
 import pytest
 
@@ -51,10 +51,10 @@ def test_acquisition_samples_distinct_tx_and_rx_truth_states():
 
     assert len(sequence.pings) == 3
     ping = sequence.pings[0]
-    assert ping.timing.trigger_time.seconds == 0.0
-    assert ping.timing.tx_time.seconds == 0.1
-    assert ping.timing.rx_start_time.seconds == 0.3
-    assert isclose(ping.timing.rx_end_time.seconds, 0.7)
+    assert isclose(ping.timing.trigger_time.seconds, 0.0, abs_tol=1e-12)
+    assert isclose(ping.timing.tx_time.seconds, 0.1, abs_tol=1e-12)
+    assert isclose(ping.timing.rx_start_time.seconds, 0.3, abs_tol=1e-12)
+    assert isclose(ping.timing.rx_end_time.seconds, 0.7, abs_tol=1e-12)
     assert ping.tx_pose.position.x < ping.rx_start_pose.position.x < ping.rx_end_pose.position.x
     assert ping.tx_pose.attitude.roll != ping.rx_end_pose.attitude.roll
     assert ping.tx_pose.position.z != ping.rx_end_pose.position.z
@@ -69,7 +69,10 @@ def test_ping_period_controls_transmit_sequence():
             ping_period_seconds=0.5,
         ),
     )
-    assert [ping.timing.tx_time.seconds for ping in sequence.pings] == [0.0, 0.5, 1.0, 1.5, 2.0]
+    expected = [0.0, 0.5, 1.0, 1.5, 2.0]
+    actual = [ping.timing.tx_time.seconds for ping in sequence.pings]
+    assert len(actual) == len(expected)
+    assert all(isclose(a, e, abs_tol=1e-12) for a, e in zip(actual, expected))
 
 
 def test_acquisition_rejects_missing_motion_support_for_rx_window():
