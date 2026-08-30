@@ -1,0 +1,78 @@
+id: hydrosim.integration.layered_svp_interface_contrast_sensitivity_convergence
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Layered SVP interface/contrast local-sensitivity convergence
+
+purpose: >-
+  Evaluate numerical step stability of Truth-centered finite-difference derivatives
+  and the local compensation slope for the edge-minus-nadir swath-curvature metric
+  by progressively reducing interface-depth and sound-speed-contrast stencil steps.
+
+equations:
+  - name: step_to_step_change
+    expression: Delta_q_n = q_n - q_(n-1)
+  - name: local_compensation_slope
+    expression: d(delta_c)/dz = -(dC/dz) / (dC/d(delta_c))
+
+state_separation:
+  Truth:
+    - fixed layered sound-speed profile
+    - selected Truth interface depth and adjacent-layer contrast
+    - flat bottom
+  Configured:
+    - selected interior interface index
+    - signed across-track beam-angle axis
+    - ordered coarse-to-fine interface-depth steps
+    - ordered coarse-to-fine sound-speed-contrast steps
+  Derived:
+    - local first derivatives
+    - local second derivatives
+    - mixed derivative
+    - local compensation slope when resolvable
+    - signed step-to-step derivative and slope changes
+
+refinement_constraints:
+  - at least two step pairs
+  - every interface-depth step is strictly positive
+  - every sound-speed-contrast step is strictly positive
+  - both step coordinates strictly decrease at each refinement level
+
+scientific_constraints:
+  - no universal numerical convergence tolerance is imposed
+  - no formal asymptotic convergence order is assumed
+  - step stability is experiment-specific evidence, not an operational quality flag
+  - Truth-centered reference curvature should remain numerically closed at every level
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontally layered piecewise-constant profiles
+  - flat bottom
+  - aligned pose
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+
+limitations:
+  - not TVU, THU, confidence, or stochastic uncertainty
+  - not Richardson extrapolation
+  - not a global compensation curve
+  - no guaranteed asymptotic convergence order
+  - no lateral sound-speed gradients, vessel dynamics, or terrain slope
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_interface_contrast_sensitivity_convergence
+  symbols:
+    - LayeredSvpLocalSensitivityConvergencePoint
+    - LayeredSvpLocalSensitivityConvergenceStudy
+    - run_layered_svp_local_sensitivity_convergence_study
+
+tests:
+  - tests/test_layered_svp_interface_contrast_sensitivity_convergence.py
+
+documentation:
+  - docs/science/layered_svp_interface_contrast_sensitivity_convergence.md
+
+related_models:
+  - hydrosim.integration.layered_svp_interface_contrast_local_sensitivity
+  - hydrosim.integration.layered_svp_interface_contrast_map
