@@ -17,17 +17,25 @@ from .mills_cross_pattern import (
     prepare_mills_cross_pattern_panels,
 )
 from .signal_explorer import SignalExplorerSnapshot, prepare_signal_explorer_snapshot
+from .signal_explorer_interactive import (
+    SignalExplorerControls,
+    launch_signal_explorer_interactive,
+    prepare_signal_explorer_comparison,
+)
 from .signal_explorer_plot import plot_signal_explorer_comparison
 
 __all__ = [
     "LayeredSvpExplorerBeam",
     "LayeredSvpExplorerSnapshot",
     "MillsCrossPatternPanels",
+    "SignalExplorerControls",
     "SignalExplorerSnapshot",
+    "launch_signal_explorer_interactive",
     "plot_layered_svp_explorer_snapshot",
     "plot_mills_cross_pattern_panels",
     "plot_signal_explorer_comparison",
     "prepare_layered_svp_explorer_snapshot",
     "prepare_mills_cross_pattern_panels",
+    "prepare_signal_explorer_comparison",
     "prepare_signal_explorer_snapshot",
 ]
