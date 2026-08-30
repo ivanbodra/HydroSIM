@@ -1,9 +1,12 @@
-"""First concrete renderer for the HydroSIM Didactic Signal Explorer.
+"""Concrete renderer for the HydroSIM Didactic Signal Explorer.
 
 The renderer compares one finite-duration CW pulse with one LFM/chirp pulse using
 an existing :class:`SignalExplorerSnapshot` for each waveform. It introduces no
-new waveform or matched-filter physics. The three panels intentionally expose the
-same scientific state from different didactic viewpoints:
+new waveform or matched-filter physics. The same draw function is shared by the
+standalone Matplotlib renderer and application shells so presentation code does
+not duplicate scientific-state interpretation.
+
+The three panels expose the same scientific state from different didactic views:
 
 - in-phase complex-baseband component versus time;
 - unwrapped complex-baseband phase versus time;
@@ -44,34 +47,31 @@ def _require_cw_lfm_pair(
     return cw, lfm
 
 
-def plot_signal_explorer_comparison(
+def draw_signal_explorer_comparison(
     first: SignalExplorerSnapshot,
     second: SignalExplorerSnapshot,
+    axes,
+    *,
+    clear: bool = True,
 ):
-    """Render the first CW-versus-chirp Didactic Explorer comparison.
+    """Draw a CW-versus-LFM comparison into three existing Matplotlib axes.
 
-    The caller may provide the snapshots in either order. Each waveform keeps its
-    own sample rate and duration. Time and lag axes use a common display unit chosen
-    from the largest physical duration represented in the pair.
+    This is the stable renderer boundary used by interactive/application shells.
+    It only interprets already-computed snapshot state; it does not calculate
+    waveform, sampling, matched-filter, propagation, or attenuation physics.
     """
 
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError as exc:  # pragma: no cover - optional dependency
-        raise ImportError(
-            "Matplotlib is required for plot_signal_explorer_comparison; "
-            "install HydroSIM with the 'visualization' extra"
-        ) from exc
+    if len(axes) != 3:
+        raise ValueError("Signal Explorer rendering requires exactly three axes")
 
     cw, lfm = _require_cw_lfm_pair(first, second)
+    waveform_axis, phase_axis, matched_axis = axes
+    if clear:
+        for axis in axes:
+            axis.clear()
+
     duration_max = max(float(cw.pulse.duration_seconds), float(lfm.pulse.duration_seconds))
     scale, unit = _time_scale(duration_max)
-
-    figure = plt.figure(figsize=(13.5, 4.8))
-    grid = figure.add_gridspec(1, 3, wspace=0.32)
-    waveform_axis = figure.add_subplot(grid[0, 0])
-    phase_axis = figure.add_subplot(grid[0, 1])
-    matched_axis = figure.add_subplot(grid[0, 2])
 
     for snapshot, label in ((cw, "CW"), (lfm, "LFM chirp")):
         time = np.asarray(snapshot.time_seconds, dtype=float) * scale
@@ -105,9 +105,34 @@ def plot_signal_explorer_comparison(
     cw_frequency_khz = float(cw.pulse.center_frequency_hz) / 1e3
     lfm_center_khz = float(lfm.pulse.center_frequency_hz) / 1e3
     lfm_bandwidth_khz = float(lfm.pulse.bandwidth_hz) / 1e3
-    figure.suptitle(
+    waveform_axis.figure.suptitle(
         "HydroSIM Didactic Explorer — CW versus chirp\n"
         f"CW: {cw_frequency_khz:g} kHz | "
         f"LFM: {lfm_center_khz:g} kHz center, {lfm_bandwidth_khz:g} kHz bandwidth"
     )
-    return figure, (waveform_axis, phase_axis, matched_axis)
+    return axes
+
+
+def plot_signal_explorer_comparison(
+    first: SignalExplorerSnapshot,
+    second: SignalExplorerSnapshot,
+):
+    """Create a standalone three-panel CW-versus-chirp comparison figure."""
+
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:  # pragma: no cover - optional dependency
+        raise ImportError(
+            "Matplotlib is required for plot_signal_explorer_comparison; "
+            "install HydroSIM with the 'visualization' extra"
+        ) from exc
+
+    figure = plt.figure(figsize=(13.5, 4.8))
+    grid = figure.add_gridspec(1, 3, wspace=0.32)
+    axes = (
+        figure.add_subplot(grid[0, 0]),
+        figure.add_subplot(grid[0, 1]),
+        figure.add_subplot(grid[0, 2]),
+    )
+    draw_signal_explorer_comparison(first, second, axes, clear=False)
+    return figure, axes
