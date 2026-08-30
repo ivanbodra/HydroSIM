@@ -12,7 +12,10 @@ from dataclasses import dataclass
 from hydrosim.acquisition import ContinuousWavePulse, LinearFMPulse
 
 from .signal_explorer import prepare_signal_explorer_snapshot
-from .signal_explorer_plot import plot_signal_explorer_comparison
+from .signal_explorer_plot import (
+    draw_signal_explorer_comparison,
+    plot_signal_explorer_comparison,
+)
 
 
 @dataclass(frozen=True)
@@ -67,7 +70,6 @@ def launch_signal_explorer_interactive(
     """
 
     try:
-        import matplotlib.pyplot as plt
         from matplotlib.widgets import Slider
     except ImportError as exc:  # pragma: no cover - optional dependency
         raise ImportError(
@@ -117,52 +119,7 @@ def launch_signal_explorer_interactive(
             sample_rate_hz=max(float(state.sample_rate_hz), 1.25 * bandwidth_hz),
         )
         new_cw, new_lfm = prepare_signal_explorer_comparison(updated)
-
-        for axis in axes:
-            axis.clear()
-
-        # Reuse the same scientific snapshots but redraw in-place so the widgets
-        # remain attached to this figure.
-        from .signal_explorer_plot import _time_scale
-        import numpy as np
-
-        duration_max = max(
-            float(new_cw.pulse.duration_seconds), float(new_lfm.pulse.duration_seconds)
-        )
-        scale, unit = _time_scale(duration_max)
-        waveform_axis, phase_axis, matched_axis = axes
-        for snapshot, label in ((new_cw, "CW"), (new_lfm, "LFM chirp")):
-            time = np.asarray(snapshot.time_seconds, dtype=float) * scale
-            waveform_axis.plot(time, snapshot.baseband_real, label=label)
-            phase_axis.plot(time, snapshot.unwrapped_baseband_phase_rad, label=label)
-            lag = np.asarray(snapshot.autocorrelation.lag_seconds, dtype=float) * scale
-            matched_axis.plot(lag, snapshot.autocorrelation.normalized_amplitude, label=label)
-
-        waveform_axis.axhline(0.0, linewidth=0.8)
-        waveform_axis.set(
-            xlabel=f"Pulse time ({unit})",
-            ylabel="In-phase baseband component",
-            title="Transmitted waveform: complex baseband",
-        )
-        phase_axis.set(
-            xlabel=f"Pulse time ({unit})",
-            ylabel="Unwrapped phase (rad)",
-            title="Phase evolution",
-        )
-        matched_axis.axvline(0.0, linewidth=0.8)
-        matched_axis.set(
-            xlabel=f"Matched-filter lag ({unit})",
-            ylabel="Normalized amplitude",
-            title="Pulse-compression response",
-        )
-        matched_axis.set_ylim(bottom=0.0)
-        for axis in axes:
-            axis.legend()
-        figure.suptitle(
-            "HydroSIM Didactic Explorer — CW versus chirp\n"
-            f"center {updated.center_frequency_hz / 1e3:g} kHz | "
-            f"LFM bandwidth {updated.lfm_bandwidth_hz / 1e3:g} kHz"
-        )
+        draw_signal_explorer_comparison(new_cw, new_lfm, axes)
         figure.canvas.draw_idle()
 
     for slider in (frequency_slider, duration_slider, bandwidth_slider):
