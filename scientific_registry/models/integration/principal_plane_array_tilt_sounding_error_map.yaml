@@ -1,0 +1,149 @@
+id: hydrosim.integration.principal_plane_array_tilt_sounding_error_map
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+purpose: >-
+  Link the independent analytical principal-plane array-tilt ray-parameter
+  sensitivity to the final calculated-minus-Truth sounding response while holding
+  Truth and processing finite-thickness sound-speed profiles identical.
+
+state_categories:
+  truth_inputs:
+    - Truth
+  sonar_inputs:
+    - Observed
+    - Configured
+  diagnostics:
+    - Estimated
+    - Derived
+
+formulation:
+  sonar_used_sound_speed:
+    equation: "c_used = c_true + b"
+  physical_array_angle:
+    equation: "theta_phys = asin((c_true / c_used) * sin(theta_cfg))"
+  analytical_tilt_sensitivity:
+    equation: "K = cos(theta_cfg) / c_used - cos(theta_phys) / c_true"
+  analytical_ray_parameter_mismatch:
+    equation: "Delta_p_analytical = K * sin(tau)"
+  numerical_truth_parameter:
+    equation: "p_truth = sin(theta_phys_profile) / c_true"
+  numerical_processing_parameter:
+    equation: "p_processing = sin(theta_est_profile) / c_used"
+  numerical_ray_parameter_mismatch:
+    equation: "Delta_p_numerical = p_processing - p_truth"
+  consistency_residual:
+    equation: "r_p = Delta_p_numerical - Delta_p_analytical"
+
+variables:
+  theta_cfg:
+    description: configured principal-plane beam angle relative to the array normal
+    unit: rad
+  theta_phys:
+    description: physical TX angle in array coordinates after sound-speed steering consequence
+    unit: rad
+  tau:
+    description: principal-plane array tilt relative to the horizontal-profile vertical
+    unit: rad
+  b:
+    description: transducer sound-speed sensor bias
+    unit: m/s
+  c_true:
+    description: true local sound speed at the profile start depth
+    unit: m/s
+  c_used:
+    description: sound speed used by the sonar
+    unit: m/s
+  K:
+    description: zero-tilt derivative of signed ray-parameter mismatch with respect to tilt
+    unit: s/m/rad
+  Delta_p_analytical:
+    description: closed-form signed ray-parameter mismatch
+    unit: s/m
+  Delta_p_numerical:
+    description: signed ray-parameter mismatch reconstructed from experiment states
+    unit: s/m
+  r_p:
+    description: analytical-versus-numerical ray-parameter consistency residual
+    unit: s/m
+  dy:
+    description: calculated-minus-Truth across-track sounding error
+    unit: m
+  dz:
+    description: calculated-minus-Truth vertical sounding error in positive-down frame
+    unit: m
+
+coordinate_and_sign_conventions:
+  frame: "HydroSIM documented right-handed NED-like local frame"
+  x: forward
+  y: starboard
+  z: down
+  tilt_sign: "positive tau is in the same signed direction as positive across-track angle"
+
+controlled_cases:
+  zero_tilt: >-
+    Recovers the narrow aligned transducer-value cancellation of the current
+    reciprocal reference experiment.
+  zero_bias: >-
+    Makes c_used equal c_true, so array tilt alone introduces no sound-speed error.
+  nonzero_tilt_and_bias: >-
+    Quantifies how the analytical profile-frame ray-parameter mismatch propagates
+    into across-track, vertical, and total sounding error for the selected geometry.
+
+validity_domain:
+  - one principal plane
+  - downward propagating steering states
+  - stationary reciprocal propagation
+  - one common TX/RX array orientation
+  - horizontal layered sound-speed profile
+  - identical Truth and processing finite-thickness profiles
+  - aligned platform attitude
+  - flat-bottom controlled geometry
+
+assumptions:
+  - the transducer sensor bias affects steering, receive-angle interpretation, and the zero-thickness processing boundary
+  - the finite-thickness processing profile is not rewritten by the transducer sensor bias
+  - analytical K and Delta_p are evaluated independently of the layered ray tracer
+  - the numerical sounding response reuses the established layered reference experiment
+
+known_limitations:
+  - sounding-error magnitude is geometry and profile dependent
+  - analytical odd symmetry of Delta_p in tilt is not imposed on final sounding errors
+  - the model is not a full 3-D Mills-cross installation model
+  - independent TX and RX array rotations are not represented
+  - vessel attitude dynamics and multi-sector behavior are outside this diagnostic
+  - the result is not an operational uncertainty or accuracy specification
+
+implementation:
+  modules:
+    - src/hydrosim/acquisition/principal_plane_array_tilt_sounding_error_map.py
+    - src/hydrosim/acquisition/principal_plane_array_tilt_sensitivity_map.py
+    - src/hydrosim/acquisition/layered_sound_speed_reference_experiment.py
+  symbols:
+    - PrincipalPlaneArrayTiltSoundingErrorMapPoint
+    - PrincipalPlaneArrayTiltSoundingErrorMap
+    - run_principal_plane_array_tilt_sounding_error_map
+
+validation:
+  tests:
+    - tests/test_principal_plane_array_tilt_sounding_error_map.py::test_map_matches_independent_closed_form_ray_parameter_mismatch
+    - tests/test_principal_plane_array_tilt_sounding_error_map.py::test_zero_tilt_or_zero_bias_preserves_controlled_sounding_closure
+    - tests/test_principal_plane_array_tilt_sounding_error_map.py::test_nonzero_tilt_and_bias_produce_resolved_sounding_components
+    - tests/test_principal_plane_array_tilt_sounding_error_map.py::test_map_order_is_angle_then_bias_then_tilt
+  analytical_anchor: >-
+    Tests independently calculate theta_phys, K, and Delta_p from elementary
+    trigonometric expressions and compare them with the numerical ray-parameter
+    mismatch reconstructed from experiment states.
+
+related_models:
+  - hydrosim.integration.principal_plane_array_tilt_symmetry_break
+  - hydrosim.integration.principal_plane_array_tilt_sensitivity
+  - hydrosim.integration.principal_plane_array_tilt_sensitivity_map
+  - hydrosim.propagation.sound_speed_zero_thickness_boundary
+  - hydrosim.propagation.layered_snell_piecewise_constant
+
+explanatory_documentation:
+  - docs/science/principal_plane_array_tilt_sounding_error_map.md
+  - docs/science/principal_plane_array_tilt_sensitivity.md
+  - docs/science/principal_plane_array_tilt.md
