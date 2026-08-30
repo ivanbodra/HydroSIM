@@ -42,7 +42,7 @@ def _run(depths: tuple[float, ...]):
         true_profile=_profile(),
         interface_index=0,
         processing_interface_depths_m=depths,
-        contrast_bracket_mps=(-200.0, 300.0),
+        contrast_bracket_mps=(-20.0, 100.0),
         profile_start_depth_m=0.0,
         local_interface_depth_step_m=2.0,
         local_sound_speed_contrast_step_mps=4.0,
