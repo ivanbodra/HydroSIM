@@ -1,6 +1,6 @@
 # Didactic Explorer Foundation
 
-Version: 0.1.0
+Version: 0.1.1
 
 ## Purpose
 
@@ -56,12 +56,12 @@ Existing core coverage:
 - matched filtering
 - deterministic transmission loss with explicit absorption coefficient
 
-Foundation gap before a frequency/attenuation lesson:
+Scientific gap before a frequency/attenuation lesson is presented as physically complete:
 
 - the core deliberately accepts `absorption_db_per_km` as an explicit input;
 - it does not yet select a literature-based frequency/environment absorption model.
 
-That model must be added to the Scientific Core and Scientific Registry before the UI presents attenuation as a physical function of frequency. HydroSIM should expose established selectable models rather than invent a project-specific absorption law.
+That model should be added to the Scientific Core and Scientific Registry before the UI presents attenuation as a calculated physical function of frequency. HydroSIM should expose established selectable models rather than invent a project-specific absorption law.
 
 ### 2. Transducer and beams
 
@@ -113,19 +113,16 @@ Learning questions:
 - How do roll, pitch, yaw, and heave enter the sounding geometry?
 - What is the difference between waterline/draft/transducer depth and water level/tide/vertical datum?
 
-Existing core coverage:
+Existing core and convention coverage:
 
 - coordinate frames and transformations
 - vessel/transducer geometry
 - lever arms and alignment
 - pose, trajectory, and dynamic acquisition geometry
 - controlled motion residuals
+- explicit vertical-reference semantics in `docs/conventions.md`, including the distinction among waterline, water level, transducer vertical position, draft, heave, dynamic draft, squat, and datum-referenced quantities
 
-Foundation gap before the vertical-reference lesson:
-
-- the didactic application needs one explicit vertical-reference composition contract that keeps vessel waterline/draft/transducer geometry distinct from environmental water level and chart/vertical datum reduction.
-
-This should be an integration contract over existing geometry where possible, not a new acoustic model.
+The remaining gap is implementation/integration, not a missing conceptual convention. The didactic application needs to compose the already-defined vertical-reference quantities into a clear visual and processing chain without creating a second vertical-reference model.
 
 ### 5. Sounding in motion
 
@@ -203,12 +200,27 @@ Visual animation must not imply physical fidelity that the underlying model does
 
 ## Foundation gates before broad UI development
 
-The scientific core is already sufficient to begin visualization. Two cross-cutting contracts should be solidified before their respective lessons are presented as physically complete:
+The scientific core is already sufficient to begin visualization. Two cross-cutting items deserve attention before their respective lessons are presented as complete:
 
 1. **Frequency-dependent absorption selection** — add at least one established, referenced absorption model while retaining the existing explicit-coefficient loss model.
-2. **Vertical-reference composition** — define how vessel reference, waterline/draft/transducer depth, instantaneous water level, and output vertical datum remain distinct and combine in the derived depth.
+2. **Vertical-reference integration** — implement and visualize the vertical-reference composition already specified by `docs/conventions.md`; do not redefine those conventions in the application layer.
 
-Neither gate blocks the existing SVP, waveform, beam-pattern, footprint, or ray-tracing visual prototypes.
+Neither item blocks the existing SVP, waveform, beam-pattern, footprint, or ray-tracing visual prototypes.
+
+## Development discipline
+
+The Didactic Explorer should not drive uncontrolled growth of the scientific core.
+
+Use the following rule:
+
+```text
+New physics?        -> new scientific model
+New validation?     -> new test or diagnostic
+New way to see it?  -> visualization / composition
+New summary?        -> reuse existing outputs
+```
+
+When multiple established models exist, HydroSIM should make model selection explicit and document each model's validity domain instead of creating a HydroSIM-specific empirical law.
 
 ## First visualization sequence
 
