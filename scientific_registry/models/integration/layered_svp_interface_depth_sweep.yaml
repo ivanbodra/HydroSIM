@@ -1,0 +1,78 @@
+id: hydrosim.integration.layered_svp_interface_depth_sweep
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Layered processing-SVP interface-depth sweep
+
+purpose: >-
+  Quantify flat-bottom swath curvature while one interior horizontal interface in the
+  processing sound-speed profile is moved through a deterministic depth sweep and the
+  Truth profile remains fixed.
+
+equations:
+  - name: interface_depth_error
+    expression: Delta_z_i = z_i,proc - z_i,true
+  - name: edge_curvature
+    expression: C_edge = 0.5 * (Delta_z_port_edge + Delta_z_starboard_edge) - Delta_z_nadir
+
+state_separation:
+  Truth:
+    - fixed layered sound-speed profile
+    - selected Truth interface depth
+    - flat bottom
+  Configured:
+    - selected interior interface index
+    - processing interface-depth sweep coordinates
+    - signed across-track beam-angle axis
+  Derived:
+    - processing profile at each interface coordinate
+    - interface-depth error
+    - calculated-minus-Truth sounding errors
+    - edge-minus-nadir vertical curvature
+
+coordinate_conventions:
+  frame: right-handed NED-like
+  z: down
+  interface_depth_error: processing minus Truth
+  sounding_error: calculated minus Truth
+
+construction:
+  - preserve the sound speeds of both layers adjacent to the moved interface
+  - preserve all unrelated layer interfaces and speeds
+  - set upper.bottom_depth_m equal to the processing interface depth
+  - set lower.top_depth_m equal to the processing interface depth
+  - require the moved interface to remain strictly inside the combined adjacent-layer extent
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontally layered piecewise-constant profiles
+  - flat bottom
+  - aligned pose
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+
+limitations:
+  - a sharp interface is a controlled profile morphology, not a complete thermocline model
+  - no universal linearity or monotonicity with interface displacement is assumed
+  - no automatic mapping from curvature sign to smile or frown terminology
+  - not an operational uncertainty estimate
+  - no lateral sound-speed gradients, vessel dynamics, or terrain slope
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_interface_depth_sweep
+  symbols:
+    - LayeredSvpInterfaceDepthSweepPoint
+    - LayeredSvpInterfaceDepthSweep
+    - move_layered_profile_interface
+    - run_layered_svp_interface_depth_sweep
+
+tests:
+  - tests/test_layered_svp_interface_depth_sweep.py
+
+documentation:
+  - docs/science/layered_svp_interface_depth_sweep.md
+
+related_models:
+  - hydrosim.integration.layered_svp_swath_curvature
+  - hydrosim.integration.layered_svp_error_family
