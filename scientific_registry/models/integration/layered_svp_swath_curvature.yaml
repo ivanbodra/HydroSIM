@@ -1,0 +1,73 @@
+id: hydrosim.integration.layered_svp_swath_curvature
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Layered processing-SVP flat-bottom swath curvature
+
+purpose: >-
+  Quantify the calculated-minus-Truth cross-track bathymetric curvature produced by a
+  finite-thickness processing sound-speed profile that differs from Truth while the
+  true bottom is flat and other controlled error sources are disabled.
+
+equations:
+  - name: edge_curvature
+    expression: C_edge = 0.5 * (Delta_z_port_edge + Delta_z_starboard_edge) - Delta_z_nadir
+
+state_separation:
+  Truth:
+    - true layered sound-speed profile
+    - flat bottom
+    - ideal transducer sound-speed value
+  Configured:
+    - signed across-track beam angle
+    - processing layered sound-speed profile
+  Derived:
+    - calculated-minus-Truth across-track error
+    - calculated-minus-Truth vertical error
+    - sounding-error norm
+    - edge-minus-nadir vertical curvature
+
+coordinate_conventions:
+  frame: right-handed NED-like
+  y: starboard
+  z: down
+  error: calculated minus Truth
+
+controlled_symmetry:
+  - Delta_z(-theta) approximately equals Delta_z(+theta)
+  - Delta_y(-theta) approximately equals -Delta_y(+theta)
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontal layered profiles
+  - flat bottom
+  - aligned platform pose
+  - one principal plane
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+
+limitations:
+  - smile and frown are retained only as informal operator terminology
+  - no universal mapping from curvature sign to smile or frown is defined
+  - not TVU, THU, confidence interval, or stochastic uncertainty
+  - no lateral sound-speed gradients
+  - no sloping or rough terrain
+  - no vessel dynamics, independent TX/RX frames, or multi-sector effects
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_swath_curvature
+  symbols:
+    - LayeredSvpSwathCurvaturePoint
+    - LayeredSvpSwathCurvature
+    - run_layered_svp_swath_curvature
+
+tests:
+  - tests/test_layered_svp_swath_curvature.py
+
+documentation:
+  - docs/science/layered_svp_swath_curvature.md
+
+related_models:
+  - hydrosim.integration.principal_plane_array_tilt_sounding_error_map
+  - hydrosim.integration.principal_plane_array_tilt_depth_normalized_response
