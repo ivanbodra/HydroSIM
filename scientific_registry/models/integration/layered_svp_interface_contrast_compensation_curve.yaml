@@ -1,0 +1,92 @@
+id: hydrosim.integration.layered_svp_interface_contrast_compensation_curve
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Layered processing-SVP interface-contrast compensation curve
+
+purpose: >-
+  Locate the controlled zero-curvature contour produced by compensating processing
+  interface-depth error with adjacent-layer sound-speed contrast error while Truth
+  remains fixed.
+
+equations:
+  - name: interface_depth_error
+    expression: Delta_z_i = z_i,proc - z_i,true
+  - name: contrast_error
+    expression: Delta_Delta_c = Delta_c_proc - Delta_c_true
+  - name: edge_curvature
+    expression: C_edge = 0.5 * (Delta_z_port_edge + Delta_z_starboard_edge) - Delta_z_nadir
+  - name: compensation_contour
+    expression: C_edge(Delta_z_i, Delta_Delta_c) ~= 0
+  - name: local_tangent
+    expression: d(Delta_c)/dz = -(dC/dz) / (dC/d(Delta_c))
+
+state_separation:
+  Truth:
+    - fixed layered sound-speed profile
+    - selected Truth interface depth
+    - Truth adjacent-layer sound-speed contrast
+    - flat bottom
+  Configured:
+    - selected interior interface index
+    - processing interface-depth coordinates
+    - sound-speed contrast search bracket
+    - signed across-track beam-angle axis
+    - root-finding tolerances
+  Derived:
+    - compensated processing contrast at each interface depth
+    - interface-depth error
+    - contrast error
+    - residual edge curvature
+    - local-tangent contrast prediction
+    - tangent prediction residual
+
+numerical_method:
+  root_solver: bisection
+  requirements:
+    - bracket endpoints must straddle zero curvature unless one endpoint already satisfies tolerance
+    - no extrapolation outside the supplied bracket
+    - deterministic maximum iteration bound
+
+coordinate_conventions:
+  frame: right-handed NED-like
+  z: down
+  interface_depth_error: processing minus Truth
+  sounding_error: calculated minus Truth
+  sound_speed_contrast: lower adjacent layer minus upper adjacent layer
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontally layered piecewise-constant profiles
+  - flat bottom
+  - aligned pose
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+
+limitations:
+  - zero edge curvature does not imply zero full-swath error
+  - zero edge curvature does not imply the processing SVP equals Truth
+  - root existence depends on the supplied contrast bracket
+  - multiple roots outside the supplied bracket are not excluded
+  - local tangent is a comparison diagnostic, not a global linearity assumption
+  - not an oceanographic inversion or operational correction method
+  - not an uncertainty estimate
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_interface_contrast_compensation_curve
+  symbols:
+    - LayeredSvpInterfaceContrastCompensationPoint
+    - LayeredSvpInterfaceContrastCompensationCurve
+    - run_layered_svp_interface_contrast_compensation_curve
+
+tests:
+  - tests/test_layered_svp_interface_contrast_compensation_curve.py
+
+documentation:
+  - docs/science/layered_svp_interface_contrast_compensation_curve.md
+
+related_models:
+  - hydrosim.integration.layered_svp_interface_contrast_map
+  - hydrosim.integration.layered_svp_interface_contrast_local_sensitivity
+  - hydrosim.integration.layered_svp_interface_contrast_sensitivity_convergence
