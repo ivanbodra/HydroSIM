@@ -10,6 +10,9 @@ dependencies = [
     "pyyaml"
 ]
 
+[project.scripts]
+hydrosim-didactic = "hydrosim.app.didactic_explorer:launch_didactic_explorer"
+
 [project.optional-dependencies]
 dev = [
     "pytest",
