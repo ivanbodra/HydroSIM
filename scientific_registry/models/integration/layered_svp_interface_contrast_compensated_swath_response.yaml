@@ -1,0 +1,91 @@
+id: hydrosim.integration.layered_svp_interface_contrast_compensated_swath_response
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Layered processing-SVP compensated full-swath response
+
+purpose: >-
+  Evaluate the complete calculated-minus-Truth signed swath at processing interface-depth
+  and adjacent-layer sound-speed-contrast pairs that satisfy the existing scalar
+  edge-minus-nadir zero-curvature compensation condition.
+
+equations:
+  - name: edge_curvature
+    expression: C_edge = 0.5 * (Delta_z_port_edge + Delta_z_starboard_edge) - Delta_z_nadir
+  - name: compensation_condition
+    expression: C_edge ~= 0
+  - name: rms_across_track_error
+    expression: RMS_y = sqrt(sum(Delta_y_i^2) / N)
+  - name: rms_vertical_error
+    expression: RMS_z = sqrt(sum(Delta_z_i^2) / N)
+  - name: rms_sounding_error_norm
+    expression: RMS_norm = sqrt(sum(||Delta_r_i||^2) / N)
+
+state_separation:
+  Truth:
+    - fixed layered sound-speed profile
+    - flat bottom
+    - ideal transducer sound-speed value
+  Configured:
+    - selected interior interface index
+    - processing interface-depth coordinates
+    - sound-speed contrast search bracket
+    - signed across-track beam-angle axis
+    - root-finding tolerances
+  Derived:
+    - zero-curvature compensation coordinate at each requested interface depth
+    - full beamwise calculated-minus-Truth across-track error
+    - full beamwise calculated-minus-Truth vertical error
+    - beamwise sounding-error norm
+    - maximum absolute across-track and vertical errors
+    - RMS across-track and vertical errors over configured beams
+    - maximum and RMS sounding-error norm over configured beams
+
+coordinate_conventions:
+  frame: right-handed NED-like
+  y: starboard
+  z: down
+  error: calculated minus Truth
+  sound_speed_contrast: lower adjacent layer minus upper adjacent layer
+
+validation_anchors:
+  - the Truth interface-depth and Truth contrast coordinate closes the complete swath
+  - off-Truth compensation points can retain non-zero beamwise error while C_edge remains near zero
+  - aggregate metrics are independently recomputable from stored beamwise errors
+  - requested interface-depth order and configured beam order are preserved
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontally layered piecewise-constant profiles
+  - flat bottom
+  - aligned pose
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+  - one signed across-track principal plane
+
+limitations:
+  - zero edge curvature does not imply zero full-swath error
+  - aggregate RMS values are deterministic beam-sample summaries, not stochastic uncertainty
+  - aggregate values depend on the configured beam sampling
+  - hidden-error magnitude and shape are not assumed universal along the compensation curve
+  - not an oceanographic inversion or operational correction method
+  - not TVU, THU, confidence interval, or uncertainty estimate
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_interface_contrast_compensated_swath_response
+  symbols:
+    - LayeredSvpCompensatedSwathResponsePoint
+    - LayeredSvpCompensatedSwathResponse
+    - run_layered_svp_compensated_swath_response
+
+tests:
+  - tests/test_layered_svp_interface_contrast_compensated_swath_response.py
+
+documentation:
+  - docs/science/layered_svp_interface_contrast_compensated_swath_response.md
+
+related_models:
+  - hydrosim.integration.layered_svp_interface_contrast_compensation_curve
+  - hydrosim.integration.layered_svp_interface_contrast_map
+  - hydrosim.integration.layered_svp_swath_curvature
