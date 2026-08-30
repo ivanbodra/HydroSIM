@@ -1,0 +1,72 @@
+id: hydrosim.integration.layered_svp_error_family
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Controlled family of layered processing-SVP errors
+
+purpose: >-
+  Compare explicit processing sound-speed-profile error morphologies against one fixed
+  Truth profile using the flat-bottom swath-curvature diagnostic while keeping the
+  remaining controlled error sources disabled.
+
+experiment_coordinates:
+  - case_id
+  - classification
+  - complete processing layered sound-speed profile
+
+classifications:
+  - reference
+  - uniform_offset
+  - layer_speed_perturbation
+  - interface_displacement
+  - synthetic_profile
+
+state_separation:
+  Truth:
+    - fixed layered sound-speed profile
+    - flat bottom
+  Configured:
+    - signed across-track beam fan
+    - explicit processing-profile case
+  Derived:
+    - full swath-curvature response for each case
+    - edge-minus-nadir vertical curvature
+
+scientific_constraints:
+  - classification labels are experiment metadata and do not replace the complete profile
+  - synthetic profiles are not climatology or observed oceanography
+  - identical profile physics under different case IDs must produce identical responses
+  - no monotonic ranking between error classifications is assumed
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontal piecewise-constant layered profiles
+  - flat bottom
+  - aligned platform pose
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+
+limitations:
+  - not TVU, THU, confidence interval, or stochastic uncertainty
+  - no lateral sound-speed gradients
+  - no vessel dynamics or independent TX/RX frames
+  - no claim that synthetic cases represent real thermoclines, seasons, or water masses
+  - continuous interface-depth and contrast parameter sweeps are not yet included
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_error_family
+  symbols:
+    - ControlledProcessingSvpCase
+    - LayeredSvpErrorFamilyCaseResult
+    - LayeredSvpErrorFamilyResponse
+    - run_layered_svp_error_family
+
+tests:
+  - tests/test_layered_svp_error_family.py
+
+documentation:
+  - docs/science/layered_svp_error_family.md
+
+related_models:
+  - hydrosim.integration.layered_svp_swath_curvature
