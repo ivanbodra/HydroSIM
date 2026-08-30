@@ -139,6 +139,33 @@ This is the first HydroSIM experience to close the intended teaching loop:
 control -> scientific model -> observable consequence
 ```
 
+## Decision: introduce the application shell now
+
+HydroSIM will not wait for the entire Scientific Core, sensor suite, motion model, and sonar model to be complete before creating the integrated application. The project has reached the point where continuing to expand the backend horizontally would increase the risk of discovering UI/API integration problems too late.
+
+Development therefore proceeds by **vertical slices** inside an early application shell:
+
+```text
+learning question
+      -> Scientific Core
+      -> composition / snapshot
+      -> visualization
+      -> interaction
+      -> tests and user evaluation
+```
+
+The application shell is not treated as cosmetic work. For the Didactic Explorer, presentation is part of validating the teaching contract because the project must make physical cause and observable consequence understandable through interaction.
+
+The first shell should remain intentionally small. It should provide a recognizable HydroSIM window, navigation between learning blocks, a content/visualization area, and a place for lesson-specific controls. The existing Signal Explorer becomes the first embedded vertical slice. Later slices are integrated into the same shell rather than developed as independent applications.
+
+This decision preserves the architecture boundary:
+
+```text
+Scientific Core -> composition/snapshot -> renderer -> application shell
+```
+
+The shell may coordinate controls, navigation, layout, and redraws, but scientific equations and physical behavior remain outside the UI.
+
 ## Recent repository milestones
 
 | Commit | Milestone | Importance |
@@ -154,17 +181,18 @@ control -> scientific model -> observable consequence
 | `2e8d74b` | Test Signal Explorer renderer | Added renderer tests. |
 | `c693689` | Document first Signal Explorer renderer | Documented the renderer and its scientific boundary. |
 | `d6ad684` | Add interactive Signal Explorer controls | Added the first live didactic control loop. |
+| `c464665` | Document first interactive Signal Explorer | Recorded the first interactive vertical slice. |
 
 ## Current development direction
 
-HydroSIM has crossed from static visualization into its first interactive didactic experience while preserving the separation between presentation and scientific calculation.
+HydroSIM has crossed from static visualization into its first interactive didactic experience while preserving the separation between presentation and scientific calculation. The next product milestone is the first integrated HydroSIM application shell, with the Signal Explorer embedded as its first working lesson.
 
 Near-term sequence:
 
-1. stabilize the first interactive Signal Explorer and keep its control surface small;
-2. implement frequency-dependent acoustic absorption using published, traceable models rather than a HydroSIM-specific law;
-3. connect frequency to a real observable propagation consequence in the Signal Explorer;
-4. integrate the vertical-reference chain already specified in project conventions;
+1. create the minimal HydroSIM Didactic Explorer application shell;
+2. embed the existing interactive Signal Explorer in that shell;
+3. stabilize the shell-to-snapshot boundary before expanding the UI;
+4. implement frequency-dependent acoustic absorption using published, traceable models rather than a HydroSIM-specific law;
 5. continue through vertical slices: signal -> beam/transducer -> propagation/SVP -> vessel/sensors -> motion -> integrated acquisition.
 
 ## When to update this log
