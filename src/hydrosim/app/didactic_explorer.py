@@ -8,7 +8,11 @@ placeholders so the product structure is visible before their implementation.
 
 from __future__ import annotations
 
-from hydrosim.visualization import SignalExplorerControls, prepare_signal_explorer_comparison
+from hydrosim.visualization import (
+    SignalExplorerControls,
+    draw_signal_explorer_comparison,
+    prepare_signal_explorer_comparison,
+)
 
 
 _LESSONS = (
@@ -35,7 +39,6 @@ def launch_didactic_explorer() -> None:
             QLabel,
             QListWidget,
             QMainWindow,
-            QPushButton,
             QSplitter,
             QStackedWidget,
             QVBoxLayout,
@@ -127,7 +130,7 @@ def launch_didactic_explorer() -> None:
 
     initial = SignalExplorerControls()
     cw, lfm = prepare_signal_explorer_comparison(initial)
-    figure, _axes = plot_signal_explorer_comparison(cw, lfm)
+    figure, axes = plot_signal_explorer_comparison(cw, lfm)
     canvas = FigureCanvas(figure)
     signal_layout.addWidget(canvas, 1)
 
@@ -140,11 +143,7 @@ def launch_didactic_explorer() -> None:
             sample_rate_hz=max(initial.sample_rate_hz, 1.25 * bandwidth_hz),
         )
         new_cw, new_lfm = prepare_signal_explorer_comparison(state)
-        new_figure, _new_axes = plot_signal_explorer_comparison(new_cw, new_lfm)
-        old_figure = canvas.figure
-        canvas.figure = new_figure
-        new_figure.set_canvas(canvas)
-        old_figure.clear()
+        draw_signal_explorer_comparison(new_cw, new_lfm, axes)
         canvas.draw_idle()
 
     frequency.valueChanged.connect(redraw_signal)
