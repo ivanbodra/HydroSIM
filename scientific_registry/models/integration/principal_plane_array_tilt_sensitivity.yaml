@@ -1,0 +1,132 @@
+id: hydrosim.integration.principal_plane_array_tilt_sensitivity
+version: 0.1.0
+scientific_status: controlled_diagnostic
+language: en
+
+purpose: >-
+  Quantify the departure from the zero-tilt transducer-sound-speed cancellation by
+  sweeping principal-plane array tilt while holding beam angle, transducer-sensor
+  bias, finite-thickness profile, platform attitude, and bottom geometry fixed.
+
+state_categories:
+  truth_inputs:
+    - Truth
+  sonar_inputs:
+    - Observed
+    - Configured
+  diagnostics:
+    - Estimated
+    - Derived
+
+formulation:
+  physical_array_angle:
+    equation: "theta_phys = asin((c_true / c_used) * sin(theta_cfg))"
+  truth_profile_parameter:
+    equation: "p_truth(tau) = sin(tau + theta_phys) / c_true"
+  processing_profile_parameter:
+    equation: "p_processing(tau) = sin(tau + theta_cfg) / c_used"
+  mismatch:
+    equations:
+      - "Delta_p(tau) = p_processing(tau) - p_truth(tau)"
+      - "Delta_p(tau) = K * sin(tau)"
+      - "K = cos(theta_cfg) / c_used - cos(theta_phys) / c_true"
+  zero_tilt_derivative:
+    equation: "d(Delta_p)/d(tau) at tau=0 = K"
+
+variables:
+  theta_cfg:
+    description: configured principal-plane beam angle relative to the array normal
+    unit: rad
+  theta_phys:
+    description: physical TX angle in array coordinates under the true local sound speed
+    unit: rad
+  tau:
+    description: principal-plane array tilt relative to the horizontal-profile vertical
+    unit: rad
+  c_true:
+    description: true local sound speed at transducer depth
+    unit: m/s
+  c_used:
+    description: sound speed used by the sonar
+    unit: m/s
+  p_truth:
+    description: signed Truth scalar ray parameter in the profile frame
+    unit: s/m
+  p_processing:
+    description: signed processing scalar ray parameter in the profile frame
+    unit: s/m
+  Delta_p:
+    description: processing-minus-Truth signed ray-parameter mismatch
+    unit: s/m
+  K:
+    description: exact zero-tilt sensitivity coefficient for the reduced model
+    unit: s/m
+
+analytical_properties:
+  - "Delta_p(0) = 0"
+  - "Delta_p(-tau) = -Delta_p(tau)"
+  - "the exact reduced-model curve is sinusoidal in tilt"
+  - "the local slope at zero tilt is K"
+
+coordinate_and_sign_conventions:
+  frame: "HydroSIM principal-plane reduction of the documented NED-like local frame"
+  tilt_sign: "positive tau is in the same signed direction as positive across-track angle"
+  mismatch_sign: "processing minus Truth under the signed scalar angle convention"
+
+validity_domain:
+  - controlled principal-plane array-tilt reference experiment
+  - stationary reciprocal propagation
+  - common TX/RX principal-plane array orientation
+  - horizontal layered sound-speed profile
+  - aligned platform pose
+  - flat-bottom experiment
+
+assumptions:
+  - finite-thickness Truth and processing profiles are identical in this transducer-only sweep
+  - beam angle and sensor bias are fixed within one sensitivity curve
+  - only array tilt varies
+  - the scalar ray-parameter diagnostic follows the controlled angle convention and does not replace vector tangential slowness in the general architecture
+
+known_limitations:
+  - the analytical Delta_p law is not a universal final-sounding-error law
+  - final sounding-error symmetry is not assumed
+  - full 3-D Mills-cross geometry is outside this model
+  - independent TX/RX array rotations are outside this model
+  - vessel attitude dynamics and multi-sector timing/association are outside this model
+
+hydrosim_derivation:
+  evidence_level: model_derivation
+  statement: >-
+    Expanding p_processing minus p_truth and applying the existing array-frame
+    steering relation cancels the cos(tau) term exactly, leaving Delta_p = K sin(tau).
+    This derivation is an analytical property of the HydroSIM reduced reference model.
+
+implementation:
+  modules:
+    - src/hydrosim/acquisition/principal_plane_array_tilt_sensitivity.py
+    - src/hydrosim/acquisition/layered_sound_speed_reference_experiment.py
+  symbols:
+    - PrincipalPlaneArrayTiltSensitivityPoint
+    - PrincipalPlaneArrayTiltSensitivityStudy
+    - run_principal_plane_array_tilt_sensitivity_study
+
+validation:
+  tests:
+    - tests/test_principal_plane_array_tilt_sensitivity.py::test_tilt_sensitivity_matches_independent_closed_form_ray_parameter_curve
+    - tests/test_principal_plane_array_tilt_sensitivity.py::test_tilt_sensitivity_small_angle_slope_matches_independent_derivative
+    - tests/test_principal_plane_array_tilt_sensitivity.py::test_tilt_sensitivity_rejects_empty_tilt_axis
+  analytical_anchor: >-
+    Expected ray parameters and the exact K*sin(tau) mismatch are computed directly
+    from elementary trigonometric relations in the tests, independently of the
+    layered ray tracer and sounding reconstruction. A centered small-tilt derivative
+    is also checked against K.
+
+related_models:
+  - hydrosim.integration.principal_plane_array_tilt_symmetry_break
+  - hydrosim.propagation.sound_speed_zero_thickness_boundary
+  - hydrosim.propagation.layered_snell_piecewise_constant
+
+explanatory_documentation:
+  - docs/science/principal_plane_array_tilt_sensitivity.md
+  - docs/science/principal_plane_array_tilt.md
+  - docs/science/sound_speed_at_transducer.md
