@@ -62,7 +62,8 @@ Current foundations include:
 - piecewise-constant layered sound-speed propagation;
 - explicit sound speed at the transducer as a zero-thickness processing boundary;
 - controlled Truth-versus-Processing sound-speed error experiments;
-- first visualization composition adapters and reference renderers.
+- first visualization composition adapters and reference renderers;
+- first integrated Didactic Explorer desktop shell with the Signal lesson embedded.
 
 The current models intentionally remain modular and limited in fidelity. Finite-bottom scattering, complete operational multisector behaviour, complete uncertainty propagation and several acquisition-system effects remain future work.
 
@@ -119,6 +120,28 @@ Main dependencies:
 - pyyaml
 
 Development dependencies include pytest, pytest-cov and ruff. Visualization dependencies are optional.
+
+## Run the Didactic Explorer
+
+Install HydroSIM with the visualization dependencies:
+
+```bash
+python -m pip install -e '.[visualization]'
+```
+
+Launch the desktop application with either:
+
+```bash
+hydrosim-didactic
+```
+
+or:
+
+```bash
+python -m hydrosim.app
+```
+
+The first integrated lesson is **Signal**, which compares finite-duration CW and LFM/chirp waveforms and their normalized pulse-compression responses. The Beam, Propagation, Vessel and Motion entries currently define the application structure and will be filled through subsequent vertical slices.
 
 ## Running checks
 
