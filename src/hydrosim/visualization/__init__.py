@@ -22,7 +22,10 @@ from .signal_explorer_interactive import (
     launch_signal_explorer_interactive,
     prepare_signal_explorer_comparison,
 )
-from .signal_explorer_plot import plot_signal_explorer_comparison
+from .signal_explorer_plot import (
+    draw_signal_explorer_comparison,
+    plot_signal_explorer_comparison,
+)
 
 __all__ = [
     "LayeredSvpExplorerBeam",
@@ -30,6 +33,7 @@ __all__ = [
     "MillsCrossPatternPanels",
     "SignalExplorerControls",
     "SignalExplorerSnapshot",
+    "draw_signal_explorer_comparison",
     "launch_signal_explorer_interactive",
     "plot_layered_svp_explorer_snapshot",
     "plot_mills_cross_pattern_panels",
