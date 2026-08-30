@@ -20,6 +20,22 @@ Visualization
 
 The frontend must consume simulation results; it must not define scientific behaviour.
 
+HydroSIM currently targets two products on the same scientific foundation:
+
+```text
+                 SCIENTIFIC CORE
+        geometry + acoustics + sensors
+                  + references
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+   DIDACTIC EXPLORER          SURVEY SIMULATOR
+   why does it happen?        what would the sonar measure?
+```
+
+The two products may expose different levels of complexity, but they must not diverge scientifically.
+
 ## 1. Scientific Core
 
 Current responsibilities include:
@@ -41,6 +57,8 @@ Current responsibilities include:
 The core is Python-first and independent from Unreal Engine or any UI framework.
 
 Propagation, array physics, signal processing and terrain interaction remain separate enough that their fidelity can evolve independently.
+
+A new scientific model should be introduced only when it answers a new physical question or replaces an existing approximation with a documented alternative. A new visualization, summary, or diagnostic should not become a new scientific model merely because it is presented differently.
 
 ## 2. Scientific Registry
 
@@ -133,8 +151,9 @@ A two-way MBES response is not equivalent to one geometric ray. Finite TX/RX res
 
 ## 6. Application / Training Layer
 
-Planned responsibilities include:
+Responsibilities include:
 
+- Didactic Explorer experiment composition;
 - lessons;
 - patch-test exercises;
 - hidden parameters;
@@ -143,22 +162,32 @@ Planned responsibilities include:
 - scoring and diagnostics;
 - comparison of expected uncertainty, hidden Truth error and observable residuals.
 
+The Didactic Explorer follows the interaction contract:
+
+```text
+control -> physical phenomenon -> observable consequence
+```
+
+An application-level snapshot or adapter may compose several scientific outputs for one lesson. Such composition does not create new physics and therefore should not be registered as a scientific model unless it adds an actual scientific claim or approximation.
+
 The Scientific Core must not depend on this layer.
 
 ## 7. Visualization
 
-Python visualization tools may be used for reference prototypes.
+Python visualization tools are used for reference prototypes and validation of interaction ideas.
 
-A future Unreal Engine frontend may provide:
+A future high-interaction or 3D frontend may provide:
 
-- 3D scene;
-- vessel operation;
+- vessel and sensor layout;
+- wave/signal displays;
 - beam/ray visualization;
 - bathymetric plots;
-- signal displays;
+- interactive controls;
 - training interfaces.
 
-Unreal Engine must remain replaceable as a frontend.
+No specific frontend framework is part of the scientific contract. Matplotlib, Plotly, PySide6, Unreal Engine, or later alternatives must remain replaceable presentation technologies.
+
+Visualization may simplify presentation density, animation, and sampling for readability, but it must not silently change the scientific calculation being presented.
 
 ## 8. Validation strategy
 
@@ -168,7 +197,8 @@ Tests should distinguish between:
 - inverse/closure tests;
 - independent analytical anchors;
 - literature/manufacturer golden values where defensible;
-- controlled numerical experiments for effects without a simple closed form.
+- controlled numerical experiments for effects without a simple closed form;
+- visualization/composition tests that verify presentation wiring without duplicating scientific validation.
 
 A closure test is useful but does not independently validate the governing physics if both sides use the same implementation assumptions. For Snell/refraction and boundary handling, HydroSIM therefore maintains direct analytical checks based on conserved tangential slowness and closed-form piecewise-constant geometry.
 
@@ -176,27 +206,37 @@ Scientific equations must not be changed merely to satisfy software tests.
 
 ## 9. Current evolution path
 
-The original v0.1 geometric slice has already expanded into acoustic and processing reference models. The working progression is now incremental rather than tied rigidly to the original version labels:
+The original v0.1 geometric slice has expanded into a substantial scientific reference core. The near-term priority is now vertical integration rather than continued horizontal expansion of scientific diagnostics.
 
 ```text
-geometry foundation
+scientific foundations
     ↓
-dynamic acquisition geometry
+validated geometry / acoustics / sensors
     ↓
-array / beam-pattern reference physics
+composition snapshots and experiment adapters
     ↓
-layered propagation and sound-speed boundary
+Didactic Explorer vertical slices
     ↓
-controlled error-isolation experiments
+integrated Survey Simulator scenarios
     ↓
-TX tilt / roll / sector asymmetry
+selective new physics where a real capability gap remains
     ↓
-multisector and broader acquisition scenarios
-    ↓
-uncertainty, calibration and training workflows
+calibration / uncertainty / broader training workflows
 ```
 
-Each transition should preserve existing reference cases and add tests before increasing physical complexity.
+The first Didactic Explorer vertical slices are organized around:
+
+```text
+signal
+  -> transducer / beams
+  -> propagation
+  -> vessel / sensors / vertical references
+  -> sounding in motion
+```
+
+This change in development emphasis does not freeze the scientific core. It means new physics should be added deliberately, from literature or established practice, when required by a learning objective or survey-simulation capability rather than to expand the module count.
+
+Each transition should preserve existing reference cases and add tests proportional to the scientific or integration risk.
 
 ## 10. Dependency rule
 
