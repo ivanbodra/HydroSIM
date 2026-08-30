@@ -1,0 +1,89 @@
+id: hydrosim.integration.layered_svp_interface_contrast_map
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Layered processing-SVP interface-depth and sound-speed-contrast map
+
+purpose: >-
+  Quantify flat-bottom swath curvature over a deterministic two-dimensional map of
+  one processing-profile interface depth and the sound-speed contrast across that
+  interface while the Truth profile remains fixed.
+
+equations:
+  - name: processing_contrast
+    expression: Delta_c_proc = c_lower,proc - c_upper,proc
+  - name: interface_depth_error
+    expression: Delta_z_i = z_i,proc - z_i,true
+  - name: contrast_error
+    expression: Delta_Delta_c = Delta_c_proc - Delta_c_true
+  - name: edge_curvature
+    expression: C_edge = 0.5 * (Delta_z_port_edge + Delta_z_starboard_edge) - Delta_z_nadir
+
+state_separation:
+  Truth:
+    - fixed layered sound-speed profile
+    - selected Truth interface depth
+    - selected Truth adjacent-layer sound-speed contrast
+    - flat bottom
+  Configured:
+    - selected interior interface index
+    - processing interface-depth axis
+    - processing adjacent-layer sound-speed-contrast axis
+    - signed across-track beam-angle axis
+  Derived:
+    - processing profile at each two-dimensional coordinate
+    - interface-depth error
+    - contrast error
+    - calculated-minus-Truth sounding errors
+    - edge-minus-nadir vertical curvature
+
+coordinate_conventions:
+  frame: right-handed NED-like
+  z: down
+  sound_speed_contrast: lower adjacent layer minus upper adjacent layer
+  interface_depth_error: processing minus Truth
+  contrast_error: processing minus Truth
+  sounding_error: calculated minus Truth
+
+construction:
+  - move the selected interface while preserving adjacent speeds
+  - retain the upper adjacent layer sound speed
+  - set c_lower,proc = c_upper,proc + Delta_c_proc
+  - preserve all unrelated interfaces and layer speeds
+  - require the resulting lower-layer speed to remain positive
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontally layered piecewise-constant profiles
+  - flat bottom
+  - aligned pose
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+
+limitations:
+  - a sharp interface is a controlled profile morphology, not a complete thermocline model
+  - no continuous-gradient physics is implied
+  - no universal linearity, separability, or monotonicity is assumed
+  - no automatic mapping from curvature sign to smile or frown terminology
+  - not an operational uncertainty estimate
+  - no lateral sound-speed gradients, vessel dynamics, terrain slope, or multisector effects
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_interface_contrast_map
+  symbols:
+    - LayeredSvpInterfaceContrastMapPoint
+    - LayeredSvpInterfaceContrastMap
+    - set_layered_profile_interface_contrast
+    - run_layered_svp_interface_contrast_map
+
+tests:
+  - tests/test_layered_svp_interface_contrast_map.py
+
+documentation:
+  - docs/science/layered_svp_interface_contrast_map.md
+
+related_models:
+  - hydrosim.integration.layered_svp_interface_depth_sweep
+  - hydrosim.integration.layered_svp_swath_curvature
+  - hydrosim.integration.layered_svp_error_family
