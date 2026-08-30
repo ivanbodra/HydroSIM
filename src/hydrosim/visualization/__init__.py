@@ -10,6 +10,7 @@ from .layered_svp_explorer import (
     LayeredSvpExplorerSnapshot,
     prepare_layered_svp_explorer_snapshot,
 )
+from .layered_svp_explorer_plot import plot_layered_svp_explorer_snapshot
 from .mills_cross_pattern import (
     MillsCrossPatternPanels,
     plot_mills_cross_pattern_panels,
@@ -20,6 +21,7 @@ __all__ = [
     "LayeredSvpExplorerBeam",
     "LayeredSvpExplorerSnapshot",
     "MillsCrossPatternPanels",
+    "plot_layered_svp_explorer_snapshot",
     "plot_mills_cross_pattern_panels",
     "prepare_layered_svp_explorer_snapshot",
     "prepare_mills_cross_pattern_panels",
