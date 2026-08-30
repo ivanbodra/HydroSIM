@@ -83,12 +83,7 @@ Truth SVP
    -> Didactic Explorer snapshot
 ```
 
-The first renderer presents:
-
-- Truth and Processing sound-speed profiles;
-- Truth refracted rays and bottom intersections;
-- reconstructed soundings;
-- beamwise vertical and across-track error.
+The first renderer presents Truth and Processing sound-speed profiles, Truth refracted rays and bottom intersections, reconstructed soundings, and beamwise vertical/across-track error.
 
 Enabling Matplotlib execution in CI exposed a real renderer defect: the plotting code originally assumed ray-segment endpoint objects that the scientific path model does not store. The renderer was corrected to reconstruct the polyline from the actual `LayeredRayPath` segment representation. This validated the decision to test visualization code rather than leave it skipped.
 
@@ -96,25 +91,11 @@ Enabling Matplotlib execution in CI exposed a real renderer defect: the plotting
 
 The didactic product is organized as connected views of the same sounding system, not as unrelated simulators.
 
-### 1. Acoustic signal
-
-Topics include CW versus chirp/LFM, frequency, wavelength, duration, bandwidth, transmit/receive filtering, matched filtering, and frequency-dependent attenuation.
-
-### 2. Transducer and beams
-
-Topics include array size, beamwidth, side lobes, footprint, SBES versus MBES, Mills Cross geometry, and multisector transmission.
-
-### 3. Propagation
-
-Topics include sound-speed profiles, refraction, ray tracing, and absorption/attenuation.
-
-### 4. Vessel, sensors, and vertical references
-
-Topics include GNSS, IMU/MRU, transducer installation, lever arms, waterline, draft, transducer depth, water level, tide, and vertical datum.
-
-### 5. Sounding in motion
-
-Topics include roll, pitch, yaw, heave, latency, multibeam geometry, multisector operation, and detection/reconstruction effects.
+1. **Acoustic signal:** CW versus chirp/LFM, frequency, wavelength, duration, bandwidth, filtering, matched filtering, and frequency-dependent attenuation.
+2. **Transducer and beams:** array size, beamwidth, side lobes, footprint, SBES versus MBES, Mills Cross geometry, and multisector transmission.
+3. **Propagation:** sound-speed profiles, refraction, ray tracing, and absorption/attenuation.
+4. **Vessel, sensors, and vertical references:** GNSS, IMU/MRU, transducer installation, lever arms, waterline, draft, transducer depth, water level, tide, and vertical datum.
+5. **Sounding in motion:** roll, pitch, yaw, heave, latency, multibeam geometry, multisector operation, and detection/reconstruction effects.
 
 Each first-release lesson should expose only the controls required to answer its teaching question.
 
@@ -126,17 +107,7 @@ Therefore the remaining gap is **implementation and integration**, not creation 
 
 ## Signal Explorer foundation
 
-The Signal Explorer is the first composition layer for the acoustic-signal learning block.
-
-Its snapshot reuses the existing scientific waveform models:
-
-- finite-duration CW;
-- finite-duration linear FM (LFM/chirp);
-- complex baseband sampling;
-- sampling-adequacy diagnostics;
-- normalized autocorrelation / matched-filter response.
-
-The snapshot exposes sample time, real and imaginary baseband components, unwrapped baseband phase, sampling adequacy, and autocorrelation results.
+The Signal Explorer is the first composition layer for the acoustic-signal learning block. Its snapshot reuses the existing finite-duration CW and LFM/chirp models, complex-baseband sampling, sampling-adequacy diagnostics, and normalized autocorrelation/matched-filter response.
 
 The baseband representation is explicit. In particular, a constant CW baseband signal does **not** imply constant physical acoustic pressure: the carrier oscillation has been removed from the analytic/baseband representation. A future carrier/passband visualization may illustrate that oscillation, but it must remain a presentation layer and must not replace the scientific waveform model.
 
@@ -149,6 +120,24 @@ The first renderer compares CW and LFM/chirp using three didactic panels:
 - **Pulse-compression response** — normalized matched-filter/autocorrelation response, making the broad CW response and compressed LFM peak visually comparable.
 
 The renderer consumes `SignalExplorerSnapshot` objects and does not recompute waveform physics.
+
+## First interactive Signal Explorer
+
+The first interactive shell adds three deliberately small controls to the CW-versus-chirp lesson:
+
+- center frequency;
+- pulse duration;
+- LFM bandwidth.
+
+Every slider change rebuilds CW and LFM snapshots through the existing composition API and redraws the same three didactic panels. The UI therefore changes inputs but does not own waveform or matched-filter physics.
+
+The sample rate remains an implementation/numerical concern in this first interaction and is automatically kept above the LFM complex-baseband Nyquist limit. Center frequency is exposed as part of the waveform definition, but no propagation consequence is implied yet: frequency-dependent attenuation will only appear after a referenced absorption model is connected to the Scientific Core.
+
+This is the first HydroSIM experience to close the intended teaching loop:
+
+```text
+control -> scientific model -> observable consequence
+```
 
 ## Recent repository milestones
 
@@ -164,29 +153,22 @@ The renderer consumes `SignalExplorerSnapshot` objects and does not recompute wa
 | `fcf89f8` | Add first Signal Explorer renderer | Added the first CW × LFM renderer. |
 | `2e8d74b` | Test Signal Explorer renderer | Added renderer tests. |
 | `c693689` | Document first Signal Explorer renderer | Documented the renderer and its scientific boundary. |
+| `d6ad684` | Add interactive Signal Explorer controls | Added the first live didactic control loop. |
 
 ## Current development direction
 
-HydroSIM is now transitioning from a predominantly scientific/backend foundation into integrated visual experiences. The immediate objective is to turn stable snapshots and renderers into small interactive experiences while keeping all physical behavior in the Scientific Core.
+HydroSIM has crossed from static visualization into its first interactive didactic experience while preserving the separation between presentation and scientific calculation.
 
 Near-term sequence:
 
-1. make the Signal Explorer interactive, beginning with CW/LFM selection, pulse duration, and LFM bandwidth;
+1. stabilize the first interactive Signal Explorer and keep its control surface small;
 2. implement frequency-dependent acoustic absorption using published, traceable models rather than a HydroSIM-specific law;
-3. integrate the vertical-reference chain already specified in project conventions;
-4. continue through vertical slices: signal -> beam/transducer -> propagation/SVP -> vessel/sensors -> motion -> integrated acquisition;
-5. maintain independent scientific tests and visualization tests proportional to risk.
+3. connect frequency to a real observable propagation consequence in the Signal Explorer;
+4. integrate the vertical-reference chain already specified in project conventions;
+5. continue through vertical slices: signal -> beam/transducer -> propagation/SVP -> vessel/sensors -> motion -> integrated acquisition.
 
 ## When to update this log
 
-Add a milestone when at least one of the following occurs:
-
-- a meaningful architectural decision changes project direction;
-- a vertical slice becomes usable end to end;
-- an important physical model is added;
-- a scientific development branch is deliberately closed or rejected;
-- a learning block receives its first renderer or interactive experience;
-- major subsystems become integrated;
-- the contract between Scientific Core, Didactic Explorer, and Survey Simulator changes.
+Add a milestone when at least one of the following occurs: a meaningful architectural decision changes project direction; a vertical slice becomes usable end to end; an important physical model is added; a scientific development branch is deliberately closed or rejected; a learning block receives its first renderer or interactive experience; major subsystems become integrated; or the contract between Scientific Core, Didactic Explorer, and Survey Simulator changes.
 
 Routine commits, minor refactors, formatting changes, and ordinary bug fixes do not need individual milestone entries unless they reveal an important architectural or scientific lesson.
