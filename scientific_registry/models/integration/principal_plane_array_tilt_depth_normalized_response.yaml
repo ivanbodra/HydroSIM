@@ -1,0 +1,110 @@
+id: hydrosim.integration.principal_plane_array_tilt_depth_normalized_response
+version: 0.1.0
+scientific_status: controlled_diagnostic
+language: en
+
+title: Principal-plane array-tilt depth-normalized sounding response
+
+purpose: >-
+  Evaluate the existing controlled array-tilt sounding-error experiment at multiple
+  flat-bottom depths and normalize calculated-minus-Truth sounding errors by the
+  physical sensor-to-bottom vertical separation.
+
+equations:
+  - name: vertical_separation
+    expression: H = z_bottom - z_sensor
+  - name: normalized_across_track_error
+    expression: e_y = Delta_y / H
+  - name: normalized_vertical_error
+    expression: e_z = Delta_z / H
+  - name: normalized_total_error
+    expression: e_norm = norm(Delta_r) / H
+
+variables:
+  H:
+    meaning: Physical vertical separation from sensor to flat bottom
+    units: m
+  Delta_y:
+    meaning: Calculated-minus-Truth across-track error
+    units: m
+  Delta_z:
+    meaning: Calculated-minus-Truth vertical error in +Z/down convention
+    units: m
+  Delta_r:
+    meaning: Calculated-minus-Truth 3-D sounding-error vector
+    units: m
+  e_y:
+    meaning: Across-track error normalized by vertical separation
+    units: dimensionless
+  e_z:
+    meaning: Vertical error normalized by vertical separation
+    units: dimensionless
+  e_norm:
+    meaning: Sounding-error norm normalized by vertical separation
+    units: dimensionless
+
+analytical_properties:
+  - >-
+    For a homogeneous sound-speed profile and fixed angle, bias, and tilt, the
+    controlled problem is geometrically scale-similar and the normalized response is
+    expected to be depth-invariant within numerical tolerance.
+  - >-
+    Fixed layer-interface depths break geometric scale similarity, so no depth
+    invariance is imposed for layered profiles.
+  - >-
+    The narrow controlled closure at zero sound-speed bias or zero array tilt remains
+    zero after normalization.
+
+coordinate_conventions:
+  frame: right-handed NED-like
+  x: forward
+  y: starboard
+  z: down
+  normalization_depth: z_bottom - z_sensor
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - one principal plane
+  - platform attitude aligned with horizontal profile frame
+  - flat bottom below the sensor
+  - processing finite-thickness profile equal to Truth
+  - supplied profile covers all requested target depths
+
+assumptions:
+  - one common principal-plane TX/RX array orientation
+  - depth normalization uses vertical separation, not slant range
+  - the same sound-speed profile is retained across the depth sweep
+
+limitations:
+  - not an operational uncertainty model
+  - not TVU or THU
+  - not a stochastic error model
+  - does not establish universal proportionality of sound-speed error with depth
+  - no independent 3-D TX/RX installation rotations
+  - no vessel dynamics or multi-sector association
+
+evidence:
+  level: model_derivation
+  basis: >-
+    HydroSIM dimensional normalization plus the scale similarity of the controlled
+    homogeneous-profile geometry; layered-profile departures are evaluated
+    numerically and are not prescribed analytically.
+
+implementation:
+  module: hydrosim.acquisition.principal_plane_array_tilt_depth_normalized_response
+  symbols:
+    - PrincipalPlaneArrayTiltDepthNormalizedResponsePoint
+    - PrincipalPlaneArrayTiltDepthNormalizedResponse
+    - run_principal_plane_array_tilt_depth_normalized_response
+
+tests:
+  - tests/test_principal_plane_array_tilt_depth_normalized_response.py
+
+documentation:
+  - docs/science/principal_plane_array_tilt_depth_normalized_response.md
+
+related_models:
+  - hydrosim.integration.principal_plane_array_tilt_symmetry_break
+  - hydrosim.integration.principal_plane_array_tilt_sensitivity
+  - hydrosim.integration.principal_plane_array_tilt_sensitivity_map
+  - hydrosim.integration.principal_plane_array_tilt_sounding_error_map
