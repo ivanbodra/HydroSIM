@@ -1,6 +1,6 @@
 # HydroSIM Fidelity and Performance Architecture
 
-Version: 0.1.0
+Version: 0.1.1
 
 > HydroSIM shall preserve one scientific model while allowing different numerical realizations and computational costs. Performance choices may change how a model is evaluated, but must not silently change the scientific meaning of the model.
 
@@ -18,6 +18,14 @@ The architecture therefore separates:
 2. the numerical fidelity used to represent that capability;
 3. the execution/performance target;
 4. the visualization used to present the result.
+
+For didactic interactions, HydroSIM additionally follows:
+
+```text
+control -> physical phenomenon -> observable consequence
+```
+
+This interaction contract affects presentation and composition, not the scientific meaning of the underlying model.
 
 ## 2. Fundamental architecture
 
@@ -73,12 +81,6 @@ A simple slant-range demonstration may require only:
 SlantRangeDemo
     geometry.vector
     geometry.distance
-```
-
-with:
-
-```math
-R = \sqrt{\Delta x^2 + \Delta y^2 + \Delta z^2}
 ```
 
 Such an experiment shall not initialize or evaluate unrelated modules such as:
@@ -209,11 +211,13 @@ Initial presets are:
 | Profile | Primary purpose | Typical characteristics |
 | --- | --- | --- |
 | `conceptual` | immediate explanation of a single concept | analytical geometry, few objects/beams, no unnecessary temporal or propagation models |
-| `didactic` | cause-and-effect teaching | selected motion, offsets, latency, SSS, simplified realistic beam geometry |
+| `didactic` | cause-and-effect teaching in the Didactic Explorer | only the phenomena needed for the lesson, simplified realistic geometry, immediate deterministic recomputation, explicit Truth/Observed/Configured/Estimated/Derived semantics |
 | `technical` | quantitative hydrographic simulation | realistic timing, Tx/Rx states where needed, SSP/ray tracing where relevant, sensor geometry, reproducible outputs |
 | `evaluation` | scientific experiment and validation | explicitly selected maximum relevant fidelity, fine temporal/spatial resolution, uncertainty and traceability as required |
 
 These profiles are presets only. A user or experiment shall be able to override each subsystem independently.
+
+A didactic view may use a conceptual or technical model when that best answers the learning question. `didactic` describes the teaching use, not permission to bypass scientific traceability.
 
 ## 7. Acquisition pipeline performance target
 
@@ -227,13 +231,13 @@ The architecture shall therefore distinguish between:
 
 ```text
 Acquisition pipeline
-    → real-time capable by design
+    -> real-time capable by design
 
 Synthetic environment
-    → fidelity-scalable
+    -> fidelity-scalable
 
 Advanced environmental or acoustic dynamics
-    → optional and explicitly enabled
+    -> optional and explicitly enabled
 ```
 
 ## 8. Synthetic-world computational cost
@@ -270,27 +274,7 @@ Terrain(x, y)
 
 Static terrain implementations may simply ignore `t`.
 
-Potential implementations include:
-
-```text
-StaticTerrain
-AnalyticalTerrain
-RasterTerrain
-MeshTerrain
-DynamicTerrain
-```
-
-A simple future analytical bedform model could be expressed as:
-
-```math
-z(x,y,t) = z_0(x,y) + A\sin(\mathbf{k}\cdot\mathbf{x} - \omega t + \phi)
-```
-
-or as a superposition of several components.
-
-A more realistic sandwave model may eventually depend on currents, sediment properties, bed shear stress, and morphodynamic processes. Such physics constitutes a separate scientific domain and is explicitly not an initial HydroSIM development priority.
-
-Time-dependent terrain is therefore a planned architectural capability, not an implementation requirement for the initial simulator.
+Time-dependent terrain is a planned architectural capability, not an implementation requirement for the initial simulator.
 
 ## 10. Reference and optimized implementations
 
@@ -344,10 +328,11 @@ HydroSIM adopts the following principles:
 6. **Reference-first scientific correctness** — optimized backends are checked against documented reference implementations or golden values.
 7. **Visualization independence** — display detail may be reduced without altering the underlying scientific calculation.
 8. **Explicit reproducibility** — effective capability, fidelity, and execution settings are recorded with scientific results.
+9. **Didactic economy** — interactive lessons expose only the controls and scientific capabilities required to demonstrate the selected cause-and-effect relationship.
 
 ## 13. Development priority
 
-The near-term priority is not premature optimization. It is to preserve clean module boundaries so that inexpensive demonstrations remain inexpensive and future high-fidelity models can be introduced without forcing their computational cost on simpler experiments.
+The near-term priority is not premature optimization or uncontrolled expansion of scientific modules. It is to preserve clean module boundaries while integrating the validated core into usable vertical slices.
 
 Implementation priority should therefore be:
 
@@ -358,9 +343,11 @@ minimal modular implementation
         ↓
 reference validation
         ↓
+application / visualization composition
+        ↓
 profiling with realistic workloads
         ↓
-targeted optimization only where demonstrated necessary
+targeted optimization or new physics only where demonstrated necessary
 ```
 
-This document defines the architectural constraints under which later performance engineering should occur.
+This document defines the architectural constraints under which later performance engineering and interactive visualization should occur.
