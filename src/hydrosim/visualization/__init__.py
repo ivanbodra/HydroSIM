@@ -16,13 +16,16 @@ from .mills_cross_pattern import (
     plot_mills_cross_pattern_panels,
     prepare_mills_cross_pattern_panels,
 )
+from .signal_explorer import SignalExplorerSnapshot, prepare_signal_explorer_snapshot
 
 __all__ = [
     "LayeredSvpExplorerBeam",
     "LayeredSvpExplorerSnapshot",
     "MillsCrossPatternPanels",
+    "SignalExplorerSnapshot",
     "plot_layered_svp_explorer_snapshot",
     "plot_mills_cross_pattern_panels",
     "prepare_layered_svp_explorer_snapshot",
     "prepare_mills_cross_pattern_panels",
+    "prepare_signal_explorer_snapshot",
 ]
