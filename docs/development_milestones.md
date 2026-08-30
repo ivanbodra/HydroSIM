@@ -166,6 +166,21 @@ Scientific Core -> composition/snapshot -> renderer -> application shell
 
 The shell may coordinate controls, navigation, layout, and redraws, but scientific equations and physical behavior remain outside the UI.
 
+## First runnable Didactic Explorer application shell
+
+The first desktop application shell now exists as a PySide6 window with navigation for Signal, Beam, Propagation, Vessel, and Motion. Signal is the first functional page; the other entries intentionally remain placeholders that expose the planned product structure without pretending that the corresponding vertical slices are complete.
+
+A reusable `draw_signal_explorer_comparison(...)` renderer boundary was introduced so both the standalone Matplotlib interaction and the PySide6 application redraw the same existing axes from the same snapshots. The application no longer replaces whole Matplotlib figures on every control change, and the interactive shell no longer duplicates the renderer implementation. This stabilizes the intended boundary:
+
+```text
+control state
+    -> SignalExplorerSnapshot
+    -> shared renderer
+    -> existing application canvas
+```
+
+The application is directly launchable after installing visualization dependencies through either `hydrosim-didactic` or `python -m hydrosim.app`. This marks the transition from a collection of scientific/visual components to an executable product shell that can receive subsequent vertical slices.
+
 ## Recent repository milestones
 
 | Commit | Milestone | Importance |
@@ -182,18 +197,21 @@ The shell may coordinate controls, navigation, layout, and redraws, but scientif
 | `c693689` | Document first Signal Explorer renderer | Documented the renderer and its scientific boundary. |
 | `d6ad684` | Add interactive Signal Explorer controls | Added the first live didactic control loop. |
 | `c464665` | Document first interactive Signal Explorer | Recorded the first interactive vertical slice. |
+| `15cc615` | Add first Didactic Explorer application shell | Created the integrated PySide6 application window. |
+| `5bb33ef` | Stabilize Signal Explorer redraw boundary | Introduced the reusable in-place renderer used by interactive shells. |
+| `aaa32a3` | Add Didactic Explorer command | Made the desktop application directly launchable after visualization installation. |
 
 ## Current development direction
 
-HydroSIM has crossed from static visualization into its first interactive didactic experience while preserving the separation between presentation and scientific calculation. The next product milestone is the first integrated HydroSIM application shell, with the Signal Explorer embedded as its first working lesson.
+HydroSIM now has a runnable application shell and a stable Signal snapshot-to-renderer boundary. The immediate product-integration objective has therefore been reached without expanding the scientific core merely for interface work.
 
 Near-term sequence:
 
-1. create the minimal HydroSIM Didactic Explorer application shell;
-2. embed the existing interactive Signal Explorer in that shell;
-3. stabilize the shell-to-snapshot boundary before expanding the UI;
-4. implement frequency-dependent acoustic absorption using published, traceable models rather than a HydroSIM-specific law;
-5. continue through vertical slices: signal -> beam/transducer -> propagation/SVP -> vessel/sensors -> motion -> integrated acquisition.
+1. keep the application shell intentionally small while integrating only proven vertical slices;
+2. implement frequency-dependent acoustic absorption using published, traceable models rather than a HydroSIM-specific law;
+3. connect center frequency to a real observable propagation consequence in the application;
+4. integrate the existing beam/transducer models as the next visual learning slice where they answer a clear teaching question;
+5. continue through propagation/SVP -> vessel/sensors -> motion -> integrated acquisition.
 
 ## When to update this log
 
