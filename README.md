@@ -2,6 +2,20 @@
 
 HydroSIM is a scientific and didactic simulator for hydrographic surveying.
 
+The project is organized around two products built on one shared scientific core:
+
+```text
+                 SCIENTIFIC CORE
+        geometry + acoustics + sensors
+                  + references
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+   DIDACTIC EXPLORER          SURVEY SIMULATOR
+   interactive learning       synthetic acquisition
+```
+
 The project aims to combine:
 
 - geometric simulation;
@@ -12,9 +26,27 @@ The project aims to combine:
 - scientific traceability;
 - interactive visualization.
 
+## Product intent
+
+### Didactic Explorer
+
+The Didactic Explorer is intended to make hydrographic sounding physics and system integration visually understandable. It should expose a small number of meaningful controls and show their consequences through the teaching contract:
+
+```text
+control -> physical phenomenon -> observable consequence
+```
+
+It is not a separate physics implementation. It consumes the same scientific models used elsewhere in HydroSIM.
+
+### Survey Simulator
+
+The Survey Simulator is intended to compose vessel, sonar, sensors, environment, terrain and processing configuration into coherent synthetic hydrographic acquisition scenarios.
+
+Both products preserve the same scientific conventions, state semantics and traceability.
+
 ## Current status
 
-HydroSIM is still experimental and pre-operational, but the implemented scientific core now extends beyond the original geometric v0.1 vertical slice.
+HydroSIM is still experimental and pre-operational, but the implemented scientific core now extends well beyond the original geometric v0.1 vertical slice.
 
 Current foundations include:
 
@@ -29,9 +61,12 @@ Current foundations include:
 - waveform, filtering and bottom-detection reference components;
 - piecewise-constant layered sound-speed propagation;
 - explicit sound speed at the transducer as a zero-thickness processing boundary;
-- controlled Truth-versus-Processing sound-speed error experiments.
+- controlled Truth-versus-Processing sound-speed error experiments;
+- first visualization composition adapters and reference renderers.
 
-The current models intentionally remain modular and limited in fidelity. Finite-bottom scattering, full operational multisection/multisector behaviour, complete uncertainty propagation and several acquisition-system effects remain future work.
+The current models intentionally remain modular and limited in fidelity. Finite-bottom scattering, complete operational multisector behaviour, complete uncertainty propagation and several acquisition-system effects remain future work.
+
+The near-term development priority is vertical integration: turn the existing scientific core into usable didactic and survey-simulation workflows before broadening the physics horizontally.
 
 ## Design principles
 
@@ -45,6 +80,7 @@ The current models intentionally remain modular and limited in fidelity. Finite-
 8. Visualization must not define the physics.
 9. Point/boundary observations must not silently replace finite-thickness environmental models.
 10. Reference-model closure must not be generalized beyond its documented validity domain.
+11. New models should be added only when they answer a new physical question, not merely to create another summary of existing outputs.
 
 ## Architecture
 
@@ -63,6 +99,13 @@ Visualization
 ```
 
 The first implementation is Python-first. Future optimized components may be implemented in C++ while preserving a traceable Python reference implementation.
+
+See also:
+
+- `docs/architecture.md`
+- `docs/architecture/didactic_explorer_foundation.md`
+- `docs/architecture/fidelity_and_performance.md`
+- `docs/conventions.md`
 
 ## Requirements
 
