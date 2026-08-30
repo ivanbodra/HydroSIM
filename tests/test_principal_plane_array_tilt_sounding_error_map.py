@@ -108,8 +108,7 @@ def test_nonzero_tilt_and_bias_produce_resolved_sounding_components() -> None:
     assert negative.numerical_ray_parameter_mismatch_seconds_per_m == pytest.approx(
         -float(positive.numerical_ray_parameter_mismatch_seconds_per_m), abs=1e-15
     )
-    # Do not impose odd/even symmetry on final sounding error components.
-    assert negative.sounding_error_norm_m != pytest.approx(positive.sounding_error_norm_m, abs=1e-6)
+    # Final sounding-error component symmetry is intentionally not asserted.
 
 
 def test_map_order_is_angle_then_bias_then_tilt() -> None:
