@@ -27,6 +27,36 @@ def _profile_step_coordinates(profile, *, start_depth_m: float) -> tuple[np.ndar
     return np.asarray(speeds), np.asarray(depths)
 
 
+def _truth_ray_plot_coordinates(beam, *, sensor_y: float, sensor_z: float) -> tuple[list[float], list[float]]:
+    """Convert layered path increments to N-frame cross-track plotting coordinates.
+
+    ``LayeredRayPath`` stores positive horizontal distance magnitudes because the
+    propagation model is a principal-plane ray tracer. The signed N-frame side is
+    already represented by the experiment's Truth bottom point, so visualization
+    recovers that sign without introducing a second beam-angle convention.
+    """
+
+    bottom_delta_y = float(beam.truth_bottom_point.y) - sensor_y
+    if abs(bottom_delta_y) <= 1e-15:
+        horizontal_sign = 0.0
+    else:
+        horizontal_sign = 1.0 if bottom_delta_y > 0.0 else -1.0
+
+    path_start_depth = float(beam.truth_ray_path.start_depth_m)
+    y_coordinates = [sensor_y]
+    z_coordinates = [sensor_z]
+    cumulative_horizontal = 0.0
+
+    for segment in beam.truth_ray_path.segments:
+        cumulative_horizontal += float(segment.horizontal_distance_m)
+        y_coordinates.append(sensor_y + horizontal_sign * cumulative_horizontal)
+        z_coordinates.append(
+            sensor_z + float(segment.end_depth_m) - path_start_depth
+        )
+
+    return y_coordinates, z_coordinates
+
+
 def plot_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot):
     """Render SVPs, cross-track geometry, and beamwise error in one figure."""
 
@@ -72,13 +102,12 @@ def plot_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot):
     across_errors: list[float] = []
 
     for beam in snapshot.beams:
-        for segment in beam.truth_ray_path.segments:
-            swath_axis.plot(
-                (float(segment.start_point.y), float(segment.end_point.y)),
-                (float(segment.start_point.z), float(segment.end_point.z)),
-                linewidth=0.9,
-                alpha=0.7,
-            )
+        ray_y, ray_z = _truth_ray_plot_coordinates(
+            beam,
+            sensor_y=sensor_y,
+            sensor_z=sensor_z,
+        )
+        swath_axis.plot(ray_y, ray_z, linewidth=0.9, alpha=0.7)
         truth_y.append(float(beam.truth_bottom_point.y))
         truth_z.append(float(beam.truth_bottom_point.z))
         reconstructed_y.append(float(beam.reconstructed_bottom_point.y))
