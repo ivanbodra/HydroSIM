@@ -1,0 +1,95 @@
+id: hydrosim.integration.layered_svp_interface_contrast_local_sensitivity
+version: 0.1.0
+scientific_status: controlled_numerical_diagnostic
+language: en
+
+title: Local sensitivity of layered processing-SVP interface depth and contrast
+
+purpose: >-
+  Quantify local finite-difference sensitivity, interaction, and first-order
+  compensation of flat-bottom edge-minus-nadir swath curvature around the Truth
+  interface-depth and adjacent-layer sound-speed-contrast coordinate.
+
+equations:
+  - name: depth_sensitivity
+    expression: dC/dz ~= [C(z0+h,dc0) - C(z0-h,dc0)] / (2 h)
+  - name: contrast_sensitivity
+    expression: dC/ddc ~= [C(z0,dc0+k) - C(z0,dc0-k)] / (2 k)
+  - name: depth_second_derivative
+    expression: d2C/dz2 ~= [C(z0+h,dc0) - 2 C(z0,dc0) + C(z0-h,dc0)] / h^2
+  - name: contrast_second_derivative
+    expression: d2C/ddc2 ~= [C(z0,dc0+k) - 2 C(z0,dc0) + C(z0,dc0-k)] / k^2
+  - name: mixed_derivative
+    expression: d2C/(dz ddc) ~= [C(+h,+k) - C(+h,-k) - C(-h,+k) + C(-h,-k)] / (4 h k)
+  - name: local_compensation_slope
+    expression: d(dc)/dz = -(dC/dz) / (dC/ddc)
+  - name: corner_interaction_residual
+    expression: R_int = C(z,dc) - C(z,dc0) - C(z0,dc) + C(z0,dc0)
+
+state_separation:
+  Truth:
+    - fixed layered sound-speed profile
+    - Truth selected interface depth z0
+    - Truth lower-minus-upper adjacent-layer contrast dc0
+    - flat bottom
+  Configured:
+    - selected interior interface index
+    - positive interface-depth finite-difference step h
+    - positive contrast finite-difference step k
+    - signed across-track beam-angle axis
+  Derived:
+    - centered 3 x 3 swath-curvature stencil
+    - first derivatives
+    - second derivatives
+    - mixed interaction derivative
+    - local first-order contrast compensation slope when resolvable
+    - maximum absolute corner interaction residual
+
+coordinate_conventions:
+  frame: right-handed NED-like
+  z: down
+  sound_speed_contrast: lower adjacent layer minus upper adjacent layer
+  sounding_error: calculated minus Truth
+  curvature: mean edge vertical error minus nadir vertical error
+
+scientific_constraints:
+  - preserve distinct physical units for depth and contrast sensitivities
+  - do not form a gradient norm without an explicit nondimensionalization scale
+  - do not assume zero mixed derivative or additive separability
+  - interpret compensation only as a local first-order property of the selected curvature metric
+  - do not infer that a low curvature implies a uniquely correct processing SVP
+  - finite-difference derivative values depend on the selected stencil steps
+
+validity_domain:
+  - stationary monostatic reciprocal reference experiment
+  - horizontally layered piecewise-constant profiles
+  - flat bottom
+  - aligned pose
+  - ideal transducer sound-speed sensor
+  - zero principal-plane array tilt
+  - one selected interior interface
+
+limitations:
+  - no global linearity or monotonicity claim
+  - no guarantee of derivative convergence without a separate refinement study
+  - no complete continuous thermocline model
+  - compensation applies to edge-minus-nadir curvature, not the full sounding-error field
+  - not an operational uncertainty estimate
+  - no lateral gradients, vessel dynamics, terrain slope, independent TX/RX frames, or multi-sector effects
+
+implementation:
+  module: hydrosim.acquisition.layered_svp_interface_contrast_local_sensitivity
+  symbols:
+    - LayeredSvpInterfaceContrastLocalSensitivity
+    - run_layered_svp_interface_contrast_local_sensitivity
+
+tests:
+  - tests/test_layered_svp_interface_contrast_local_sensitivity.py
+
+documentation:
+  - docs/science/layered_svp_interface_contrast_local_sensitivity.md
+
+related_models:
+  - hydrosim.integration.layered_svp_interface_contrast_map
+  - hydrosim.integration.layered_svp_interface_depth_sweep
+  - hydrosim.integration.layered_svp_swath_curvature
