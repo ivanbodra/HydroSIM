@@ -36,13 +36,13 @@ def test_signal_renderer_builds_three_cw_vs_chirp_panels() -> None:
     figure, axes = plot_signal_explorer_comparison(cw, lfm)
     try:
         assert len(axes) == 3
-        assert axes[0].get_title() == "Transmitted waveform: complex baseband"
+        assert axes[0].get_title() == "Transmitted waveform"
         assert axes[1].get_title() == "Phase evolution"
         assert axes[2].get_title() == "Pulse-compression response"
-        assert len(axes[0].lines) == 3  # zero reference + CW + LFM
+        assert len(axes[0].lines) == 3
         assert len(axes[1].lines) == 2
-        assert len(axes[2].lines) == 3  # zero-lag reference + CW + LFM
-        assert "CW versus chirp" in figure._suptitle.get_text()
+        assert len(axes[2].lines) == 3
+        assert figure._suptitle is None
     finally:
         import matplotlib.pyplot as plt
 
@@ -90,8 +90,8 @@ def test_signal_draw_redraws_in_place_without_accumulating_lines() -> None:
         assert len(axes[0].lines) == 3
         assert len(axes[1].lines) == 2
         assert len(axes[2].lines) == 3
-        assert "300 kHz" in figure._suptitle.get_text()
-        assert "60 kHz bandwidth" in figure._suptitle.get_text()
+        assert axes[0].get_ylabel() == "In-phase baseband"
+        assert axes[2].get_ylabel() == "Normalized amplitude"
     finally:
         import matplotlib.pyplot as plt
 
