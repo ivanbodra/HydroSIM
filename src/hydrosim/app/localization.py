@@ -25,6 +25,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "common.learning_question": "Learning question",
         "common.what_to_look_for": "What to look for",
         "common.scientific_view": "Scientific view",
+        "common.scientific_boundary": "Scientific boundary",
+        "common.quantitative": "Quantitative",
         "common.reset": "Reset lesson",
         "common.try_it": "Try it",
         "common.not_shown_yet": "Not shown yet",
@@ -35,6 +37,19 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "signal.question": (
             "How do pulse duration and LFM bandwidth change the transmitted baseband "
             "signal and its pulse-compression response?"
+        ),
+        "signal.question_focus": "How does LFM bandwidth affect pulse compression?",
+        "signal.scientific_boundary": "Analytical / deterministic baseband model",
+        "signal.instruction": "Change one control at a time and watch how the compressed response changes.",
+        "signal.pulse_duration": "Pulse duration",
+        "signal.lfm_bandwidth": "LFM bandwidth",
+        "signal.observation": (
+            "Increasing LFM bandwidth changes the chirp phase evolution and narrows the "
+            "normalized matched-filter peak."
+        ),
+        "signal.not_shown": (
+            "Frequency-dependent absorption, electronics, noise, and a general wave-equation "
+            "field solution are not represented in this lesson."
         ),
         "beam.title": "Beam — frequency, wavelength, aperture, and footprint",
         "beam.question": (
@@ -60,6 +75,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "common.learning_question": "Pergunta de aprendizagem",
         "common.what_to_look_for": "O que observar",
         "common.scientific_view": "Representação científica",
+        "common.scientific_boundary": "Limite científico",
+        "common.quantitative": "Quantitativo",
         "common.reset": "Restaurar aula",
         "common.try_it": "Experimente",
         "common.not_shown_yet": "Ainda não representado",
@@ -70,6 +87,21 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "signal.question": (
             "Como a duração do pulso e a largura de banda LFM alteram o sinal transmitido "
             "em banda base e sua resposta de compressão de pulso?"
+        ),
+        "signal.question_focus": "Como a largura de banda LFM afeta a compressão de pulso?",
+        "signal.scientific_boundary": "Modelo analítico / determinístico em banda base",
+        "signal.instruction": (
+            "Altere um controle por vez e observe como a resposta comprimida se modifica."
+        ),
+        "signal.pulse_duration": "Duração do pulso",
+        "signal.lfm_bandwidth": "Largura de banda LFM",
+        "signal.observation": (
+            "Aumentar a largura de banda LFM modifica a evolução de fase do chirp e estreita "
+            "o pico normalizado do filtro casado."
+        ),
+        "signal.not_shown": (
+            "Absorção dependente da frequência, eletrônica, ruído e uma solução geral de campo "
+            "pela equação de onda não são representados nesta aula."
         ),
         "beam.title": "Feixe — frequência, comprimento de onda, abertura e footprint",
         "beam.question": (
