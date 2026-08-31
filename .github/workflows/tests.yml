@@ -12,8 +12,10 @@ jobs:
   pytest:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout tested head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -82,7 +84,9 @@ jobs:
             artifacts/
 
       - name: Persist real screenshots on the tested branch
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
         shell: bash
         run: |
           test "$(cat artifacts/capture.exit)" = "0"
@@ -97,4 +101,4 @@ jobs:
             exit 0
           fi
           git commit -m "Update real Didactic Explorer screenshots [skip ci]"
-          git push origin HEAD:${GITHUB_REF_NAME}
+          git push origin HEAD:${TARGET_BRANCH}
