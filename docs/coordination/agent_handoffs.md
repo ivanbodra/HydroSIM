@@ -155,6 +155,8 @@ The coordination secretary does not replace specialist ownership. Its periodic r
 7. avoid duplicating issues that already exist;
 8. leave scientific, engineering, validation and interface decisions to the responsible specialist.
 
+A handoff addressed to `coordination-secretary` is actionable work for the Secretary, not merely an item to observe. When the requested action is within coordination scope, the Secretary should perform it promptly, reply with evidence in the Issue, and close it when its completion condition is satisfied. When it requires a specialist decision, the Secretary routes or escalates it instead of deciding it.
+
 When no intervention is needed, the secretary should make no repository changes.
 
 ## Project governance
