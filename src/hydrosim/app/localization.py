@@ -67,6 +67,18 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
             "What happens when the water column is physically unchanged, but the "
             "lower-layer sound speed used during processing is wrong?"
         ),
+        "vessel.title": "Vessel — sensors and vertical references",
+        "vessel.question": "How do sensor lever arms, waterline, and water level relate without mixing reference systems?",
+        "vessel.vrp": "Vessel reference point (VRP)",
+        "vessel.gnss": "GNSS antenna",
+        "vessel.imu": "IMU",
+        "vessel.transducer": "Transducer",
+        "vessel.waterline": "Configured waterline",
+        "vessel.water_level": "Hydrographic water level",
+        "vessel.transducer_depth": "Transducer below waterline",
+        "vessel.observation": "Sensor positions are tied to the VRP; hydrographic water level remains a separate datum-referenced quantity.",
+        "vessel.boundary": "Static geometry only. Positive-down body Z; no datum-to-VRP relationship is inferred.",
+        "vessel.not_shown": "Motion, dynamic draft, squat, and time-varying vertical effects are outside this lesson.",
     },
     "pt-BR": {
         "app.title": "HydroSIM — Explorador Didático",
@@ -123,6 +135,18 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
             "O que acontece quando a coluna d'água permanece fisicamente inalterada, mas "
             "a velocidade do som da camada inferior usada no processamento está errada?"
         ),
+        "vessel.title": "Embarcação — sensores e referências verticais",
+        "vessel.question": "Como os lever arms dos sensores, a linha d'água e o nível d'água se relacionam sem misturar sistemas de referência?",
+        "vessel.vrp": "Ponto de referência da embarcação (VRP)",
+        "vessel.gnss": "Antena GNSS",
+        "vessel.imu": "IMU",
+        "vessel.transducer": "Transdutor",
+        "vessel.waterline": "Linha d'água configurada",
+        "vessel.water_level": "Nível d'água hidrográfico",
+        "vessel.transducer_depth": "Transdutor abaixo da linha d'água",
+        "vessel.observation": "As posições dos sensores são vinculadas ao VRP; o nível d'água hidrográfico permanece uma grandeza separada, referida ao datum.",
+        "vessel.boundary": "Apenas geometria estática. Z do corpo positivo para baixo; nenhuma relação datum–VRP é inferida.",
+        "vessel.not_shown": "Movimento, calado dinâmico, squat e efeitos verticais variáveis no tempo estão fora desta aula.",
     },
 }
 
