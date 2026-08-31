@@ -18,6 +18,24 @@ def _power_db(amplitude: np.ndarray, floor_db: float = -40.0) -> np.ndarray:
     return 10.0 * np.log10(np.maximum(power, 10.0 ** (floor_db / 10.0)))
 
 
+def _principal_plane_samples(scan, *, varying_axis: str):
+    n_along = len(scan.along_track_angles_rad)
+    n_across = len(scan.across_track_angles_rad)
+    if varying_axis == "along":
+        center_across = n_across // 2
+        return (
+            [scan.samples[i * n_across + center_across] for i in range(n_along)],
+            np.array([degrees(float(v)) for v in scan.along_track_angles_rad]),
+        )
+    if varying_axis == "across":
+        center_along = n_along // 2
+        return (
+            [scan.samples[center_along * n_across + j] for j in range(n_across)],
+            np.array([degrees(float(v)) for v in scan.across_track_angles_rad]),
+        )
+    raise ValueError("varying_axis must be 'along' or 'across'")
+
+
 def draw_beam_explorer_snapshot(snapshot: BeamExplorerSnapshot, axes) -> None:
     """Draw principal-plane pattern slices and reference-array geometry in place."""
 
@@ -25,17 +43,12 @@ def draw_beam_explorer_snapshot(snapshot: BeamExplorerSnapshot, axes) -> None:
     for axis in axes:
         axis.clear()
 
-    scan = snapshot.scan
-    n_across = len(scan.across_track_angles_rad)
-    center_across = n_across // 2
-    n_along = len(scan.along_track_angles_rad)
-    center_along = n_along // 2
-
-    along_samples = [scan.samples[i * n_across + center_across] for i in range(n_along)]
-    across_samples = [scan.samples[center_along * n_across + j] for j in range(n_across)]
-
-    along_deg = np.array([degrees(float(v)) for v in scan.along_track_angles_rad])
-    across_deg = np.array([degrees(float(v)) for v in scan.across_track_angles_rad])
+    along_samples, along_deg = _principal_plane_samples(
+        snapshot.along_track_scan, varying_axis="along"
+    )
+    across_samples, across_deg = _principal_plane_samples(
+        snapshot.across_track_scan, varying_axis="across"
+    )
 
     for samples, angle, axis, title in (
         (along_samples, along_deg, along_axis, "Along-track principal plane"),
@@ -85,7 +98,8 @@ def plot_beam_explorer_snapshot(snapshot: BeamExplorerSnapshot):
         import matplotlib.pyplot as plt
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "Matplotlib is required for plot_beam_explorer_snapshot; install the visualization extra"
+            "Matplotlib is required for plot_beam_explorer_snapshot; "
+            "install the visualization extra"
         ) from exc
 
     figure, axes = plt.subplots(1, 3, figsize=(13.5, 4.8))
