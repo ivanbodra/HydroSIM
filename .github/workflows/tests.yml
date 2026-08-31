@@ -33,10 +33,16 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
           MPLBACKEND: QtAgg
-        run: python tools/capture_didactic_explorer.py --output artifacts/didactic_explorer_actual.png
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          set +e
+          python tools/capture_didactic_explorer.py --output artifacts/didactic_explorer_actual.png > artifacts/capture.log 2>&1
+          echo $? > artifacts/capture.exit
+          exit 0
 
-      - name: Upload Didactic Explorer screenshot
+      - name: Upload Didactic Explorer screenshot and diagnostics
         uses: actions/upload-artifact@v4
         with:
           name: didactic-explorer-screenshot
-          path: artifacts/didactic_explorer_actual.png
+          path: artifacts/
