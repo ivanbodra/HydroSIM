@@ -35,32 +35,51 @@ jobs:
           MPLBACKEND: Agg
         run: pytest -q
 
-      - name: Capture real Didactic Explorer windows
+      - name: Capture real Didactic Explorer lessons
         env:
           QT_QPA_PLATFORM: offscreen
           MPLBACKEND: QtAgg
         shell: bash
         run: |
-          mkdir -p artifacts
+          mkdir -p docs/images artifacts
           set +e
-          python tools/capture_didactic_explorer.py --output artifacts/didactic_explorer_actual.png > artifacts/capture.log 2>&1
+          python tools/capture_didactic_explorer.py --output docs/images/didactic_explorer_actual.png > artifacts/capture.log 2>&1
           actual_status=$?
-          python tools/capture_didactic_explorer.py --lesson Signal --output artifacts/didactic_explorer_signal.png >> artifacts/capture.log 2>&1
+          python tools/capture_didactic_explorer.py --lesson Signal --output docs/images/didactic_explorer_signal.png >> artifacts/capture.log 2>&1
           signal_status=$?
-          echo "$actual_status" > artifacts/capture.exit
-          echo "$signal_status" > artifacts/capture_signal.exit
+          python tools/capture_didactic_explorer.py --lesson Beam --output docs/images/didactic_explorer_beam.png >> artifacts/capture.log 2>&1
+          beam_status=$?
+          python tools/capture_didactic_explorer.py --lesson Propagation --output docs/images/didactic_explorer_propagation.png >> artifacts/capture.log 2>&1
+          propagation_status=$?
+          python tools/capture_didactic_explorer.py --lesson Vessel --output docs/images/didactic_explorer_vessel.png >> artifacts/capture.log 2>&1
+          vessel_status=$?
           set -e
+
+          printf '%s\n' "$actual_status" > artifacts/capture.exit
+          printf '%s\n' "$signal_status" > artifacts/capture_signal.exit
+          printf '%s\n' "$beam_status" > artifacts/capture_beam.exit
+          printf '%s\n' "$propagation_status" > artifacts/capture_propagation.exit
+          printf '%s\n' "$vessel_status" > artifacts/capture_vessel.exit
+
           test "$actual_status" = "0"
           test "$signal_status" = "0"
-          test -s artifacts/didactic_explorer_actual.png
-          test -s artifacts/didactic_explorer_signal.png
+          test "$beam_status" = "0"
+          test "$propagation_status" = "0"
+          test "$vessel_status" = "0"
+          test -s docs/images/didactic_explorer_actual.png
+          test -s docs/images/didactic_explorer_signal.png
+          test -s docs/images/didactic_explorer_beam.png
+          test -s docs/images/didactic_explorer_propagation.png
+          test -s docs/images/didactic_explorer_vessel.png
 
       - name: Upload Didactic Explorer screenshots and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: didactic-explorer-screenshot
-          path: artifacts/
+          path: |
+            docs/images/didactic_explorer_*.png
+            artifacts/
 
       - name: Publish real screenshots to repository
         if: github.ref == 'refs/heads/ui-shot'
@@ -68,14 +87,14 @@ jobs:
         run: |
           test "$(cat artifacts/capture.exit)" = "0"
           test "$(cat artifacts/capture_signal.exit)" = "0"
-          mkdir -p docs/images
-          cp artifacts/didactic_explorer_actual.png docs/images/didactic_explorer_actual.png
-          cp artifacts/didactic_explorer_signal.png docs/images/didactic_explorer_signal.png
+          test "$(cat artifacts/capture_beam.exit)" = "0"
+          test "$(cat artifacts/capture_propagation.exit)" = "0"
+          test "$(cat artifacts/capture_vessel.exit)" = "0"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/images/didactic_explorer_actual.png docs/images/didactic_explorer_signal.png
+          git add docs/images/didactic_explorer_*.png
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Add real Didactic Explorer screenshots [skip ci]"
+          git commit -m "Update real Didactic Explorer screenshots [skip ci]"
           git push origin HEAD:ui-shot
