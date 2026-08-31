@@ -1,6 +1,6 @@
 # HydroSIM Development Milestones
 
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 ## Purpose
 
@@ -87,13 +87,38 @@ The first renderer presents Truth and Processing sound-speed profiles, Truth ref
 
 Enabling Matplotlib execution in CI exposed a real renderer defect: the plotting code originally assumed ray-segment endpoint objects that the scientific path model does not store. The renderer was corrected to reconstruct the polyline from the actual `LayeredRayPath` segment representation. This validated the decision to test visualization code rather than leave it skipped.
 
+## Explicit environmental extension of truncated SVPs
+
+A comparison with the NOAA/UNH Pydro/HydrOffice sound-speed workflow reinforced an existing HydroSIM boundary: a finite measured sound-speed profile must not be silently extrapolated beyond its support. HydrOffice treats profile extension as an explicit operation and can use climatology, model output, or a reference cast.
+
+For the Didactic Explorer, this operational observation led to a useful new teaching model rather than a generic extrapolation rule. Below the maximum supplied depth `z_m`, the first environmental extension holds the deepest temperature and salinity constant while pressure continues to vary with depth and latitude:
+
+```text
+T(z > z_m) = T_m
+S(z > z_m) = S_m
+P = P(z, latitude)
+c = c(T_m, S_m, P)
+```
+
+The reference seawater sound-speed formulation is Wong & Zhu (1995), correcting Chen & Millero (1977), with TEOS-10/GSW preferred for pressure/depth conversion where practical.
+
+A second explicit mode holds sound speed constant below `z_m`. Its purpose is didactic comparison, not physical preference. The learner can therefore see that constant temperature and salinity do not imply constant sound speed because pressure continues to change with depth.
+
+The state boundary is equally important: supplied environmental samples remain Observed or Configured; extrapolated T/S are Estimated; pressure is Derived; and the resulting sound speed and ray/reconstruction are Derived. The extrapolated region must never appear as measured data.
+
+The generic layered Snell solver remains strict and finite-domain. Environmental extension is constructed explicitly before tracing. This preserves the scientific meaning of the profile while allowing the Propagation Explorer to teach both environmental physics and the consequences of extrapolation assumptions.
+
+Scientific specification: `docs/science/environmental_sound_speed_extension.md`.
+Registry model: `scientific_registry/models/propagation/environmental_sound_speed_extension.yaml`.
+Implementation handoff: Issue #34. Visualization handoff: Issue #35.
+
 ## Didactic Explorer learning blocks
 
 The didactic product is organized as connected views of the same sounding system, not as unrelated simulators.
 
 1. **Acoustic signal:** CW versus chirp/LFM, frequency, wavelength, duration, bandwidth, filtering, matched filtering, and frequency-dependent attenuation.
 2. **Transducer and beams:** array size, beamwidth, side lobes, footprint, SBES versus MBES, Mills Cross geometry, and multisector transmission.
-3. **Propagation:** sound-speed profiles, refraction, ray tracing, and absorption/attenuation.
+3. **Propagation:** sound-speed profiles, refraction, ray tracing, explicit profile support/extrapolation, environmental controls, and absorption/attenuation.
 4. **Vessel, sensors, and vertical references:** GNSS, IMU/MRU, transducer installation, lever arms, waterline, draft, transducer depth, water level, tide, and vertical datum.
 5. **Sounding in motion:** roll, pitch, yaw, heave, latency, multibeam geometry, multisector operation, and detection/reconstruction effects.
 
@@ -215,6 +240,9 @@ This decision also introduces progressive disclosure as a product rule: advanced
 | `aaa32a3` | Add Didactic Explorer command | Made the desktop application directly launchable after visualization installation. |
 | `64b4ddf` | Define Didactic Explorer user experience contract | Formalized guided-learning and progressive-disclosure rules. |
 | `2455e39` | Test guided Didactic Explorer experience | Added checks for meaningful controls, guidance, reset, and planned-state labeling. |
+| `c30c980` | Document environmental sound-speed extension | Defined explicit T/S/P-based continuation and its scientific boundaries. |
+| `269402d` | Register environmental sound-speed extension | Added the model and validation requirements to the Scientific Registry. |
+| `edbd039` | Record environmental SVP extension direction | Updated project overview and design principles for explicit environmental extrapolation. |
 
 ## Current development direction
 
@@ -224,9 +252,10 @@ Near-term sequence:
 
 1. preserve the guided-learning contract while completing the Signal lesson;
 2. connect frequency to a real observable consequence only after a referenced frequency-dependent absorption model is available, or expose frequency first in the Beam lesson where wavelength/array effects are already represented;
-3. integrate the existing beam/transducer models as the next vertical slice with a small number of meaningful controls;
-4. continue through propagation/SVP -> vessel/sensors -> motion -> integrated acquisition;
-5. keep advanced configuration for the Survey Simulator or progressive-disclosure views rather than putting every parameter on the first didactic screen.
+3. integrate the existing beam/transducer models as a vertical slice with a small number of meaningful controls;
+4. integrate the Propagation lesson with explicit observed-profile support and environmental extension, preserving the strict ray-tracer boundary;
+5. continue through vessel/sensors -> motion -> integrated acquisition;
+6. keep advanced configuration for the Survey Simulator or progressive-disclosure views rather than putting every parameter on the first didactic screen.
 
 ## When to update this log
 
