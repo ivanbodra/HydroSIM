@@ -60,7 +60,7 @@ def test_signal_quantitative_panel_derives_readouts_from_current_controls():
 
     assert "time_bandwidth = state.duration_seconds * state.lfm_bandwidth_hz" in source
     assert "reciprocal_bandwidth_us" in source
-    assert 'f"TB = {time_bandwidth:.1f}' in source
+    assert 'f"TB={time_bandwidth:.1f}' in source
 
 
 def test_future_learning_blocks_are_marked_as_planned():
