@@ -16,7 +16,7 @@ Use these identifiers in handoff issues:
 - `scientific-lead` — scientific model ownership, equations, assumptions, fidelity, references and scientific choices.
 - `software-engineering` — implementation architecture, code quality, APIs, numerical/computational robustness, testing, packaging, CI and performance.
 - `qa-scientific-validation` — independent scientific and computational validation, invariants, units, signs, frames, limits and reference-vs-implementation checks.
-- `interface-ux` — Didactic Explorer / Survey Simulator interaction design, information architecture, visualization behaviour and bilingual user-facing interface.
+- `interface-ux` — Didactic Explorer / Survey Simulator interaction design, information architecture, visualization behaviour and bilingual user-facing interface. Legacy or accidental `ux-ui` handoffs should be treated as addressed to `interface-ux` and normalized when touched.
 - `coordination-secretary` — cross-agent routing, queue hygiene and detection of unaddressed dependencies.
 
 New specialist agents may be added later, but their identifier must be documented here before use.
