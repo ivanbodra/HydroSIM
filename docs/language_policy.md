@@ -40,15 +40,22 @@ Scientific terminology should preserve established English usage from the releva
 
 ## 3. Software localization
 
-HydroSIM may provide localized user interfaces. Portuguese (Brazil), identified as `pt-BR`, is an intended localization.
+HydroSIM user-facing applications must support bilingual presentation from the interface foundation.
 
-Localization may translate user-facing labels, descriptions, help text, tutorials, exercises, warnings, and other presentation content. It must not translate or alter canonical internal identifiers.
+The initial supported locales are:
+
+- English (`en`), the default and fallback locale;
+- Brazilian Portuguese (`pt-BR`).
+
+Localization may translate user-facing labels, descriptions, help text, tutorials, exercises, warnings, graph titles, axes, legends, annotations, and other presentation content. It must not translate or alter canonical internal identifiers.
+
+No user-facing string that participates in the supported application experience should be unnecessarily hard-coded inside UI components. Localization resources must remain separated from scientific and computational logic.
 
 For example, the interface may display `Incerteza a priori`, while the underlying field remains `a_priori_uncertainty`.
 
 A localized scenario editor may display `Ângulo across-track` or an approved Portuguese equivalent, but the persisted schema key remains `across_track_angle`.
 
-Localization resources should be separated from scientific and computational logic.
+Language switching must not require rebuilding scientific state and should not reset an active experiment unless a technical limitation is explicitly documented.
 
 ## 4. Documentation
 
