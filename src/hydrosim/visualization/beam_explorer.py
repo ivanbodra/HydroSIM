@@ -23,7 +23,7 @@ class BeamExplorerControls:
     element_spacing_m: float = 0.005
     element_size_m: float = 0.004
     angular_extent_deg: float = 60.0
-    angular_sample_count: int = 121
+    angular_sample_count: int = 81
 
     def validate(self) -> None:
         if self.frequency_hz <= 0.0:
