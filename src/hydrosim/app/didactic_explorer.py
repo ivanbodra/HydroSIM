@@ -8,24 +8,28 @@ from __future__ import annotations
 
 from hydrosim.visualization import (
     BeamExplorerControls,
+    PropagationExplorerControls,
     SignalExplorerControls,
     draw_beam_explorer_snapshot,
+    draw_layered_svp_explorer_snapshot,
     draw_signal_explorer_comparison,
     prepare_beam_explorer_snapshot,
+    prepare_propagation_explorer_snapshot,
     prepare_signal_explorer_comparison,
 )
 
 
 _LESSONS = (
     ("Signal", "CW and chirp/LFM waveform and pulse-compression behavior."),
-    ("Beam", "Frequency, aperture, beam pattern, side lobes, and Mills Cross behavior."),
-    ("Propagation", "Sound-speed profile, refraction, ray tracing, and attenuation."),
+    ("Beam", "Frequency, aperture, beam pattern, side lobes, and footprint behavior."),
+    ("Propagation", "Sound-speed profile, refraction, ray tracing, and sounding reconstruction."),
     ("Vessel", "Sensors, lever arms, waterline, draft, and vertical references."),
     ("Motion", "Roll, pitch, yaw, heave, latency, and sounding consequences."),
 )
 
 _SIGNAL_DEFAULTS = SignalExplorerControls()
 _BEAM_DEFAULTS = BeamExplorerControls()
+_PROPAGATION_DEFAULTS = PropagationExplorerControls()
 
 
 def launch_didactic_explorer() -> None:
@@ -59,6 +63,7 @@ def launch_didactic_explorer() -> None:
         ) from exc
 
     from hydrosim.visualization.beam_explorer_plot import plot_beam_explorer_snapshot
+    from hydrosim.visualization.layered_svp_explorer_plot import plot_layered_svp_explorer_snapshot
     from hydrosim.visualization.signal_explorer_plot import plot_signal_explorer_comparison
 
     app = QApplication.instance() or QApplication([])
@@ -79,7 +84,7 @@ def launch_didactic_explorer() -> None:
     navigation = QListWidget()
     navigation.setMaximumWidth(210)
     for index, (lesson, _description) in enumerate(_LESSONS):
-        suffix = "  • ready" if index in {0, 1} else "  • planned"
+        suffix = "  • ready" if index in {0, 1, 2} else "  • planned"
         item = QListWidgetItem(lesson + suffix)
         item.setData(Qt.ItemDataRole.UserRole, lesson)
         navigation.addItem(item)
@@ -108,7 +113,6 @@ def launch_didactic_explorer() -> None:
     )
     context.setWordWrap(True)
     signal_root.addWidget(context)
-
     signal_layout = QHBoxLayout()
     signal_root.addLayout(signal_layout, 1)
     controls_frame = QFrame()
@@ -122,7 +126,6 @@ def launch_didactic_explorer() -> None:
     instruction.setWordWrap(True)
     controls_layout.addWidget(instruction)
     form = QFormLayout()
-
     duration = QDoubleSpinBox()
     duration.setRange(0.1, 5.0)
     duration.setSingleStep(0.1)
@@ -134,7 +137,6 @@ def launch_didactic_explorer() -> None:
     duration_slider.setRange(1, 50)
     duration_slider.setValue(round(duration.value() * 10.0))
     form.addRow("", duration_slider)
-
     bandwidth = QDoubleSpinBox()
     bandwidth.setRange(10.0, 300.0)
     bandwidth.setSingleStep(10.0)
@@ -159,7 +161,6 @@ def launch_didactic_explorer() -> None:
     controls_layout.addWidget(signal_observation)
     controls_layout.addStretch(1)
     signal_layout.addWidget(controls_frame)
-
     cw, lfm = prepare_signal_explorer_comparison(_SIGNAL_DEFAULTS)
     signal_figure, signal_axes = plot_signal_explorer_comparison(cw, lfm)
     signal_canvas = FigureCanvas(signal_figure)
@@ -205,35 +206,33 @@ def launch_didactic_explorer() -> None:
     # Beam lesson -----------------------------------------------------------
     beam_page = QWidget()
     beam_root = QVBoxLayout(beam_page)
-    beam_heading = QLabel("Beam — frequency, wavelength, and aperture")
+    beam_heading = QLabel("Beam — frequency, wavelength, aperture, and footprint")
     beam_heading.setStyleSheet("font-size: 20px; font-weight: 600;")
     beam_root.addWidget(beam_heading)
     beam_question = QLabel(
-        "<b>Learning question:</b> For a fixed physical element spacing, how do frequency "
-        "and aperture size change the main lobe and secondary lobes of a Mills-Cross beam?"
+        "<b>Learning question:</b> How do frequency and aperture change beamwidth and the "
+        "resulting -3 dB footprint on a flat seabed?"
     )
     beam_question.setWordWrap(True)
     beam_root.addWidget(beam_question)
     beam_context = QLabel(
-        "Scientific view: normalized narrowband far-field TX/RX array response. Sound speed, "
-        "element spacing, element size, broadside steering, and array orientation are fixed."
+        "Scientific view: normalized narrowband far-field TX/RX array response plus the "
+        "existing flat-bottom beamwidth footprint approximation at fixed depth."
     )
     beam_context.setWordWrap(True)
     beam_root.addWidget(beam_context)
-
     beam_layout = QHBoxLayout()
     beam_root.addLayout(beam_layout, 1)
     beam_controls_frame = QFrame()
     beam_controls_frame.setMaximumWidth(315)
     beam_controls = QVBoxLayout(beam_controls_frame)
     beam_instruction = QLabel(
-        "Change frequency first, then the number of elements. Compare main-lobe width and "
-        "watch for additional strong lobes as d/λ increases."
+        "Change frequency first, then the number of elements. Compare main-lobe width "
+        "and the footprint dimensions."
     )
     beam_instruction.setWordWrap(True)
     beam_controls.addWidget(beam_instruction)
     beam_form = QFormLayout()
-
     beam_frequency = QDoubleSpinBox()
     beam_frequency.setRange(75.0, 300.0)
     beam_frequency.setSingleStep(5.0)
@@ -245,7 +244,6 @@ def launch_didactic_explorer() -> None:
     beam_frequency_slider.setRange(75, 300)
     beam_frequency_slider.setValue(round(beam_frequency.value()))
     beam_form.addRow("", beam_frequency_slider)
-
     beam_elements = QSpinBox()
     beam_elements.setRange(4, 32)
     beam_elements.setValue(_BEAM_DEFAULTS.elements_per_arm)
@@ -261,17 +259,15 @@ def launch_didactic_explorer() -> None:
     beam_readout.setWordWrap(True)
     beam_controls.addWidget(beam_readout)
     beam_note = QLabel(
-        "<b>What to look for</b><br>Higher frequency shortens wavelength. More elements increase "
-        "the physical aperture. Both can narrow the main response; fixed spacing can also make "
-        "grating-lobe behavior visible when spacing becomes large relative to wavelength.<br><br>"
-        "<b>Not shown yet:</b> footprint on a seabed, steering, propagation loss, refraction, "
-        "multisector transmission, or vendor-specific transducer geometry."
+        "<b>What to look for</b><br>Higher frequency shortens wavelength. More elements "
+        "increase aperture. Narrower -3 dB beamwidths reduce the approximate nadir footprint."
+        "<br><br><b>Not shown yet:</b> steering, refraction, multisector transmission, "
+        "bottom scattering, or vendor-specific transducer geometry."
     )
     beam_note.setWordWrap(True)
     beam_controls.addWidget(beam_note)
     beam_controls.addStretch(1)
     beam_layout.addWidget(beam_controls_frame)
-
     beam_snapshot = prepare_beam_explorer_snapshot(_BEAM_DEFAULTS)
     beam_figure, beam_axes = plot_beam_explorer_snapshot(beam_snapshot)
     beam_canvas = FigureCanvas(beam_figure)
@@ -286,13 +282,16 @@ def launch_didactic_explorer() -> None:
             element_size_m=_BEAM_DEFAULTS.element_size_m,
             angular_extent_deg=_BEAM_DEFAULTS.angular_extent_deg,
             angular_sample_count=_BEAM_DEFAULTS.angular_sample_count,
+            seafloor_depth_m=_BEAM_DEFAULTS.seafloor_depth_m,
         )
         snapshot = prepare_beam_explorer_snapshot(state)
         draw_beam_explorer_snapshot(snapshot, beam_axes)
         beam_readout.setText(
             f"λ = {snapshot.wavelength_m * 1e3:.2f} mm<br>"
             f"d/λ = {snapshot.spacing_over_wavelength:.2f}<br>"
-            f"Element-center span = {snapshot.element_center_span_m * 100:.1f} cm"
+            f"-3 dB beamwidth = {snapshot.along_track_beamwidth_deg:.2f}°<br>"
+            f"Footprint = {snapshot.footprint.beam_limited_along_track_width_m:.2f} × "
+            f"{snapshot.footprint.beam_limited_across_track_width_m:.2f} m"
         )
         beam_canvas.draw_idle()
 
@@ -324,8 +323,112 @@ def launch_didactic_explorer() -> None:
     redraw_beam()
     pages.addWidget(beam_page)
 
+    # Propagation lesson ----------------------------------------------------
+    propagation_page = QWidget()
+    propagation_root = QVBoxLayout(propagation_page)
+    propagation_heading = QLabel("Propagation — SVP mismatch and reconstructed swath")
+    propagation_heading.setStyleSheet("font-size: 20px; font-weight: 600;")
+    propagation_root.addWidget(propagation_heading)
+    propagation_question = QLabel(
+        "<b>Learning question:</b> What happens when the water column is physically unchanged, "
+        "but the lower-layer sound speed used during processing is wrong?"
+    )
+    propagation_question.setWordWrap(True)
+    propagation_root.addWidget(propagation_question)
+    propagation_context = QLabel(
+        "Scientific view: stationary monostatic principal-plane geometry, flat bottom, two "
+        "piecewise-constant layers, ideal transducer sound speed, and zero array tilt."
+    )
+    propagation_context.setWordWrap(True)
+    propagation_root.addWidget(propagation_context)
+    propagation_layout = QHBoxLayout()
+    propagation_root.addLayout(propagation_layout, 1)
+    propagation_controls_frame = QFrame()
+    propagation_controls_frame.setMaximumWidth(315)
+    propagation_controls = QVBoxLayout(propagation_controls_frame)
+    propagation_instruction = QLabel(
+        "Change only the processing sound-speed bias. Truth rays stay fixed; watch where the "
+        "reconstructed soundings move and how beamwise error grows toward the swath edges."
+    )
+    propagation_instruction.setWordWrap(True)
+    propagation_controls.addWidget(propagation_instruction)
+    propagation_form = QFormLayout()
+    propagation_bias = QDoubleSpinBox()
+    propagation_bias.setRange(-30.0, 30.0)
+    propagation_bias.setSingleStep(1.0)
+    propagation_bias.setDecimals(0)
+    propagation_bias.setValue(_PROPAGATION_DEFAULTS.processing_lower_layer_bias_mps)
+    propagation_bias.setSuffix(" m/s")
+    propagation_form.addRow("Processing lower-layer bias", propagation_bias)
+    propagation_bias_slider = QSlider(Qt.Orientation.Horizontal)
+    propagation_bias_slider.setRange(-30, 30)
+    propagation_bias_slider.setValue(round(propagation_bias.value()))
+    propagation_form.addRow("", propagation_bias_slider)
+    propagation_controls.addLayout(propagation_form)
+    propagation_reset = QPushButton("Reset lesson")
+    propagation_controls.addWidget(propagation_reset)
+    propagation_readout = QLabel()
+    propagation_readout.setWordWrap(True)
+    propagation_controls.addWidget(propagation_readout)
+    propagation_note = QLabel(
+        "<b>What to look for</b><br>The Truth SVP and rays do not change when this control moves. "
+        "Only the processing profile changes. A profile mismatch can curve or displace the "
+        "reconstructed swath even though the real seabed is flat.<br><br>"
+        "<b>Not shown yet:</b> frequency-dependent absorption, continuous-gradient SVP, "
+        "surface sound-speed error, vessel motion, or uncertainty."
+    )
+    propagation_note.setWordWrap(True)
+    propagation_controls.addWidget(propagation_note)
+    propagation_controls.addStretch(1)
+    propagation_layout.addWidget(propagation_controls_frame)
+
+    propagation_snapshot = prepare_propagation_explorer_snapshot(_PROPAGATION_DEFAULTS)
+    propagation_figure, propagation_axes = plot_layered_svp_explorer_snapshot(propagation_snapshot)
+    propagation_canvas = FigureCanvas(propagation_figure)
+    propagation_layout.addWidget(propagation_canvas, 1)
+
+    def redraw_propagation() -> None:
+        state = PropagationExplorerControls(
+            processing_lower_layer_bias_mps=propagation_bias.value(),
+            terrain_depth_m=_PROPAGATION_DEFAULTS.terrain_depth_m,
+            interface_depth_m=_PROPAGATION_DEFAULTS.interface_depth_m,
+            upper_layer_sound_speed_mps=_PROPAGATION_DEFAULTS.upper_layer_sound_speed_mps,
+            lower_layer_sound_speed_mps=_PROPAGATION_DEFAULTS.lower_layer_sound_speed_mps,
+            maximum_beam_angle_deg=_PROPAGATION_DEFAULTS.maximum_beam_angle_deg,
+            beam_count=_PROPAGATION_DEFAULTS.beam_count,
+        )
+        snapshot = prepare_propagation_explorer_snapshot(state)
+        draw_layered_svp_explorer_snapshot(snapshot, propagation_axes)
+        max_error = max(float(beam.sounding_error_norm_m) for beam in snapshot.beams)
+        propagation_readout.setText(
+            f"Truth lower layer = {_PROPAGATION_DEFAULTS.lower_layer_sound_speed_mps:.0f} m/s<br>"
+            f"Processing lower layer = "
+            f"{_PROPAGATION_DEFAULTS.lower_layer_sound_speed_mps + propagation_bias.value():.0f} m/s<br>"
+            f"Max sounding error = {max_error:.3f} m"
+        )
+        propagation_canvas.draw_idle()
+
+    propagation_bias.valueChanged.connect(
+        lambda value: propagation_bias_slider.setValue(round(value))
+        if propagation_bias_slider.value() != round(value)
+        else redraw_propagation()
+    )
+    propagation_bias_slider.valueChanged.connect(
+        lambda value: propagation_bias.setValue(float(value))
+        if propagation_bias.value() != float(value)
+        else None
+    )
+
+    def reset_propagation() -> None:
+        propagation_bias.setValue(_PROPAGATION_DEFAULTS.processing_lower_layer_bias_mps)
+        redraw_propagation()
+
+    propagation_reset.clicked.connect(reset_propagation)
+    redraw_propagation()
+    pages.addWidget(propagation_page)
+
     # Planned slices --------------------------------------------------------
-    for lesson, description in _LESSONS[2:]:
+    for lesson, description in _LESSONS[3:]:
         page = QWidget()
         layout = QVBoxLayout(page)
         heading = QLabel(lesson)
@@ -360,6 +463,11 @@ def launch_didactic_explorer() -> None:
         "elements": beam_elements,
         "elements_slider": beam_elements_slider,
         "reset": beam_reset,
+    }
+    window.hydrosim_propagation_controls = {
+        "processing_bias": propagation_bias,
+        "processing_bias_slider": propagation_bias_slider,
+        "reset": propagation_reset,
     }
     app.hydrosim_didactic_explorer_window = window
     app.exec()
