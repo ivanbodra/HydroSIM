@@ -62,12 +62,13 @@ Current foundations include:
 - piecewise-constant layered sound-speed propagation;
 - explicit sound speed at the transducer as a zero-thickness processing boundary;
 - controlled Truth-versus-Processing sound-speed error experiments;
+- a specified environmental SVP-extension model that derives sound speed from temperature, salinity and pressure below an explicit profile boundary, while preserving strict finite-profile ray tracing;
 - first visualization composition adapters and reference renderers;
 - first integrated Didactic Explorer desktop shell with the Signal lesson embedded.
 
 The current models intentionally remain modular and limited in fidelity. Finite-bottom scattering, complete operational multisector behaviour, complete uncertainty propagation and several acquisition-system effects remain future work.
 
-The near-term development priority is vertical integration: turn the existing scientific core into usable didactic and survey-simulation workflows before broadening the physics horizontally.
+The near-term development priority is vertical integration: turn the existing scientific core into usable didactic and survey-simulation workflows before broadening the physics horizontally. The Propagation Explorer is being extended to make the distinction between observed profile support and explicit environmental extrapolation visible, including a didactic comparison between constant sound speed and pressure-dependent `c(T,S,P)` continuation.
 
 ## Design principles
 
@@ -82,6 +83,7 @@ The near-term development priority is vertical integration: turn the existing sc
 9. Point/boundary observations must not silently replace finite-thickness environmental models.
 10. Reference-model closure must not be generalized beyond its documented validity domain.
 11. New models should be added only when they answer a new physical question, not merely to create another summary of existing outputs.
+12. Environmental extrapolation beyond observed support must be explicit, traceable, and distinguishable from measured data.
 
 ## Architecture
 
@@ -107,6 +109,7 @@ See also:
 - `docs/architecture/didactic_explorer_foundation.md`
 - `docs/architecture/fidelity_and_performance.md`
 - `docs/conventions.md`
+- `docs/science/environmental_sound_speed_extension.md`
 
 ## Requirements
 
