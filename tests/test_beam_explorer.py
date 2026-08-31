@@ -9,11 +9,10 @@ def test_beam_explorer_snapshot_uses_frequency_for_wavelength_and_spacing_ratio(
             frequency_hz=150_000.0,
             sound_speed_mps=1500.0,
             element_spacing_m=0.005,
-            angular_sample_count= nine := 9,
+            angular_sample_count=9,
         )
     )
 
-    assert nine == 9
     assert isclose(snapshot.wavelength_m, 0.01, abs_tol=1e-12)
     assert isclose(snapshot.spacing_over_wavelength, 0.5, abs_tol=1e-12)
     assert len(snapshot.scan.samples) == 81
