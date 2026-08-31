@@ -1,0 +1,82 @@
+id: hydrosim.propagation.environmental_sound_speed_extension
+version: 0.1.0
+status: specified
+
+physical_quantity: seawater sound speed below a truncated didactic environmental profile
+physical_cause: pressure-dependent seawater sound speed under explicit continuation assumptions for temperature and salinity
+
+state_categories:
+  supplied_temperature_salinity: Observed_or_Configured
+  extended_temperature_salinity: Estimated
+  pressure: Derived
+  extended_sound_speed: Derived
+  propagated_ray_or_reconstruction: Derived
+
+model:
+  boundary_depth: z_m
+  assumptions_below_boundary:
+    temperature: "T(z > z_m) = T_m"
+    salinity: "S(z > z_m) = S_m"
+    pressure: "P = P(z, latitude)"
+    sound_speed: "c = c(T_m, S_m, P)"
+  sound_speed_formulation: Wong_and_Zhu_1995_corrected_Chen_and_Millero_1977
+  pressure_depth_reference: TEOS_10_GSW_preferred
+
+control_alternative:
+  id: constant_sound_speed
+  formula: "c(z > z_m) = c(z_m)"
+  purpose: didactic comparison and explicit simple continuation assumption
+
+validity:
+  - didactic continuation below the deepest supplied profile point
+  - first-order demonstration of pressure contribution to sound speed
+
+assumptions:
+  - deepest supplied temperature is held constant below z_m
+  - deepest supplied salinity is held constant below z_m
+  - latitude is known/configured for pressure-depth conversion
+  - extension is explicitly requested by the caller
+
+limitations:
+  - does not represent realistic deep-ocean thermohaline evolution in general
+  - must not be presented as observed data
+  - does not replace climatological, model, reference-cast, or deeper measured profile information
+  - must not create implicit extrapolation inside the generic layered ray tracer
+
+architecture:
+  generic_layered_profile_semantics: strict_finite_domain
+  extension_location: explicit_scientific_helper_or_composition_path
+
+references:
+  - key: wong_zhu_1995
+    citation: "Wong, G. S. K., & Zhu, S. (1995). Speed of sound in seawater as a function of salinity, temperature, and pressure. JASA 97(3), 1732-1736."
+    evidence_level: direct_source
+  - key: chen_millero_1977
+    citation: "Chen, C.-T., & Millero, F. J. (1977). Speed of sound in seawater at high pressures. JASA 62(5), 1129-1135."
+    evidence_level: direct_source
+  - key: teos10
+    citation: "IOC, SCOR & IAPSO (2010). The international thermodynamic equation of seawater – 2010 (TEOS-10)."
+    evidence_level: direct_source
+  - key: hydroffice_sound_speed_manager
+    citation: "NOAA/UNH HydrOffice Sound Speed Manager (hydroffice/hyo2_soundspeed)."
+    evidence_level: supporting_implementation
+
+implementation:
+  status: pending
+  handoff_issue: 34
+
+validation:
+  required:
+    - continuity_at_extension_boundary
+    - pressure_increases_with_depth
+    - finite_physically_plausible_sound_speed
+    - deterministic_output
+    - environmental_and_constant_c_extensions_diverge_below_boundary
+    - generic_ray_tracer_remains_strict
+
+visualization:
+  handoff_issue: 35
+  teaching_point: constant temperature and salinity do not imply constant sound speed because pressure continues to vary with depth
+
+documentation:
+  science_note: docs/science/environmental_sound_speed_extension.md
