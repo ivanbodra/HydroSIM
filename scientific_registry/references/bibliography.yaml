@@ -1,4 +1,4 @@
-version: 0.1.2
+version: 0.1.3
 language: en
 
 references:
@@ -149,6 +149,36 @@ references:
       Hydrographic literature supporting explicit treatment of water-column sound-speed
       structure in multibeam ray tracing. Exact formula/source locators should be tightened
       as the propagation registry matures.
+
+  - id: demer_et_al_2015_calibration_acoustic_instruments
+    type: technical_report
+    authors:
+      - David A. Demer
+      - Laurent Berger
+      - Matteo Bernasconi
+      - Eckhard Bethke
+      - Kevin Boswell
+      - Dezhang Chu
+      - Reka Domokos
+      - et al.
+    year: 2015
+    title: "Calibration of acoustic instruments"
+    publication: "ICES Cooperative Research Report"
+    report_number: "326"
+    publisher: "International Council for the Exploration of the Sea (ICES)"
+    doi: "10.17895/ices.pub.5494"
+    primary_url: "https://doi.org/10.17895/ices.pub.5494"
+    scope:
+      - acoustic instrument calibration
+      - transducer arrays
+      - multibeam echosounders
+      - Mills Cross geometry
+      - split-beam and multibeam bearing estimation
+    notes: >-
+      Recognized hydroacoustic reference supporting the common Mills-Cross MBES
+      description: a line-array transmit fan combined with an orthogonal receive array
+      that electronically forms multiple beams. Used by HydroSIM as support for the
+      generic Mills-Cross configuration, not as a vendor-specific transducer model.
 
   - id: kongsberg_em120_operator_manual_850_164112
     type: manufacturer_manual
