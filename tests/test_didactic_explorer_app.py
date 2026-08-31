@@ -18,6 +18,33 @@ def test_didactic_explorer_shell_uses_stable_signal_renderer_boundary():
     assert "Scientific Core" in source
 
 
+def test_signal_lesson_exposes_only_controls_with_visible_current_consequences():
+    source = Path("src/hydrosim/app/didactic_explorer.py").read_text(encoding="utf-8")
+
+    assert "Pulse duration" in source
+    assert "LFM bandwidth" in source
+    assert 'form.addRow("Center frequency"' not in source
+    assert "Carrier frequency is fixed at 300 kHz" in source
+
+
+def test_signal_lesson_is_guided_and_resettable():
+    source = Path("src/hydrosim/app/didactic_explorer.py").read_text(encoding="utf-8")
+
+    assert "Learning question:" in source
+    assert "What to look for" in source
+    assert "Not shown yet:" in source
+    assert "Reset lesson" in source
+    assert "QSlider" in source
+
+
+def test_future_learning_blocks_are_marked_as_planned():
+    source = Path("src/hydrosim/app/didactic_explorer.py").read_text(encoding="utf-8")
+
+    assert "• ready" in source
+    assert "• planned" in source
+    assert "Planned learning block" in source
+
+
 def test_didactic_explorer_has_console_entry_point():
     config = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
