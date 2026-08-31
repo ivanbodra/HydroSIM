@@ -15,7 +15,8 @@ def test_beam_explorer_snapshot_uses_frequency_for_wavelength_and_spacing_ratio(
 
     assert isclose(snapshot.wavelength_m, 0.01, abs_tol=1e-12)
     assert isclose(snapshot.spacing_over_wavelength, 0.5, abs_tol=1e-12)
-    assert len(snapshot.scan.samples) == 81
+    assert len(snapshot.along_track_scan.samples) == 27
+    assert len(snapshot.across_track_scan.samples) == 27
 
 
 def test_beam_explorer_aperture_span_grows_with_element_count():
