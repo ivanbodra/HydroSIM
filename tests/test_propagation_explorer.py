@@ -42,11 +42,9 @@ def test_processing_profile_support_is_explicit_and_truth_remains_bounded_to_bot
     snapshot = prepare_propagation_explorer_snapshot()
 
     assert float(snapshot.true_profile.layers[-1].bottom_depth_m) == 60.0
+    assert float(snapshot.processing_profile.layers[-1].top_depth_m) == 20.0
     assert float(snapshot.processing_profile.layers[-1].bottom_depth_m) == 11_000.0
-    assert (
-        float(snapshot.processing_profile.layers[-1].sound_speed_mps)
-        == float(snapshot.processing_profile.layers[-2].sound_speed_mps)
-    )
+    assert float(snapshot.processing_profile.layers[-1].sound_speed_mps) == 1480.0
 
 
 def test_propagation_explorer_preserves_symmetric_signed_fan():
