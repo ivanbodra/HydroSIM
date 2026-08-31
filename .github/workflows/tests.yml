@@ -35,7 +35,7 @@ jobs:
           MPLBACKEND: Agg
         run: pytest -q
 
-      - name: Capture real Didactic Explorer window
+      - name: Capture real Didactic Explorer windows
         env:
           QT_QPA_PLATFORM: offscreen
           MPLBACKEND: QtAgg
@@ -43,12 +43,16 @@ jobs:
         run: |
           mkdir -p artifacts
           set +e
-          python tools/capture_didactic_explorer.py --output artifacts/didactic_explorer_actual.png > artifacts/capture.log 2>&1
-          capture_status=$?
-          echo "$capture_status" > artifacts/capture.exit
+          python tools/capture_didactic_explorer.py --lesson Signal --output artifacts/didactic_explorer_actual.png > artifacts/capture-signal.log 2>&1
+          signal_status=$?
+          python tools/capture_didactic_explorer.py --lesson Beam --output artifacts/didactic_explorer_beam_actual.png > artifacts/capture-beam.log 2>&1
+          beam_status=$?
+          printf "signal=%s\nbeam=%s\n" "$signal_status" "$beam_status" > artifacts/capture.exit
           set -e
-          test "$capture_status" = "0"
+          test "$signal_status" = "0"
+          test "$beam_status" = "0"
           test -s artifacts/didactic_explorer_actual.png
+          test -s artifacts/didactic_explorer_beam_actual.png
 
       - name: Upload Didactic Explorer screenshot and diagnostics
         if: always()
@@ -61,7 +65,7 @@ jobs:
         if: github.ref == 'refs/heads/ui-shot'
         shell: bash
         run: |
-          test "$(cat artifacts/capture.exit)" = "0"
+          grep -q '^signal=0$' artifacts/capture.exit
           mkdir -p docs/images
           cp artifacts/didactic_explorer_actual.png docs/images/didactic_explorer_actual.png
           git config user.name "github-actions[bot]"
