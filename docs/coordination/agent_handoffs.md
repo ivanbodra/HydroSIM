@@ -12,6 +12,7 @@ This mechanism is for concrete cross-agent needs only. It must not become a seco
 
 Use these identifiers in handoff issues:
 
+- `technical-lead` — project-level technical integration, sequencing across specialist outputs, integration readiness, dependency resolution, and deciding when work is ready to advance to the next vertical slice. The Technical Lead does not replace specialist ownership of scientific models, software implementation, independent validation, or interface/UX decisions.
 - `scientific-lead` — scientific model ownership, equations, assumptions, fidelity, references and scientific choices.
 - `software-engineering` — implementation architecture, code quality, APIs, numerical/computational robustness, testing, packaging, CI and performance.
 - `qa-scientific-validation` — independent scientific and computational validation, invariants, units, signs, frames, limits and reference-vs-implementation checks.
@@ -136,8 +137,9 @@ The coordination secretary should search all open handoff issues and identify st
 
 ## Polling policy
 
-- Each specialist agent performs a handoff check every 2 hours.
-- The coordination secretary performs an independent queue-health check every 4 hours.
+- Each specialist agent performs a handoff check every 2 hours when an automation slot is allocated to that specialist.
+- Specialists without a dedicated automation slot, such as QA when automation capacity is constrained, are activated manually by the project owner when a concrete handoff requires their attention.
+- The coordination secretary performs an independent queue-health check every 4 hours and must surface actionable handoffs for manually activated specialists to the project owner rather than attempting the specialist work itself.
 - Polling is a safety net. Agents should create and answer handoffs immediately when they are already active and the dependency is known.
 
 ## Coordination secretary responsibilities
@@ -149,8 +151,9 @@ The coordination secretary does not replace specialist ownership. Its periodic r
 3. detect unanswered or apparently abandoned handoffs;
 4. detect requests sent to the wrong specialist when this is clear from project governance;
 5. flag blockers that require a new handoff;
-6. avoid duplicating issues that already exist;
-7. leave scientific, engineering, validation and interface decisions to the responsible specialist.
+6. surface pending handoffs for specialists without an active polling automation to the project owner for manual forwarding;
+7. avoid duplicating issues that already exist;
+8. leave scientific, engineering, validation and interface decisions to the responsible specialist.
 
 When no intervention is needed, the secretary should make no repository changes.
 
