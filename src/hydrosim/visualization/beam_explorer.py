@@ -1,7 +1,9 @@
 """Composition layer for the first HydroSIM Beam Explorer lesson.
 
 No new acoustic physics is introduced here. The snapshot is assembled from the
-existing Mills-Cross geometry and two-way angular-pattern model.
+existing Mills-Cross geometry and two-way angular-pattern model. Because the
+first lesson displays only the two principal planes, it evaluates two thin scans
+rather than computing an unused dense 2-D field on every interactive update.
 """
 
 from __future__ import annotations
@@ -23,7 +25,7 @@ class BeamExplorerControls:
     element_spacing_m: float = 0.005
     element_size_m: float = 0.004
     angular_extent_deg: float = 60.0
-    angular_sample_count: int = 81
+    angular_sample_count: int = 121
 
     def validate(self) -> None:
         if self.frequency_hz <= 0.0:
@@ -47,7 +49,8 @@ class BeamExplorerSnapshot:
     """Render-ready state for a symmetric reference Mills-Cross lesson."""
 
     controls: BeamExplorerControls
-    scan: AngularPattern2DScan
+    along_track_scan: AngularPattern2DScan
+    across_track_scan: AngularPattern2DScan
     wavelength_m: float
     spacing_over_wavelength: float
     element_center_span_m: float
@@ -72,21 +75,34 @@ def prepare_beam_explorer_snapshot(
         name="didactic_reference_mills_cross",
     )
     extent = state.angular_extent_deg * pi / 180.0
-    scan = scan_mills_cross_two_way_pattern_2d(
+    common = dict(
         configuration=configuration,
+        frequency_hz=state.frequency_hz,
+        sound_speed_mps=state.sound_speed_mps,
+    )
+    along_track_scan = scan_mills_cross_two_way_pattern_2d(
         along_track_start_angle_rad=-extent,
         along_track_end_angle_rad=extent,
         along_track_sample_count=state.angular_sample_count,
         across_track_start_angle_rad=-extent,
         across_track_end_angle_rad=extent,
+        across_track_sample_count=3,
+        **common,
+    )
+    across_track_scan = scan_mills_cross_two_way_pattern_2d(
+        along_track_start_angle_rad=-extent,
+        along_track_end_angle_rad=extent,
+        along_track_sample_count=3,
+        across_track_start_angle_rad=-extent,
+        across_track_end_angle_rad=extent,
         across_track_sample_count=state.angular_sample_count,
-        frequency_hz=state.frequency_hz,
-        sound_speed_mps=state.sound_speed_mps,
+        **common,
     )
     wavelength = state.sound_speed_mps / state.frequency_hz
     return BeamExplorerSnapshot(
         controls=state,
-        scan=scan,
+        along_track_scan=along_track_scan,
+        across_track_scan=across_track_scan,
         wavelength_m=wavelength,
         spacing_over_wavelength=state.element_spacing_m / wavelength,
         element_center_span_m=(state.elements_per_arm - 1) * state.element_spacing_m,
