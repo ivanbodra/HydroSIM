@@ -5,6 +5,12 @@ does not require optional plotting dependencies; plotting libraries are imported
 only inside renderer functions.
 """
 
+from .beam_explorer import (
+    BeamExplorerControls,
+    BeamExplorerSnapshot,
+    prepare_beam_explorer_snapshot,
+)
+from .beam_explorer_plot import draw_beam_explorer_snapshot, plot_beam_explorer_snapshot
 from .layered_svp_explorer import (
     LayeredSvpExplorerBeam,
     LayeredSvpExplorerSnapshot,
@@ -28,16 +34,21 @@ from .signal_explorer_plot import (
 )
 
 __all__ = [
+    "BeamExplorerControls",
+    "BeamExplorerSnapshot",
     "LayeredSvpExplorerBeam",
     "LayeredSvpExplorerSnapshot",
     "MillsCrossPatternPanels",
     "SignalExplorerControls",
     "SignalExplorerSnapshot",
+    "draw_beam_explorer_snapshot",
     "draw_signal_explorer_comparison",
     "launch_signal_explorer_interactive",
+    "plot_beam_explorer_snapshot",
     "plot_layered_svp_explorer_snapshot",
     "plot_mills_cross_pattern_panels",
     "plot_signal_explorer_comparison",
+    "prepare_beam_explorer_snapshot",
     "prepare_layered_svp_explorer_snapshot",
     "prepare_mills_cross_pattern_panels",
     "prepare_signal_explorer_comparison",
