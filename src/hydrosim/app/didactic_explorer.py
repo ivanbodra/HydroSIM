@@ -75,15 +75,17 @@ def launch_didactic_explorer() -> None:
 
     central = QWidget()
     root = QVBoxLayout(central)
-    root.setContentsMargins(18, 16, 18, 16)
-    root.setSpacing(10)
+    root.setContentsMargins(14, 10, 14, 12)
+    root.setSpacing(6)
 
     header = QHBoxLayout()
+    header.setSpacing(8)
     header_text = QVBoxLayout()
+    header_text.setSpacing(0)
     title = QLabel()
-    title.setStyleSheet("font-size: 23px; font-weight: 650;")
+    title.setStyleSheet("font-size: 21px; font-weight: 650;")
     tagline = QLabel()
-    tagline.setStyleSheet("color: #53616d;")
+    tagline.setStyleSheet("color: #53616d; font-size: 12px;")
     header_text.addWidget(title)
     header_text.addWidget(tagline)
     header.addLayout(header_text)
@@ -92,14 +94,14 @@ def launch_didactic_explorer() -> None:
     language_selector = QComboBox()
     language_selector.addItem("EN", "en")
     language_selector.addItem("PT-BR", "pt-BR")
-    language_selector.setMinimumWidth(86)
+    language_selector.setMinimumWidth(80)
     header.addWidget(language_label)
     header.addWidget(language_selector)
     root.addLayout(header)
 
     splitter = QSplitter(Qt.Orientation.Horizontal)
     navigation = QListWidget()
-    navigation.setMaximumWidth(210)
+    navigation.setMaximumWidth(165)
     splitter.addWidget(navigation)
     pages = QStackedWidget()
     splitter.addWidget(pages)
@@ -109,46 +111,50 @@ def launch_didactic_explorer() -> None:
     # Signal lesson ---------------------------------------------------------
     signal_page = QWidget()
     signal_root = QVBoxLayout(signal_page)
-    signal_root.setContentsMargins(12, 4, 8, 4)
-    signal_root.setSpacing(10)
+    signal_root.setContentsMargins(8, 2, 4, 2)
+    signal_root.setSpacing(6)
 
     signal_heading = QLabel()
-    signal_heading.setStyleSheet("font-size: 20px; font-weight: 600;")
+    signal_heading.setStyleSheet("font-size: 19px; font-weight: 600;")
     signal_root.addWidget(signal_heading)
 
     question_frame = QFrame()
     question_frame.setObjectName("learningQuestion")
-    question_frame.setStyleSheet(
-        "QFrame#learningQuestion { background: #eef6f8; border-radius: 8px; padding: 4px; }"
-    )
-    question_layout = QVBoxLayout(question_frame)
+    question_frame.setStyleSheet("QFrame#learningQuestion { background: transparent; }")
+    question_layout = QHBoxLayout(question_frame)
+    question_layout.setContentsMargins(0, 0, 0, 2)
+    question_layout.setSpacing(8)
     question_label = QLabel()
-    question_label.setStyleSheet("font-size: 12px; font-weight: 650; color: #3f5962;")
+    question_label.setStyleSheet("font-size: 11px; font-weight: 650; color: #3f5962;")
     question = QLabel()
     question.setWordWrap(True)
-    question.setStyleSheet("font-size: 18px; font-weight: 550;")
+    question.setStyleSheet("font-size: 15px; font-weight: 550;")
     question_layout.addWidget(question_label)
-    question_layout.addWidget(question)
+    question_layout.addWidget(question, 1)
     signal_root.addWidget(question_frame)
 
     signal_layout = QHBoxLayout()
-    signal_layout.setSpacing(14)
+    signal_layout.setSpacing(10)
     signal_root.addLayout(signal_layout, 1)
 
     controls_frame = QFrame()
-    controls_frame.setMaximumWidth(320)
-    controls_frame.setMinimumWidth(275)
+    controls_frame.setMaximumWidth(255)
+    controls_frame.setMinimumWidth(225)
     controls_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     controls_layout = QVBoxLayout(controls_frame)
-    controls_layout.setContentsMargins(14, 14, 14, 14)
+    controls_layout.setContentsMargins(10, 8, 10, 8)
+    controls_layout.setSpacing(6)
     try_it_label = QLabel()
-    try_it_label.setStyleSheet("font-size: 16px; font-weight: 650;")
+    try_it_label.setStyleSheet("font-size: 14px; font-weight: 650;")
     controls_layout.addWidget(try_it_label)
     instruction = QLabel()
     instruction.setWordWrap(True)
+    instruction.setStyleSheet("color: #53616d; font-size: 11px;")
     controls_layout.addWidget(instruction)
 
     form = QFormLayout()
+    form.setVerticalSpacing(5)
+    form.setHorizontalSpacing(8)
     duration_label = QLabel()
     duration = QDoubleSpinBox()
     duration.setRange(0.1, 5.0)
@@ -178,8 +184,10 @@ def launch_didactic_explorer() -> None:
 
     baseline_hint = QLabel()
     baseline_hint.setWordWrap(True)
+    baseline_hint.setVisible(False)
     controls_layout.addWidget(baseline_hint)
     baseline_actions = QHBoxLayout()
+    baseline_actions.setSpacing(6)
     signal_set_baseline = QPushButton()
     signal_clear_baseline = QPushButton()
     signal_clear_baseline.setEnabled(False)
@@ -188,7 +196,7 @@ def launch_didactic_explorer() -> None:
     controls_layout.addLayout(baseline_actions)
 
     signal_reset = QPushButton()
-    signal_reset.setMinimumHeight(34)
+    signal_reset.setMinimumHeight(28)
     controls_layout.addWidget(signal_reset)
     controls_layout.addStretch(1)
     signal_layout.addWidget(controls_frame)
@@ -199,15 +207,18 @@ def launch_didactic_explorer() -> None:
     signal_layout.addWidget(signal_canvas, 1)
 
     learning_footer = QHBoxLayout()
-    learning_footer.setSpacing(10)
+    learning_footer.setSpacing(6)
 
     observation_frame = QFrame()
     observation_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     observation_layout = QVBoxLayout(observation_frame)
+    observation_layout.setContentsMargins(8, 6, 8, 6)
+    observation_layout.setSpacing(2)
     observation_title = QLabel()
-    observation_title.setStyleSheet("font-weight: 650;")
+    observation_title.setStyleSheet("font-weight: 650; font-size: 11px;")
     signal_observation = QLabel()
     signal_observation.setWordWrap(True)
+    signal_observation.setStyleSheet("font-size: 11px;")
     observation_layout.addWidget(observation_title)
     observation_layout.addWidget(signal_observation)
     learning_footer.addWidget(observation_frame, 2)
@@ -215,27 +226,34 @@ def launch_didactic_explorer() -> None:
     quantitative_frame = QFrame()
     quantitative_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     quantitative_layout = QVBoxLayout(quantitative_frame)
+    quantitative_layout.setContentsMargins(8, 6, 8, 6)
+    quantitative_layout.setSpacing(2)
     quantitative_title = QLabel()
-    quantitative_title.setStyleSheet("font-weight: 650;")
+    quantitative_title.setStyleSheet("font-weight: 650; font-size: 11px;")
     signal_readout = QLabel()
     signal_readout.setWordWrap(True)
+    signal_readout.setStyleSheet("font-size: 11px;")
     signal_comparison_readout = QLabel()
     signal_comparison_readout.setWordWrap(True)
+    signal_comparison_readout.setStyleSheet("font-size: 10px;")
     quantitative_layout.addWidget(quantitative_title)
     quantitative_layout.addWidget(signal_readout)
     quantitative_layout.addWidget(signal_comparison_readout)
-    learning_footer.addWidget(quantitative_frame, 1)
+    learning_footer.addWidget(quantitative_frame, 3)
 
     boundary_frame = QFrame()
     boundary_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     boundary_layout = QVBoxLayout(boundary_frame)
+    boundary_layout.setContentsMargins(8, 6, 8, 6)
+    boundary_layout.setSpacing(2)
     boundary_title = QLabel()
-    boundary_title.setStyleSheet("font-weight: 650;")
+    boundary_title.setStyleSheet("font-weight: 650; font-size: 11px;")
     boundary_text = QLabel()
     boundary_text.setWordWrap(True)
+    boundary_text.setStyleSheet("font-size: 10px;")
     boundary_layout.addWidget(boundary_title)
     boundary_layout.addWidget(boundary_text)
-    learning_footer.addWidget(boundary_frame, 1)
+    learning_footer.addWidget(boundary_frame, 2)
     signal_root.addLayout(learning_footer)
 
     signal_baseline: SignalLessonSnapshot | None = None
@@ -250,7 +268,7 @@ def launch_didactic_explorer() -> None:
         localizer = Localizer(str(language_selector.currentData() or "en"))
         if signal_baseline is None:
             signal_comparison_readout.setText(
-                f"{localizer.text('signal.baseline_empty')}<br>"
+                f"{localizer.text('signal.baseline_empty')} · "
                 f"<i>{localizer.text('signal.baseline_note')}</i>"
             )
             signal_clear_baseline.setEnabled(False)
@@ -260,17 +278,17 @@ def launch_didactic_explorer() -> None:
         comparison = SignalLessonComparison(baseline=signal_baseline, current=current)
         signal_clear_baseline.setEnabled(True)
         signal_comparison_readout.setText(
-            f"<b>{localizer.text('common.baseline')}</b>: "
+            f"<b>{localizer.text('common.baseline')}</b> "
             f"T={signal_baseline.duration_seconds * 1e3:.1f} ms, "
             f"B={signal_baseline.lfm_bandwidth_hz / 1e3:.0f} kHz, "
-            f"TB={signal_baseline.time_bandwidth_product:.1f}<br>"
-            f"<b>{localizer.text('common.current')}</b>: "
+            f"TB={signal_baseline.time_bandwidth_product:.1f} · "
+            f"<b>{localizer.text('common.current')}</b> "
             f"T={current.duration_seconds * 1e3:.1f} ms, "
             f"B={current.lfm_bandwidth_hz / 1e3:.0f} kHz, "
             f"TB={current.time_bandwidth_product:.1f}<br>"
-            f"<b>Δ</b>: T={comparison.duration_change_seconds * 1e3:+.1f} ms, "
+            f"<b>Δ</b> T={comparison.duration_change_seconds * 1e3:+.1f} ms, "
             f"B={comparison.bandwidth_change_hz / 1e3:+.0f} kHz, "
-            f"TB={comparison.time_bandwidth_change:+.1f}<br>"
+            f"TB={comparison.time_bandwidth_change:+.1f} · "
             f"<i>{localizer.text('signal.baseline_note')}</i>"
         )
 
@@ -287,10 +305,10 @@ def launch_didactic_explorer() -> None:
         time_bandwidth = state.duration_seconds * state.lfm_bandwidth_hz
         reciprocal_bandwidth_us = 1e6 / state.lfm_bandwidth_hz
         signal_readout.setText(
-            f"T = {state.duration_seconds * 1e3:.1f} ms<br>"
-            f"B = {state.lfm_bandwidth_hz / 1e3:.0f} kHz<br>"
-            f"TB = {time_bandwidth:.1f}<br>"
-            f"1/B = {reciprocal_bandwidth_us:.1f} μs"
+            f"T={state.duration_seconds * 1e3:.1f} ms · "
+            f"B={state.lfm_bandwidth_hz / 1e3:.0f} kHz · "
+            f"TB={time_bandwidth:.1f} · "
+            f"1/B={reciprocal_bandwidth_us:.1f} μs"
         )
         update_signal_comparison_display()
         signal_canvas.draw_idle()
@@ -610,7 +628,7 @@ def launch_didactic_explorer() -> None:
         quantitative_title.setText(localizer.text("common.quantitative"))
         boundary_title.setText(localizer.text("common.scientific_boundary"))
         boundary_text.setText(
-            f"{localizer.text('signal.scientific_boundary')}<br><br>"
+            f"{localizer.text('signal.scientific_boundary')}<br>"
             f"{localizer.text('signal.not_shown')}"
         )
         update_signal_comparison_display()
