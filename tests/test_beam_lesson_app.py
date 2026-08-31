@@ -14,7 +14,7 @@ def test_beam_visible_copy_is_routed_through_localization() -> None:
 
     expected = (
         'beam_heading.setText(localizer.text("beam.title"))',
-        'localizer.text("beam.question")',
+        'beam_question_text = localizer.text("beam.question")',
         'beam_instruction.setText(localizer.text("beam.instruction"))',
         'beam_frequency_label.setText(localizer.text("beam.frequency"))',
         'beam_elements_label.setText(localizer.text("beam.elements_per_arm"))',
