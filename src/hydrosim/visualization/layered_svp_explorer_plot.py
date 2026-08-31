@@ -14,12 +14,21 @@ import numpy as np
 from .layered_svp_explorer import LayeredSvpExplorerSnapshot
 
 
-def _profile_step_coordinates(profile, *, start_depth_m: float) -> tuple[np.ndarray, np.ndarray]:
+def _profile_step_coordinates(
+    profile,
+    *,
+    start_depth_m: float,
+    maximum_depth_m: float | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     speeds: list[float] = []
     depths: list[float] = []
     for layer in profile.layers:
         top = max(float(layer.top_depth_m), start_depth_m)
         bottom = float(layer.bottom_depth_m)
+        if maximum_depth_m is not None:
+            if top >= maximum_depth_m:
+                break
+            bottom = min(bottom, maximum_depth_m)
         if bottom <= start_depth_m:
             continue
         speeds.extend((float(layer.sound_speed_mps), float(layer.sound_speed_mps)))
@@ -54,11 +63,16 @@ def draw_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot, axe
     for axis in axes:
         axis.clear()
 
+    display_depth = float(snapshot.terrain_depth_m)
     true_c, true_z = _profile_step_coordinates(
-        snapshot.true_profile, start_depth_m=float(snapshot.profile_start_depth_m)
+        snapshot.true_profile,
+        start_depth_m=float(snapshot.profile_start_depth_m),
+        maximum_depth_m=display_depth,
     )
     proc_c, proc_z = _profile_step_coordinates(
-        snapshot.processing_profile, start_depth_m=float(snapshot.profile_start_depth_m)
+        snapshot.processing_profile,
+        start_depth_m=float(snapshot.profile_start_depth_m),
+        maximum_depth_m=display_depth,
     )
     profile_axis.plot(true_c, true_z, label="Truth SVP")
     profile_axis.plot(proc_c, proc_z, linestyle="--", label="Processing SVP")
