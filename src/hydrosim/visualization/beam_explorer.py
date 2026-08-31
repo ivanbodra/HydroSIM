@@ -2,9 +2,8 @@
 
 No new acoustic physics is introduced here. The snapshot is assembled from the
 existing Mills-Cross two-way angular-pattern and flat-seafloor footprint models.
-The lesson evaluates principal-plane scans only, keeping interactive updates
-lightweight while exposing the causal chain from frequency/aperture to beamwidth
-and seafloor footprint.
+A single two-dimensional angular response is retained so the renderer can show
+both principal-plane cuts and the modeled continuous seafloor response.
 """
 
 from __future__ import annotations
@@ -61,6 +60,7 @@ class BeamExplorerSnapshot:
     """Render-ready state for the reference Mills-Cross beam lesson."""
 
     controls: BeamExplorerControls
+    response_scan: AngularPattern2DScan
     along_track_scan: AngularPattern2DScan
     across_track_scan: AngularPattern2DScan
     wavelength_m: float
@@ -133,7 +133,7 @@ def _half_power_beamwidth(scan: AngularPattern2DScan, *, axis: str) -> float:
 def prepare_beam_explorer_snapshot(
     controls: BeamExplorerControls | None = None,
 ) -> BeamExplorerSnapshot:
-    """Build beam pattern, -3 dB widths, and nadir footprint from existing models."""
+    """Build the modeled 2D response, -3 dB widths, and nadir footprint."""
 
     state = controls or BeamExplorerControls()
     state.validate()
@@ -149,32 +149,20 @@ def prepare_beam_explorer_snapshot(
         name="didactic_reference_mills_cross",
     )
     extent = state.angular_extent_deg * pi / 180.0
-    common = dict(
+    response_scan = scan_mills_cross_two_way_pattern_2d(
         configuration=configuration,
-        frequency_hz=state.frequency_hz,
-        sound_speed_mps=state.sound_speed_mps,
-    )
-    along_track_scan = scan_mills_cross_two_way_pattern_2d(
         along_track_start_angle_rad=-extent,
         along_track_end_angle_rad=extent,
         along_track_sample_count=state.angular_sample_count,
         across_track_start_angle_rad=-extent,
         across_track_end_angle_rad=extent,
-        across_track_sample_count=3,
-        **common,
-    )
-    across_track_scan = scan_mills_cross_two_way_pattern_2d(
-        along_track_start_angle_rad=-extent,
-        along_track_end_angle_rad=extent,
-        along_track_sample_count=3,
-        across_track_start_angle_rad=-extent,
-        across_track_end_angle_rad=extent,
         across_track_sample_count=state.angular_sample_count,
-        **common,
+        frequency_hz=state.frequency_hz,
+        sound_speed_mps=state.sound_speed_mps,
     )
     wavelength = state.sound_speed_mps / state.frequency_hz
-    along_width = _half_power_beamwidth(along_track_scan, axis="along")
-    across_width = _half_power_beamwidth(across_track_scan, axis="across")
+    along_width = _half_power_beamwidth(response_scan, axis="along")
+    across_width = _half_power_beamwidth(response_scan, axis="across")
     footprint = estimate_flat_seafloor_footprint(
         model=FlatSeafloorFootprintModel(
             transmit_along_track_beamwidth_rad=along_width,
@@ -188,8 +176,9 @@ def prepare_beam_explorer_snapshot(
     )
     return BeamExplorerSnapshot(
         controls=state,
-        along_track_scan=along_track_scan,
-        across_track_scan=across_track_scan,
+        response_scan=response_scan,
+        along_track_scan=response_scan,
+        across_track_scan=response_scan,
         wavelength_m=wavelength,
         spacing_over_wavelength=state.element_spacing_m / wavelength,
         element_center_span_m=(state.elements_per_arm - 1) * state.element_spacing_m,
