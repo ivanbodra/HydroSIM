@@ -1,6 +1,6 @@
-"""First concrete renderer for the layered-SVP Didactic Explorer.
+"""Renderer for the layered-SVP Didactic Explorer.
 
-This module renders an existing :class:`LayeredSvpExplorerSnapshot`. It does not
+The renderer consumes an existing :class:`LayeredSvpExplorerSnapshot`. It does not
 perform acquisition or propagation calculations and therefore introduces no new
 scientific model. Matplotlib remains an optional visualization dependency.
 """
@@ -28,13 +28,7 @@ def _profile_step_coordinates(profile, *, start_depth_m: float) -> tuple[np.ndar
 
 
 def _truth_ray_plot_coordinates(beam, *, sensor_y: float, sensor_z: float) -> tuple[list[float], list[float]]:
-    """Convert layered path increments to N-frame cross-track plotting coordinates.
-
-    ``LayeredRayPath`` stores positive horizontal distance magnitudes because the
-    propagation model is a principal-plane ray tracer. The signed N-frame side is
-    already represented by the experiment's Truth bottom point, so visualization
-    recovers that sign without introducing a second beam-angle convention.
-    """
+    """Convert layered path increments to signed N-frame plotting coordinates."""
 
     bottom_delta_y = float(beam.truth_bottom_point.y) - sensor_y
     if abs(bottom_delta_y) <= 1e-15:
@@ -46,33 +40,19 @@ def _truth_ray_plot_coordinates(beam, *, sensor_y: float, sensor_z: float) -> tu
     y_coordinates = [sensor_y]
     z_coordinates = [sensor_z]
     cumulative_horizontal = 0.0
-
     for segment in beam.truth_ray_path.segments:
         cumulative_horizontal += float(segment.horizontal_distance_m)
         y_coordinates.append(sensor_y + horizontal_sign * cumulative_horizontal)
-        z_coordinates.append(
-            sensor_z + float(segment.end_depth_m) - path_start_depth
-        )
-
+        z_coordinates.append(sensor_z + float(segment.end_depth_m) - path_start_depth)
     return y_coordinates, z_coordinates
 
 
-def plot_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot):
-    """Render SVPs, cross-track geometry, and beamwise error in one figure."""
+def draw_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot, axes) -> None:
+    """Redraw an existing three-axis layered-SVP figure in place."""
 
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError as exc:  # pragma: no cover - depends on optional environment
-        raise ImportError(
-            "Matplotlib is required for plot_layered_svp_explorer_snapshot; "
-            "install HydroSIM with the 'visualization' extra"
-        ) from exc
-
-    figure = plt.figure(figsize=(14.0, 5.2))
-    grid = figure.add_gridspec(1, 3, width_ratios=(0.8, 1.8, 1.1), wspace=0.32)
-    profile_axis = figure.add_subplot(grid[0, 0])
-    swath_axis = figure.add_subplot(grid[0, 1])
-    error_axis = figure.add_subplot(grid[0, 2])
+    profile_axis, swath_axis, error_axis = axes
+    for axis in axes:
+        axis.clear()
 
     true_c, true_z = _profile_step_coordinates(
         snapshot.true_profile, start_depth_m=float(snapshot.profile_start_depth_m)
@@ -102,11 +82,7 @@ def plot_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot):
     across_errors: list[float] = []
 
     for beam in snapshot.beams:
-        ray_y, ray_z = _truth_ray_plot_coordinates(
-            beam,
-            sensor_y=sensor_y,
-            sensor_z=sensor_z,
-        )
+        ray_y, ray_z = _truth_ray_plot_coordinates(beam, sensor_y=sensor_y, sensor_z=sensor_z)
         swath_axis.plot(ray_y, ray_z, linewidth=0.9, alpha=0.7)
         truth_y.append(float(beam.truth_bottom_point.y))
         truth_z.append(float(beam.truth_bottom_point.z))
@@ -117,12 +93,7 @@ def plot_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot):
         across_errors.append(float(beam.across_track_error_m))
 
     swath_axis.scatter(truth_y, truth_z, marker="o", label="Truth intersections")
-    swath_axis.scatter(
-        reconstructed_y,
-        reconstructed_z,
-        marker="x",
-        label="Reconstructed soundings",
-    )
+    swath_axis.scatter(reconstructed_y, reconstructed_z, marker="x", label="Reconstructed soundings")
     swath_axis.set_xlabel("Across-track y (m): +starboard")
     swath_axis.set_ylabel("Depth z, +down (m)")
     swath_axis.set_title("Truth rays and reconstructed swath")
@@ -137,5 +108,34 @@ def plot_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot):
     error_axis.set_title("Beamwise sounding error")
     error_axis.legend()
 
-    figure.suptitle("HydroSIM Didactic Explorer — layered SVP sounding")
-    return figure, (profile_axis, swath_axis, error_axis)
+    max_error = max((float(beam.sounding_error_norm_m) for beam in snapshot.beams), default=0.0)
+    profile_bias = (
+        float(snapshot.processing_profile.layers[-1].sound_speed_mps)
+        - float(snapshot.true_profile.layers[-1].sound_speed_mps)
+    )
+    profile_axis.figure.suptitle(
+        "HydroSIM Didactic Explorer — processing SVP mismatch\n"
+        f"lower-layer bias={profile_bias:+.1f} m/s | max sounding error={max_error:.3f} m"
+    )
+
+
+def plot_layered_svp_explorer_snapshot(snapshot: LayeredSvpExplorerSnapshot):
+    """Create the layered-SVP figure and render its first snapshot."""
+
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError(
+            "Matplotlib is required for plot_layered_svp_explorer_snapshot; "
+            "install HydroSIM with the 'visualization' extra"
+        ) from exc
+
+    figure = plt.figure(figsize=(14.0, 5.2))
+    grid = figure.add_gridspec(1, 3, width_ratios=(0.8, 1.8, 1.1), wspace=0.32)
+    axes = (
+        figure.add_subplot(grid[0, 0]),
+        figure.add_subplot(grid[0, 1]),
+        figure.add_subplot(grid[0, 2]),
+    )
+    draw_layered_svp_explorer_snapshot(snapshot, axes)
+    return figure, axes
