@@ -157,6 +157,21 @@ The coordination secretary does not replace specialist ownership. Its periodic r
 
 A handoff addressed to `coordination-secretary` is actionable work for the Secretary, not merely an item to observe. When the requested action is within coordination scope, the Secretary should perform it promptly, reply with evidence in the Issue, and close it when its completion condition is satisfied. When it requires a specialist decision, the Secretary routes or escalates it instead of deciding it.
 
+### Closure-effect verification
+
+The Secretary must also audit newly closed handoffs for effect-based completion. A closed Issue is not considered healthy merely because a response was posted or the state changed.
+
+For each newly closed handoff reviewed, verify as far as reasonably possible:
+
+1. the original completion condition;
+2. the recipient response and cited evidence;
+3. that referenced commits, files, PRs, tests, decisions, or downstream handoffs actually exist where verification is practical;
+4. that the requested downstream effect occurred, not merely that an answer was recorded;
+5. when the requested action was intentionally not performed, that the reason is explicit, within the deciding agent's authority, and the closure reason reflects cancellation/deferment (`not_planned`) rather than false completion;
+6. that any new cross-agent dependency created by the result was routed and not silently dropped.
+
+If the requested effect is missing, the Secretary should reopen the Issue or create/correct the necessary handoff and state what remains unsatisfied. Do not reopen correctly completed work merely to demand redundant documentation.
+
 When no intervention is needed, the secretary should make no repository changes.
 
 ## Project governance
