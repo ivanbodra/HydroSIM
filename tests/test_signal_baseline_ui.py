@@ -30,7 +30,7 @@ def test_signal_baseline_captures_only_visible_duration_and_bandwidth_controls()
 def test_signal_reset_does_not_redefine_or_clear_baseline():
     signal = _signal_source()
     reset_function = signal.split("def reset_signal()", 1)[1].split(
-        "signal_set_baseline.clicked.connect", 1
+        "signal_reset.clicked.connect", 1
     )[0]
 
     assert "signal_baseline" not in reset_function
