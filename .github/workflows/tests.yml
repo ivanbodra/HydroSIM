@@ -19,7 +19,7 @@ jobs:
           cache: pip
 
       - name: Install package and test dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]' matplotlib
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[dev,visualization]'
 
       - name: Run Ruff
         run: ruff check .
@@ -28,3 +28,15 @@ jobs:
         env:
           MPLBACKEND: Agg
         run: pytest -q
+
+      - name: Capture real Didactic Explorer window
+        env:
+          QT_QPA_PLATFORM: offscreen
+          MPLBACKEND: QtAgg
+        run: python tools/capture_didactic_explorer.py --output artifacts/didactic_explorer_actual.png
+
+      - name: Upload Didactic Explorer screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: didactic-explorer-screenshot
+          path: artifacts/didactic_explorer_actual.png
