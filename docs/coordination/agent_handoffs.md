@@ -139,7 +139,7 @@ The coordination secretary should search all open handoff issues and identify st
 
 - Each specialist agent performs a handoff check every 2 hours when an automation slot is allocated to that specialist.
 - Specialists without a dedicated automation slot, such as QA when automation capacity is constrained, are activated manually by the project owner when a concrete handoff requires their attention.
-- The coordination secretary performs an independent queue-health check every 4 hours and must surface actionable handoffs for manually activated specialists to the project owner rather than attempting the specialist work itself.
+- The coordination secretary performs an independent queue-health check every 4 hours. When a concrete open handoff to a manually activated specialist appears, the Secretary must report that specific handoff to the project owner with enough context to forward it. The Secretary must not attempt the specialist work itself.
 - Polling is a safety net. Agents should create and answer handoffs immediately when they are already active and the dependency is known.
 
 ## Coordination secretary responsibilities
