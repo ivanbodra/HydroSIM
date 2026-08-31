@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from hydrosim.app.localization import Localizer
 from hydrosim.app.signal_compare import SignalLessonComparison, SignalLessonSnapshot
+from hydrosim.app.vessel_lesson import build_vessel_lesson
 from hydrosim.visualization import (
     BeamExplorerControls,
     PropagationExplorerControls,
@@ -574,10 +575,14 @@ def launch_didactic_explorer() -> None:
     redraw_propagation()
     pages.addWidget(propagation_page)
 
+    # Vessel lesson ---------------------------------------------------------
+    vessel_page, vessel_controls, apply_vessel_language = build_vessel_lesson(FigureCanvas)
+    pages.addWidget(vessel_page)
+
     # Planned slices --------------------------------------------------------
     planned_headings: list[QLabel] = []
     planned_labels: list[QLabel] = []
-    for lesson, description in _LESSONS[3:]:
+    for lesson, description in _LESSONS[4:]:
         page = QWidget()
         layout = QVBoxLayout(page)
         heading = QLabel(lesson)
@@ -607,7 +612,7 @@ def launch_didactic_explorer() -> None:
 
         nav_keys = ("signal", "beam", "propagation", "vessel", "motion")
         for index, key in enumerate(nav_keys):
-            status_key = "status.ready" if index in {0, 1, 2} else "status.planned"
+            status_key = "status.ready" if index in {0, 1, 2, 3} else "status.planned"
             navigation.item(index).setText(
                 f"{localizer.text(f'nav.{key}')}  • {localizer.text(status_key)}"
             )
@@ -643,8 +648,8 @@ def launch_didactic_explorer() -> None:
             f"<b>{localizer.text('common.learning_question')}:</b> "
             f"{localizer.text('propagation.question')}"
         )
-        planned_headings[0].setText(localizer.text("nav.vessel"))
-        planned_headings[1].setText(localizer.text("nav.motion"))
+        apply_vessel_language(locale)
+        planned_headings[0].setText(localizer.text("nav.motion"))
 
     def on_language_changed(_index: int) -> None:
         apply_language(str(language_selector.currentData()))
@@ -652,7 +657,9 @@ def launch_didactic_explorer() -> None:
     language_selector.currentIndexChanged.connect(on_language_changed)
     navigation.currentRowChanged.connect(pages.setCurrentIndex)
     for index, (lesson, _description) in enumerate(_LESSONS):
-        item = QListWidgetItem(lesson + ("  • ready" if index in {0, 1, 2} else "  • planned"))
+        item = QListWidgetItem(
+            lesson + ("  • ready" if index in {0, 1, 2, 3} else "  • planned")
+        )
         item.setData(Qt.ItemDataRole.UserRole, lesson)
         navigation.addItem(item)
 
@@ -687,5 +694,6 @@ def launch_didactic_explorer() -> None:
         "processing_bias_slider": propagation_bias_slider,
         "reset": propagation_reset,
     }
+    window.hydrosim_vessel_controls = vessel_controls
     app.hydrosim_didactic_explorer_window = window
     app.exec()
