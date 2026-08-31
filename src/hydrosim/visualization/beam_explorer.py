@@ -70,6 +70,18 @@ class BeamExplorerSnapshot:
     across_track_half_power_beamwidth_rad: float
     nadir_footprint: InsonifiedFootprint
 
+    @property
+    def along_track_beamwidth_deg(self) -> float:
+        """Compatibility readout for application code predating the radian field rename."""
+
+        return self.along_track_half_power_beamwidth_rad * 180.0 / pi
+
+    @property
+    def footprint(self) -> InsonifiedFootprint:
+        """Compatibility alias for the explicitly named nadir footprint."""
+
+        return self.nadir_footprint
+
 
 def _principal_samples(scan: AngularPattern2DScan, *, axis: str):
     n_along = len(scan.along_track_angles_rad)

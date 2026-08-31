@@ -44,10 +44,14 @@ jobs:
           mkdir -p artifacts
           set +e
           python tools/capture_didactic_explorer.py --output artifacts/didactic_explorer_actual.png > artifacts/capture.log 2>&1
-          echo $? > artifacts/capture.exit
-          exit 0
+          capture_status=$?
+          echo "$capture_status" > artifacts/capture.exit
+          set -e
+          test "$capture_status" = "0"
+          test -s artifacts/didactic_explorer_actual.png
 
       - name: Upload Didactic Explorer screenshot and diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: didactic-explorer-screenshot
