@@ -20,6 +20,20 @@ def test_beam_explorer_snapshot_uses_frequency_for_wavelength_and_spacing_ratio(
     assert snapshot.nadir_footprint.effective_area_m2 > 0.0
 
 
+def test_beam_explorer_retains_full_two_dimensional_modeled_response():
+    snapshot = prepare_beam_explorer_snapshot(BeamExplorerControls(angular_sample_count=31))
+
+    scan = snapshot.response_scan
+    assert len(scan.along_track_angles_rad) == 31
+    assert len(scan.across_track_angles_rad) == 31
+    assert len(scan.samples) == 31 * 31
+    assert scan is snapshot.along_track_scan
+    assert scan is snapshot.across_track_scan
+    center = 15 * 31 + 15
+    assert isclose(float(scan.samples[center].normalized_power), 1.0, rel_tol=1e-12)
+    assert any(0.0 < float(sample.normalized_power) < 0.5 for sample in scan.samples)
+
+
 def test_beam_explorer_aperture_narrows_beam_and_footprint():
     small = prepare_beam_explorer_snapshot(BeamExplorerControls(elements_per_arm=8))
     large = prepare_beam_explorer_snapshot(BeamExplorerControls(elements_per_arm=16))
