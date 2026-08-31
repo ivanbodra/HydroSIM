@@ -271,66 +271,80 @@ def launch_didactic_explorer() -> None:
     # Beam lesson -----------------------------------------------------------
     beam_page = QWidget()
     beam_root = QVBoxLayout(beam_page)
-    beam_heading = QLabel("Beam — frequency, wavelength, aperture, and footprint")
+    beam_root.setContentsMargins(12, 4, 8, 4)
+    beam_root.setSpacing(10)
+    beam_heading = QLabel()
     beam_heading.setStyleSheet("font-size: 20px; font-weight: 600;")
     beam_root.addWidget(beam_heading)
-    beam_question = QLabel(
-        "<b>Learning question:</b> How do frequency and aperture change beamwidth and the "
-        "resulting -3 dB footprint on a flat seabed?"
-    )
+    beam_question = QLabel()
     beam_question.setWordWrap(True)
-    beam_root.addWidget(beam_question)
-    beam_context = QLabel(
-        "Scientific view: normalized narrowband far-field TX/RX array response plus the "
-        "existing flat-bottom beamwidth footprint approximation at fixed depth."
+    beam_question.setStyleSheet(
+        "background: #eef6f8; border-radius: 8px; padding: 12px; font-size: 17px; font-weight: 550;"
     )
+    beam_root.addWidget(beam_question)
+    beam_context = QLabel()
     beam_context.setWordWrap(True)
+    beam_context.setStyleSheet("color: #53616d;")
     beam_root.addWidget(beam_context)
     beam_layout = QHBoxLayout()
+    beam_layout.setSpacing(14)
     beam_root.addLayout(beam_layout, 1)
     beam_controls_frame = QFrame()
-    beam_controls_frame.setMaximumWidth(315)
+    beam_controls_frame.setMaximumWidth(320)
+    beam_controls_frame.setMinimumWidth(275)
+    beam_controls_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     beam_controls = QVBoxLayout(beam_controls_frame)
-    beam_instruction = QLabel(
-        "Change frequency first, then the number of elements. Compare main-lobe width "
-        "and the footprint dimensions."
-    )
+    beam_controls.setContentsMargins(14, 14, 14, 14)
+    beam_try_it = QLabel()
+    beam_try_it.setStyleSheet("font-size: 16px; font-weight: 650;")
+    beam_controls.addWidget(beam_try_it)
+    beam_instruction = QLabel()
     beam_instruction.setWordWrap(True)
     beam_controls.addWidget(beam_instruction)
     beam_form = QFormLayout()
+    beam_frequency_label = QLabel()
     beam_frequency = QDoubleSpinBox()
     beam_frequency.setRange(75.0, 300.0)
     beam_frequency.setSingleStep(5.0)
     beam_frequency.setDecimals(0)
     beam_frequency.setValue(_BEAM_DEFAULTS.frequency_hz / 1e3)
     beam_frequency.setSuffix(" kHz")
-    beam_form.addRow("Frequency", beam_frequency)
+    beam_form.addRow(beam_frequency_label, beam_frequency)
     beam_frequency_slider = QSlider(Qt.Orientation.Horizontal)
     beam_frequency_slider.setRange(75, 300)
     beam_frequency_slider.setValue(round(beam_frequency.value()))
     beam_form.addRow("", beam_frequency_slider)
+    beam_elements_label = QLabel()
     beam_elements = QSpinBox()
     beam_elements.setRange(4, 32)
     beam_elements.setValue(_BEAM_DEFAULTS.elements_per_arm)
-    beam_form.addRow("Elements per arm", beam_elements)
+    beam_form.addRow(beam_elements_label, beam_elements)
     beam_elements_slider = QSlider(Qt.Orientation.Horizontal)
     beam_elements_slider.setRange(4, 32)
     beam_elements_slider.setValue(beam_elements.value())
     beam_form.addRow("", beam_elements_slider)
     beam_controls.addLayout(beam_form)
-    beam_reset = QPushButton("Reset lesson")
+    beam_reset = QPushButton()
+    beam_reset.setMinimumHeight(34)
     beam_controls.addWidget(beam_reset)
+    beam_quantitative_title = QLabel()
+    beam_quantitative_title.setStyleSheet("font-weight: 650;")
+    beam_controls.addWidget(beam_quantitative_title)
     beam_readout = QLabel()
     beam_readout.setWordWrap(True)
     beam_controls.addWidget(beam_readout)
-    beam_note = QLabel(
-        "<b>What to look for</b><br>Higher frequency shortens wavelength. More elements "
-        "increase aperture. Narrower -3 dB beamwidths reduce the approximate nadir footprint."
-        "<br><br><b>Not shown yet:</b> steering, refraction, multisector transmission, "
-        "bottom scattering, or vendor-specific transducer geometry."
-    )
-    beam_note.setWordWrap(True)
-    beam_controls.addWidget(beam_note)
+    beam_observation_title = QLabel()
+    beam_observation_title.setStyleSheet("font-weight: 650;")
+    beam_controls.addWidget(beam_observation_title)
+    beam_observation = QLabel()
+    beam_observation.setWordWrap(True)
+    beam_controls.addWidget(beam_observation)
+    beam_boundary_title = QLabel()
+    beam_boundary_title.setStyleSheet("font-weight: 650;")
+    beam_controls.addWidget(beam_boundary_title)
+    beam_boundary = QLabel()
+    beam_boundary.setWordWrap(True)
+    beam_controls.addWidget(beam_boundary)
     beam_controls.addStretch(1)
     beam_layout.addWidget(beam_controls_frame)
     beam_snapshot = prepare_beam_explorer_snapshot(_BEAM_DEFAULTS)
@@ -351,11 +365,14 @@ def launch_didactic_explorer() -> None:
         )
         snapshot = prepare_beam_explorer_snapshot(state)
         draw_beam_explorer_snapshot(snapshot, beam_axes)
+        locale = str(language_selector.currentData() or "en")
+        localizer = Localizer(locale)
         beam_readout.setText(
-            f"λ = {snapshot.wavelength_m * 1e3:.2f} mm<br>"
-            f"d/λ = {snapshot.spacing_over_wavelength:.2f}<br>"
-            f"-3 dB beamwidth = {snapshot.along_track_beamwidth_deg:.2f}°<br>"
-            f"Footprint = {snapshot.footprint.beam_limited_along_track_width_m:.2f} × "
+            f"{localizer.text('beam.wavelength')}: {snapshot.wavelength_m * 1e3:.2f} mm<br>"
+            f"{localizer.text('beam.spacing_ratio')}: {snapshot.spacing_over_wavelength:.2f}<br>"
+            f"{localizer.text('beam.beamwidth')}: {snapshot.along_track_beamwidth_deg:.2f}°<br>"
+            f"{localizer.text('beam.footprint')}: "
+            f"{snapshot.footprint.beam_limited_along_track_width_m:.2f} × "
             f"{snapshot.footprint.beam_limited_across_track_width_m:.2f} m"
         )
         beam_canvas.draw_idle()
@@ -549,9 +566,28 @@ def launch_didactic_explorer() -> None:
 
         beam_heading.setText(localizer.text("beam.title"))
         beam_question.setText(
-            f"<b>{localizer.text('common.learning_question')}:</b> "
+            f"<b>{localizer.text('common.learning_question').upper()}</b><br>"
             f"{localizer.text('beam.question')}"
         )
+        beam_context.setText(
+            f"<b>{localizer.text('common.scientific_view')}:</b> "
+            f"{localizer.text('beam.scientific_boundary')}"
+        )
+        beam_try_it.setText(localizer.text("common.try_it"))
+        beam_instruction.setText(localizer.text("beam.instruction"))
+        beam_frequency_label.setText(localizer.text("beam.frequency"))
+        beam_elements_label.setText(localizer.text("beam.elements_per_arm"))
+        beam_reset.setText(localizer.text("common.reset"))
+        beam_quantitative_title.setText(localizer.text("common.quantitative"))
+        beam_observation_title.setText(localizer.text("common.what_to_look_for"))
+        beam_observation.setText(localizer.text("beam.observation"))
+        beam_boundary_title.setText(localizer.text("common.scientific_boundary"))
+        beam_boundary.setText(
+            f"{localizer.text('beam.scientific_boundary')}<br><br>"
+            f"<b>{localizer.text('common.not_shown_yet')}:</b> {localizer.text('beam.not_shown')}"
+        )
+        redraw_beam()
+
         propagation_heading.setText(localizer.text("propagation.title"))
         propagation_question.setText(
             f"<b>{localizer.text('common.learning_question')}:</b> "
