@@ -7,6 +7,7 @@ calculations remain in the Scientific Core and visualization composition layers.
 from __future__ import annotations
 
 from hydrosim.app.localization import Localizer
+from hydrosim.app.signal_compare import SignalLessonComparison, SignalLessonSnapshot
 from hydrosim.visualization import (
     BeamExplorerControls,
     PropagationExplorerControls,
@@ -175,6 +176,17 @@ def launch_didactic_explorer() -> None:
     form.addRow("", bandwidth_slider)
     controls_layout.addLayout(form)
 
+    baseline_hint = QLabel()
+    baseline_hint.setWordWrap(True)
+    controls_layout.addWidget(baseline_hint)
+    baseline_actions = QHBoxLayout()
+    signal_set_baseline = QPushButton()
+    signal_clear_baseline = QPushButton()
+    signal_clear_baseline.setEnabled(False)
+    baseline_actions.addWidget(signal_set_baseline)
+    baseline_actions.addWidget(signal_clear_baseline)
+    controls_layout.addLayout(baseline_actions)
+
     signal_reset = QPushButton()
     signal_reset.setMinimumHeight(34)
     controls_layout.addWidget(signal_reset)
@@ -207,8 +219,11 @@ def launch_didactic_explorer() -> None:
     quantitative_title.setStyleSheet("font-weight: 650;")
     signal_readout = QLabel()
     signal_readout.setWordWrap(True)
+    signal_comparison_readout = QLabel()
+    signal_comparison_readout.setWordWrap(True)
     quantitative_layout.addWidget(quantitative_title)
     quantitative_layout.addWidget(signal_readout)
+    quantitative_layout.addWidget(signal_comparison_readout)
     learning_footer.addWidget(quantitative_frame, 1)
 
     boundary_frame = QFrame()
@@ -222,6 +237,42 @@ def launch_didactic_explorer() -> None:
     boundary_layout.addWidget(boundary_text)
     learning_footer.addWidget(boundary_frame, 1)
     signal_root.addLayout(learning_footer)
+
+    signal_baseline: SignalLessonSnapshot | None = None
+
+    def current_signal_snapshot() -> SignalLessonSnapshot:
+        return SignalLessonSnapshot(
+            duration_seconds=duration.value() * 1e-3,
+            lfm_bandwidth_hz=bandwidth.value() * 1e3,
+        )
+
+    def update_signal_comparison_display() -> None:
+        localizer = Localizer(str(language_selector.currentData() or "en"))
+        if signal_baseline is None:
+            signal_comparison_readout.setText(
+                f"{localizer.text('signal.baseline_empty')}<br>"
+                f"<i>{localizer.text('signal.baseline_note')}</i>"
+            )
+            signal_clear_baseline.setEnabled(False)
+            return
+
+        current = current_signal_snapshot()
+        comparison = SignalLessonComparison(baseline=signal_baseline, current=current)
+        signal_clear_baseline.setEnabled(True)
+        signal_comparison_readout.setText(
+            f"<b>{localizer.text('common.baseline')}</b>: "
+            f"T={signal_baseline.duration_seconds * 1e3:.1f} ms, "
+            f"B={signal_baseline.lfm_bandwidth_hz / 1e3:.0f} kHz, "
+            f"TB={signal_baseline.time_bandwidth_product:.1f}<br>"
+            f"<b>{localizer.text('common.current')}</b>: "
+            f"T={current.duration_seconds * 1e3:.1f} ms, "
+            f"B={current.lfm_bandwidth_hz / 1e3:.0f} kHz, "
+            f"TB={current.time_bandwidth_product:.1f}<br>"
+            f"<b>Δ</b>: T={comparison.duration_change_seconds * 1e3:+.1f} ms, "
+            f"B={comparison.bandwidth_change_hz / 1e3:+.0f} kHz, "
+            f"TB={comparison.time_bandwidth_change:+.1f}<br>"
+            f"<i>{localizer.text('signal.baseline_note')}</i>"
+        )
 
     def redraw_signal() -> None:
         bandwidth_hz = bandwidth.value() * 1e3
@@ -241,6 +292,7 @@ def launch_didactic_explorer() -> None:
             f"TB = {time_bandwidth:.1f}<br>"
             f"1/B = {reciprocal_bandwidth_us:.1f} μs"
         )
+        update_signal_comparison_display()
         signal_canvas.draw_idle()
 
     duration.valueChanged.connect(
@@ -260,11 +312,23 @@ def launch_didactic_explorer() -> None:
         lambda value: bandwidth.setValue(float(value)) if bandwidth.value() != float(value) else None
     )
 
+    def set_signal_baseline() -> None:
+        nonlocal signal_baseline
+        signal_baseline = current_signal_snapshot()
+        update_signal_comparison_display()
+
+    def clear_signal_baseline() -> None:
+        nonlocal signal_baseline
+        signal_baseline = None
+        update_signal_comparison_display()
+
     def reset_signal() -> None:
         duration.setValue(_SIGNAL_DEFAULTS.duration_seconds * 1e3)
         bandwidth.setValue(_SIGNAL_DEFAULTS.lfm_bandwidth_hz / 1e3)
         redraw_signal()
 
+    signal_set_baseline.clicked.connect(set_signal_baseline)
+    signal_clear_baseline.clicked.connect(clear_signal_baseline)
     signal_reset.clicked.connect(reset_signal)
     pages.addWidget(signal_page)
 
@@ -537,6 +601,9 @@ def launch_didactic_explorer() -> None:
         instruction.setText(localizer.text("signal.instruction"))
         duration_label.setText(localizer.text("signal.pulse_duration"))
         bandwidth_label.setText(localizer.text("signal.lfm_bandwidth"))
+        baseline_hint.setText(localizer.text("signal.compare_hint"))
+        signal_set_baseline.setText(localizer.text("common.set_baseline"))
+        signal_clear_baseline.setText(localizer.text("common.clear_baseline"))
         signal_reset.setText(localizer.text("common.reset"))
         observation_title.setText(localizer.text("common.what_to_look_for"))
         signal_observation.setText(localizer.text("signal.observation"))
@@ -546,6 +613,7 @@ def launch_didactic_explorer() -> None:
             f"{localizer.text('signal.scientific_boundary')}<br><br>"
             f"{localizer.text('signal.not_shown')}"
         )
+        update_signal_comparison_display()
 
         beam_heading.setText(localizer.text("beam.title"))
         beam_question.setText(
@@ -584,6 +652,9 @@ def launch_didactic_explorer() -> None:
         "duration_slider": duration_slider,
         "bandwidth": bandwidth,
         "bandwidth_slider": bandwidth_slider,
+        "set_baseline": signal_set_baseline,
+        "clear_baseline": signal_clear_baseline,
+        "comparison_readout": signal_comparison_readout,
         "reset": signal_reset,
     }
     window.hydrosim_beam_controls = {
