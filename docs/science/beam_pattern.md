@@ -1,6 +1,6 @@
 # One-Way Physical Beam Pattern
 
-Version: 0.1.0
+Version: 0.1.1
 
 ## Purpose
 
@@ -107,7 +107,7 @@ The initial regression tests include:
 
 ## Current scope
 
-Implemented:
+Implemented in this one-way layer:
 
 - identical rectangular elements;
 - far-field narrowband element factor;
@@ -117,12 +117,20 @@ Implemented:
 - deterministic across-track angular scans;
 - sampled peak and interpolated half-power beamwidth.
 
-Not yet implemented:
+Implemented in the subsequent beam-pattern layer:
+
+- independent transmit and receive one-way responses;
+- explicit TX × RX two-way complex-field composition;
+- independent TX/RX array orientations and local-frame direction transforms;
+- generic support for orthogonal apertures, including Mills-Cross configurations.
+
+See `docs/science/two_way_beam_pattern.md` and `src/hydrosim/acquisition/two_way_pattern.py`.
+
+Not yet implemented in the physical beam-pattern family:
 
 - automatic sidelobe classification;
 - automatic null classification;
 - grating-lobe classification across an arbitrary scan;
-- transmit × receive two-way pattern;
 - unequal element dimensions or orientations inside one array;
 - mutual coupling;
 - element-to-element calibration errors;
@@ -132,7 +140,7 @@ Not yet implemented:
 
 ## Architectural consequence
 
-The next physical composition is not a replacement for the current one-way pattern. A Mills-Cross or other MBES two-way angular response will combine explicit transmit and receive responses, conceptually
+The one-way pattern remains a reusable physical layer rather than being replaced by two-way composition. A Mills-Cross or other sonar configuration combines explicit transmit and receive responses as
 
 \[
 B_{2way}(\mathbf u)=B_{Tx}(\mathbf u)\,B_{Rx}(\mathbf u),
