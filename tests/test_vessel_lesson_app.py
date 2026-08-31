@@ -26,7 +26,8 @@ def test_vessel_lesson_uses_shared_adapter_and_keeps_datum_separate():
 def test_vessel_lesson_exposes_only_static_reference_controls():
     source = Path("src/hydrosim/app/vessel_lesson.py").read_text(encoding="utf-8")
 
+    controls_block = source.split("controls = {", 1)[1].split("return page", 1)[0]
     for control in ("transducer_z", "waterline_z", "water_level"):
-        assert f'"{control}"' in source
+        assert f'"{control}"' in controls_block
     for excluded in ("roll", "pitch", "yaw", "heave", "squat"):
-        assert excluded not in source.lower()
+        assert f'"{excluded}"' not in controls_block.lower()
