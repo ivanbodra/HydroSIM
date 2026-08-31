@@ -19,6 +19,9 @@ from .layered_svp_explorer import (
 )
 
 
+PROCESSING_SVP_SUPPORT_DEPTH_M = 11_000.0
+
+
 @dataclass(frozen=True)
 class PropagationExplorerControls:
     """Small control state for the first SVP/refraction lesson."""
@@ -46,7 +49,12 @@ class PropagationExplorerControls:
             raise ValueError("beam_count must be an odd integer >= 3")
 
 
-def _profile(*, controls: PropagationExplorerControls, lower_speed_mps: float) -> LayeredSoundSpeedProfile:
+def _profile(
+    *,
+    controls: PropagationExplorerControls,
+    lower_speed_mps: float,
+    bottom_depth_m: float,
+) -> LayeredSoundSpeedProfile:
     return LayeredSoundSpeedProfile(
         layers=(
             SoundSpeedLayer(
@@ -56,7 +64,7 @@ def _profile(*, controls: PropagationExplorerControls, lower_speed_mps: float) -
             ),
             SoundSpeedLayer(
                 top_depth_m=controls.interface_depth_m,
-                bottom_depth_m=controls.terrain_depth_m,
+                bottom_depth_m=bottom_depth_m,
                 sound_speed_mps=lower_speed_mps,
             ),
         )
@@ -71,6 +79,10 @@ def prepare_propagation_explorer_snapshot(
     Truth is fixed to a two-layer water column. The learner changes only the
     lower-layer sound speed used in processing, so the visualization isolates a
     processing-SVP mismatch while the physical Truth rays remain unchanged.
+
+    The synthetic Processing SVP is explicitly extended to 11,000 m with the
+    deepest configured sound speed held constant. This is Configured processing
+    support, not Truth or an additional observed profile measurement.
     """
 
     state = controls or PropagationExplorerControls()
@@ -79,11 +91,13 @@ def prepare_propagation_explorer_snapshot(
     truth_profile = _profile(
         controls=state,
         lower_speed_mps=state.lower_layer_sound_speed_mps,
+        bottom_depth_m=state.terrain_depth_m,
     )
     processing_profile = _profile(
         controls=state,
         lower_speed_mps=state.lower_layer_sound_speed_mps
         + state.processing_lower_layer_bias_mps,
+        bottom_depth_m=max(state.terrain_depth_m, PROCESSING_SVP_SUPPORT_DEPTH_M),
     )
 
     step = 2.0 * state.maximum_beam_angle_deg / (state.beam_count - 1)
