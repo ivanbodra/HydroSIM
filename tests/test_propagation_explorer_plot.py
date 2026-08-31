@@ -24,6 +24,16 @@ def test_propagation_renderer_builds_three_causal_panels():
     plt.close(figure)
 
 
+def test_propagation_renderer_limits_processing_profile_display_to_truth_water_column():
+    import matplotlib.pyplot as plt
+
+    snapshot = prepare_propagation_explorer_snapshot()
+    figure, axes = plot_layered_svp_explorer_snapshot(snapshot)
+
+    assert max(float(value) for value in axes[0].lines[1].get_ydata()) == 60.0
+    plt.close(figure)
+
+
 def test_propagation_renderer_redraws_existing_axes_for_processing_bias():
     import matplotlib.pyplot as plt
 
