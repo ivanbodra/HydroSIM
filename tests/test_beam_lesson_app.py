@@ -12,18 +12,15 @@ def _source() -> str:
 def test_beam_visible_copy_is_routed_through_localization() -> None:
     source = _source()
 
-    expected = (
-        'beam_heading.setText(localizer.text("beam.title"))',
-        'beam_question_text = localizer.text("beam.question")',
-        'beam_instruction.setText(localizer.text("beam.instruction"))',
-        'beam_frequency_label.setText(localizer.text("beam.frequency"))',
-        'beam_elements_label.setText(localizer.text("beam.elements_per_arm"))',
-        'beam_observation.setText(localizer.text("beam.observation"))',
-        'localizer.text("beam.scientific_boundary")',
-        'localizer.text("beam.not_shown")',
-    )
-    for snippet in expected:
-        assert snippet in source
+    assert 'beam_heading.setText(localizer.text("beam.title"))' in source
+    assert "beam_question.setText(" in source
+    assert "localizer.text('beam.question')" in source
+    assert 'beam_instruction.setText(localizer.text("beam.instruction"))' in source
+    assert 'beam_frequency_label.setText(localizer.text("beam.frequency"))' in source
+    assert 'beam_elements_label.setText(localizer.text("beam.elements_per_arm"))' in source
+    assert 'beam_observation.setText(localizer.text("beam.observation"))' in source
+    assert "localizer.text('beam.scientific_boundary')" in source
+    assert "localizer.text('beam.not_shown')" in source
 
 
 def test_beam_quantitative_readout_uses_localized_labels() -> None:
