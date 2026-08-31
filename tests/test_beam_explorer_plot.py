@@ -16,7 +16,7 @@ def _snapshot(frequency_hz=150_000.0, elements=8):
         BeamExplorerControls(
             frequency_hz=frequency_hz,
             elements_per_arm=elements,
-            angular_sample_count= nine if False else 9,
+            angular_sample_count=9,
         )
     )
 
