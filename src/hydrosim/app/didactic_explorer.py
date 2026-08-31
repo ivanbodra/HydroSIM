@@ -6,6 +6,7 @@ calculations remain in the Scientific Core and visualization composition layers.
 
 from __future__ import annotations
 
+from hydrosim.app.localization import Localizer
 from hydrosim.visualization import (
     BeamExplorerControls,
     PropagationExplorerControls,
@@ -39,6 +40,7 @@ def launch_didactic_explorer() -> None:
         from PySide6.QtCore import Qt
         from PySide6.QtWidgets import (
             QApplication,
+            QComboBox,
             QDoubleSpinBox,
             QFormLayout,
             QFrame,
@@ -68,26 +70,35 @@ def launch_didactic_explorer() -> None:
 
     app = QApplication.instance() or QApplication([])
     window = QMainWindow()
-    window.setWindowTitle("HydroSIM — Didactic Explorer")
     window.resize(1440, 860)
 
     central = QWidget()
     root = QVBoxLayout(central)
-    root.setContentsMargins(14, 14, 14, 14)
+    root.setContentsMargins(18, 16, 18, 16)
     root.setSpacing(10)
-    title = QLabel("HydroSIM — Didactic Explorer")
-    title.setStyleSheet("font-size: 22px; font-weight: 600;")
-    root.addWidget(title)
-    root.addWidget(QLabel("Change one physical control. See what changes. Understand why."))
+
+    header = QHBoxLayout()
+    header_text = QVBoxLayout()
+    title = QLabel()
+    title.setStyleSheet("font-size: 23px; font-weight: 650;")
+    tagline = QLabel()
+    tagline.setStyleSheet("color: #53616d;")
+    header_text.addWidget(title)
+    header_text.addWidget(tagline)
+    header.addLayout(header_text)
+    header.addStretch(1)
+    language_label = QLabel()
+    language_selector = QComboBox()
+    language_selector.addItem("EN", "en")
+    language_selector.addItem("PT-BR", "pt-BR")
+    language_selector.setMinimumWidth(86)
+    header.addWidget(language_label)
+    header.addWidget(language_selector)
+    root.addLayout(header)
 
     splitter = QSplitter(Qt.Orientation.Horizontal)
     navigation = QListWidget()
     navigation.setMaximumWidth(210)
-    for index, (lesson, _description) in enumerate(_LESSONS):
-        suffix = "  • ready" if index in {0, 1, 2} else "  • planned"
-        item = QListWidgetItem(lesson + suffix)
-        item.setData(Qt.ItemDataRole.UserRole, lesson)
-        navigation.addItem(item)
     splitter.addWidget(navigation)
     pages = QStackedWidget()
     splitter.addWidget(pages)
@@ -97,74 +108,120 @@ def launch_didactic_explorer() -> None:
     # Signal lesson ---------------------------------------------------------
     signal_page = QWidget()
     signal_root = QVBoxLayout(signal_page)
-    signal_heading = QLabel("Signal — CW versus LFM chirp")
+    signal_root.setContentsMargins(12, 4, 8, 4)
+    signal_root.setSpacing(10)
+
+    signal_heading = QLabel()
     signal_heading.setStyleSheet("font-size: 20px; font-weight: 600;")
     signal_root.addWidget(signal_heading)
-    question = QLabel(
-        "<b>Learning question:</b> How do pulse duration and LFM bandwidth change "
-        "the transmitted baseband signal and its pulse-compression response?"
+
+    question_frame = QFrame()
+    question_frame.setObjectName("learningQuestion")
+    question_frame.setStyleSheet(
+        "QFrame#learningQuestion { background: #eef6f8; border-radius: 8px; padding: 4px; }"
     )
+    question_layout = QVBoxLayout(question_frame)
+    question_label = QLabel()
+    question_label.setStyleSheet("font-size: 12px; font-weight: 650; color: #3f5962;")
+    question = QLabel()
     question.setWordWrap(True)
-    signal_root.addWidget(question)
-    context = QLabel(
-        "Scientific view: deterministic complex analytic/baseband waveform + normalized "
-        "autocorrelation. Carrier frequency is fixed at 300 kHz in this lesson because "
-        "the current baseband plots do not show a physical consequence of changing it."
-    )
-    context.setWordWrap(True)
-    signal_root.addWidget(context)
+    question.setStyleSheet("font-size: 18px; font-weight: 550;")
+    question_layout.addWidget(question_label)
+    question_layout.addWidget(question)
+    signal_root.addWidget(question_frame)
+
     signal_layout = QHBoxLayout()
+    signal_layout.setSpacing(14)
     signal_root.addLayout(signal_layout, 1)
+
     controls_frame = QFrame()
-    controls_frame.setMaximumWidth(315)
+    controls_frame.setMaximumWidth(320)
+    controls_frame.setMinimumWidth(275)
+    controls_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     controls_layout = QVBoxLayout(controls_frame)
-    controls_layout.addWidget(QLabel("Try it"))
-    instruction = QLabel(
-        "Change one control at a time. Watch the phase panel and the width of the "
-        "matched-filter peak."
-    )
+    controls_layout.setContentsMargins(14, 14, 14, 14)
+    try_it_label = QLabel()
+    try_it_label.setStyleSheet("font-size: 16px; font-weight: 650;")
+    controls_layout.addWidget(try_it_label)
+    instruction = QLabel()
     instruction.setWordWrap(True)
     controls_layout.addWidget(instruction)
+
     form = QFormLayout()
+    duration_label = QLabel()
     duration = QDoubleSpinBox()
     duration.setRange(0.1, 5.0)
     duration.setSingleStep(0.1)
     duration.setDecimals(1)
     duration.setValue(_SIGNAL_DEFAULTS.duration_seconds * 1e3)
     duration.setSuffix(" ms")
-    form.addRow("Pulse duration", duration)
+    form.addRow(duration_label, duration)
     duration_slider = QSlider(Qt.Orientation.Horizontal)
     duration_slider.setRange(1, 50)
     duration_slider.setValue(round(duration.value() * 10.0))
     form.addRow("", duration_slider)
+
+    bandwidth_label = QLabel()
     bandwidth = QDoubleSpinBox()
     bandwidth.setRange(10.0, 300.0)
     bandwidth.setSingleStep(10.0)
     bandwidth.setDecimals(0)
     bandwidth.setValue(_SIGNAL_DEFAULTS.lfm_bandwidth_hz / 1e3)
     bandwidth.setSuffix(" kHz")
-    form.addRow("LFM bandwidth", bandwidth)
+    form.addRow(bandwidth_label, bandwidth)
     bandwidth_slider = QSlider(Qt.Orientation.Horizontal)
     bandwidth_slider.setRange(10, 300)
     bandwidth_slider.setValue(round(bandwidth.value()))
     form.addRow("", bandwidth_slider)
     controls_layout.addLayout(form)
-    signal_reset = QPushButton("Reset lesson")
+
+    signal_reset = QPushButton()
+    signal_reset.setMinimumHeight(34)
     controls_layout.addWidget(signal_reset)
-    signal_observation = QLabel(
-        "<b>What to look for</b><br>Pulse duration changes pulse extent. LFM bandwidth "
-        "changes chirp phase evolution and the compressed response.<br><br>"
-        "<b>Not shown yet:</b> frequency-dependent absorption, electronics, noise, and a "
-        "general wave-equation field solution."
-    )
-    signal_observation.setWordWrap(True)
-    controls_layout.addWidget(signal_observation)
     controls_layout.addStretch(1)
     signal_layout.addWidget(controls_frame)
+
     cw, lfm = prepare_signal_explorer_comparison(_SIGNAL_DEFAULTS)
     signal_figure, signal_axes = plot_signal_explorer_comparison(cw, lfm)
     signal_canvas = FigureCanvas(signal_figure)
     signal_layout.addWidget(signal_canvas, 1)
+
+    learning_footer = QHBoxLayout()
+    learning_footer.setSpacing(10)
+
+    observation_frame = QFrame()
+    observation_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
+    observation_layout = QVBoxLayout(observation_frame)
+    observation_title = QLabel()
+    observation_title.setStyleSheet("font-weight: 650;")
+    signal_observation = QLabel()
+    signal_observation.setWordWrap(True)
+    observation_layout.addWidget(observation_title)
+    observation_layout.addWidget(signal_observation)
+    learning_footer.addWidget(observation_frame, 2)
+
+    quantitative_frame = QFrame()
+    quantitative_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
+    quantitative_layout = QVBoxLayout(quantitative_frame)
+    quantitative_title = QLabel()
+    quantitative_title.setStyleSheet("font-weight: 650;")
+    signal_readout = QLabel()
+    signal_readout.setWordWrap(True)
+    quantitative_layout.addWidget(quantitative_title)
+    quantitative_layout.addWidget(signal_readout)
+    learning_footer.addWidget(quantitative_frame, 1)
+
+    boundary_frame = QFrame()
+    boundary_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
+    boundary_layout = QVBoxLayout(boundary_frame)
+    boundary_title = QLabel()
+    boundary_title.setStyleSheet("font-weight: 650;")
+    boundary_text = QLabel()
+    boundary_text.setWordWrap(True)
+    boundary_layout.addWidget(boundary_title)
+    boundary_layout.addWidget(boundary_text)
+    learning_footer.addWidget(boundary_frame, 1)
+    signal_root.addLayout(learning_footer)
 
     def redraw_signal() -> None:
         bandwidth_hz = bandwidth.value() * 1e3
@@ -176,6 +233,14 @@ def launch_didactic_explorer() -> None:
         )
         new_cw, new_lfm = prepare_signal_explorer_comparison(state)
         draw_signal_explorer_comparison(new_cw, new_lfm, signal_axes)
+        time_bandwidth = state.duration_seconds * state.lfm_bandwidth_hz
+        reciprocal_bandwidth_us = 1e6 / state.lfm_bandwidth_hz
+        signal_readout.setText(
+            f"T = {state.duration_seconds * 1e3:.1f} ms<br>"
+            f"B = {state.lfm_bandwidth_hz / 1e3:.0f} kHz<br>"
+            f"TB = {time_bandwidth:.1f}<br>"
+            f"1/B = {reciprocal_bandwidth_us:.1f} μs"
+        )
         signal_canvas.draw_idle()
 
     duration.valueChanged.connect(
@@ -428,13 +493,16 @@ def launch_didactic_explorer() -> None:
     pages.addWidget(propagation_page)
 
     # Planned slices --------------------------------------------------------
+    planned_headings: list[QLabel] = []
+    planned_labels: list[QLabel] = []
     for lesson, description in _LESSONS[3:]:
         page = QWidget()
         layout = QVBoxLayout(page)
         heading = QLabel(lesson)
         heading.setStyleSheet("font-size: 20px; font-weight: 600;")
         layout.addWidget(heading)
-        layout.addWidget(QLabel("Planned learning block"))
+        planned = QLabel("Planned learning block")
+        layout.addWidget(planned)
         body = QLabel(
             description + "\n\nThis view remains unavailable until its first end-to-end "
             "learning slice is integrated and tested."
@@ -442,14 +510,75 @@ def launch_didactic_explorer() -> None:
         body.setWordWrap(True)
         layout.addWidget(body)
         layout.addStretch(1)
+        planned_headings.append(heading)
+        planned_labels.append(planned)
         pages.addWidget(page)
 
+    def apply_language(locale: str) -> None:
+        """Update presentation text without touching simulation controls or state."""
+
+        localizer = Localizer(locale)
+        window.setWindowTitle(localizer.text("app.title"))
+        title.setText(localizer.text("app.title"))
+        tagline.setText(localizer.text("app.tagline"))
+        language_label.setText(localizer.text("common.language"))
+
+        nav_keys = ("signal", "beam", "propagation", "vessel", "motion")
+        for index, key in enumerate(nav_keys):
+            status_key = "status.ready" if index in {0, 1, 2} else "status.planned"
+            navigation.item(index).setText(
+                f"{localizer.text(f'nav.{key}')}  • {localizer.text(status_key)}"
+            )
+
+        signal_heading.setText(localizer.text("signal.title"))
+        question_label.setText(localizer.text("common.learning_question").upper())
+        question.setText(localizer.text("signal.question_focus"))
+        try_it_label.setText(localizer.text("common.try_it"))
+        instruction.setText(localizer.text("signal.instruction"))
+        duration_label.setText(localizer.text("signal.pulse_duration"))
+        bandwidth_label.setText(localizer.text("signal.lfm_bandwidth"))
+        signal_reset.setText(localizer.text("common.reset"))
+        observation_title.setText(localizer.text("common.what_to_look_for"))
+        signal_observation.setText(localizer.text("signal.observation"))
+        quantitative_title.setText(localizer.text("common.quantitative"))
+        boundary_title.setText(localizer.text("common.scientific_boundary"))
+        boundary_text.setText(
+            f"{localizer.text('signal.scientific_boundary')}<br><br>"
+            f"{localizer.text('signal.not_shown')}"
+        )
+
+        beam_heading.setText(localizer.text("beam.title"))
+        beam_question.setText(
+            f"<b>{localizer.text('common.learning_question')}:</b> "
+            f"{localizer.text('beam.question')}"
+        )
+        propagation_heading.setText(localizer.text("propagation.title"))
+        propagation_question.setText(
+            f"<b>{localizer.text('common.learning_question')}:</b> "
+            f"{localizer.text('propagation.question')}"
+        )
+        planned_headings[0].setText(localizer.text("nav.vessel"))
+        planned_headings[1].setText(localizer.text("nav.motion"))
+
+    def on_language_changed(_index: int) -> None:
+        apply_language(str(language_selector.currentData()))
+
+    language_selector.currentIndexChanged.connect(on_language_changed)
     navigation.currentRowChanged.connect(pages.setCurrentIndex)
+    for index, (lesson, _description) in enumerate(_LESSONS):
+        item = QListWidgetItem(lesson + ("  • ready" if index in {0, 1, 2} else "  • planned"))
+        item.setData(Qt.ItemDataRole.UserRole, lesson)
+        navigation.addItem(item)
+
     navigation.setCurrentRow(0)
+    redraw_signal()
+    apply_language("en")
+
     window.setCentralWidget(central)
     window.show()
     window.hydrosim_pages = pages
     window.hydrosim_navigation = navigation
+    window.hydrosim_language_selector = language_selector
     window.hydrosim_signal_controls = {
         "duration": duration,
         "duration_slider": duration_slider,
