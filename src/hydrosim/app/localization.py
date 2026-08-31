@@ -33,6 +33,10 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "common.language": "Language",
         "common.english": "English",
         "common.portuguese": "Português",
+        "common.baseline": "Baseline",
+        "common.current": "Current",
+        "common.set_baseline": "Set baseline",
+        "common.clear_baseline": "Clear baseline",
         "signal.title": "Signal — CW versus LFM chirp",
         "signal.question": (
             "How do pulse duration and LFM bandwidth change the transmitted baseband "
@@ -50,6 +54,14 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "signal.not_shown": (
             "Frequency-dependent absorption, electronics, noise, and a general wave-equation "
             "field solution are not represented in this lesson."
+        ),
+        "signal.compare_hint": (
+            "Freeze the current controls as a teaching baseline, then change one parameter "
+            "to compare the current state against it."
+        ),
+        "signal.baseline_empty": "No teaching baseline is currently frozen.",
+        "signal.baseline_note": (
+            "Baseline and Current are pedagogical comparison states, not HydroSIM scientific states."
         ),
         "beam.title": "Beam — frequency, wavelength, aperture, and footprint",
         "beam.question": (
@@ -83,6 +95,10 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "common.language": "Idioma",
         "common.english": "English",
         "common.portuguese": "Português",
+        "common.baseline": "Referência",
+        "common.current": "Atual",
+        "common.set_baseline": "Fixar referência",
+        "common.clear_baseline": "Limpar referência",
         "signal.title": "Sinal — CW versus chirp LFM",
         "signal.question": (
             "Como a duração do pulso e a largura de banda LFM alteram o sinal transmitido "
@@ -102,6 +118,14 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "signal.not_shown": (
             "Absorção dependente da frequência, eletrônica, ruído e uma solução geral de campo "
             "pela equação de onda não são representados nesta aula."
+        ),
+        "signal.compare_hint": (
+            "Fixe os controles atuais como referência didática e depois altere um parâmetro "
+            "para comparar o estado atual com essa referência."
+        ),
+        "signal.baseline_empty": "Nenhuma referência didática está fixada no momento.",
+        "signal.baseline_note": (
+            "Referência e Atual são estados de comparação pedagógica, não estados científicos do HydroSIM."
         ),
         "beam.title": "Feixe — frequência, comprimento de onda, abertura e footprint",
         "beam.question": (
