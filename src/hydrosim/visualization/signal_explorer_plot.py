@@ -54,12 +54,7 @@ def draw_signal_explorer_comparison(
     *,
     clear: bool = True,
 ):
-    """Draw a CW-versus-LFM comparison into three existing Matplotlib axes.
-
-    This is the stable renderer boundary used by interactive/application shells.
-    It only interprets already-computed snapshot state; it does not calculate
-    waveform, sampling, matched-filter, propagation, or attenuation physics.
-    """
+    """Draw a CW-versus-LFM comparison into three existing Matplotlib axes."""
 
     if len(axes) != 3:
         raise ValueError("Signal Explorer rendering requires exactly three axes")
@@ -86,30 +81,26 @@ def draw_signal_explorer_comparison(
 
     waveform_axis.axhline(0.0, linewidth=0.8)
     waveform_axis.set_xlabel(f"Pulse time ({unit})")
-    waveform_axis.set_ylabel("In-phase baseband component")
-    waveform_axis.set_title("Transmitted waveform: complex baseband")
-    waveform_axis.legend()
+    waveform_axis.set_ylabel("In-phase baseband")
+    waveform_axis.set_title("Transmitted waveform")
+    waveform_axis.legend(loc="upper right")
+    waveform_axis.grid(alpha=0.18)
 
     phase_axis.set_xlabel(f"Pulse time ({unit})")
-    phase_axis.set_ylabel("Unwrapped phase (rad)")
+    phase_axis.set_ylabel("Phase (rad)")
     phase_axis.set_title("Phase evolution")
-    phase_axis.legend()
+    phase_axis.legend(loc="upper left")
+    phase_axis.grid(alpha=0.18)
 
     matched_axis.axvline(0.0, linewidth=0.8)
     matched_axis.set_xlabel(f"Matched-filter lag ({unit})")
     matched_axis.set_ylabel("Normalized amplitude")
     matched_axis.set_title("Pulse-compression response")
     matched_axis.set_ylim(bottom=0.0)
-    matched_axis.legend()
+    matched_axis.legend(loc="upper right")
+    matched_axis.grid(alpha=0.18)
 
-    cw_frequency_khz = float(cw.pulse.center_frequency_hz) / 1e3
-    lfm_center_khz = float(lfm.pulse.center_frequency_hz) / 1e3
-    lfm_bandwidth_khz = float(lfm.pulse.bandwidth_hz) / 1e3
-    waveform_axis.figure.suptitle(
-        "HydroSIM Didactic Explorer — CW versus chirp\n"
-        f"CW: {cw_frequency_khz:g} kHz | "
-        f"LFM: {lfm_center_khz:g} kHz center, {lfm_bandwidth_khz:g} kHz bandwidth"
-    )
+    waveform_axis.figure.subplots_adjust(left=0.08, right=0.985, bottom=0.10, top=0.95)
     return axes
 
 
@@ -117,7 +108,7 @@ def plot_signal_explorer_comparison(
     first: SignalExplorerSnapshot,
     second: SignalExplorerSnapshot,
 ):
-    """Create a standalone three-panel CW-versus-chirp comparison figure."""
+    """Create a standalone CW-versus-chirp comparison figure."""
 
     try:
         import matplotlib.pyplot as plt
@@ -127,12 +118,12 @@ def plot_signal_explorer_comparison(
             "install HydroSIM with the 'visualization' extra"
         ) from exc
 
-    figure = plt.figure(figsize=(13.5, 4.8))
-    grid = figure.add_gridspec(1, 3, wspace=0.32)
+    figure = plt.figure(figsize=(12.8, 7.0))
+    grid = figure.add_gridspec(2, 2, height_ratios=(1.05, 1.0), hspace=0.34, wspace=0.26)
     axes = (
-        figure.add_subplot(grid[0, 0]),
-        figure.add_subplot(grid[0, 1]),
-        figure.add_subplot(grid[0, 2]),
+        figure.add_subplot(grid[0, :]),
+        figure.add_subplot(grid[1, 0]),
+        figure.add_subplot(grid[1, 1]),
     )
     draw_signal_explorer_comparison(first, second, axes, clear=False)
     return figure, axes
