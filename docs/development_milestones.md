@@ -123,20 +123,25 @@ The renderer consumes `SignalExplorerSnapshot` objects and does not recompute wa
 
 ## First interactive Signal Explorer
 
-The first interactive shell adds three deliberately small controls to the CW-versus-chirp lesson:
+The initial interactive prototype demonstrated that the CW-versus-chirp lesson could close a live control loop through the existing Scientific Core and snapshot API. It originally exposed center frequency, pulse duration, and LFM bandwidth.
 
-- center frequency;
+The subsequent user-experience review identified an important teaching-contract problem: center frequency is part of the waveform definition, but the current complex-baseband plots do not show a meaningful consequence of changing it. Exposing that parameter as an active control therefore invited interaction without an observable physical result.
+
+The integrated Signal lesson now keeps center frequency fixed as explicit context and exposes only:
+
 - pulse duration;
 - LFM bandwidth.
 
-Every slider change rebuilds CW and LFM snapshots through the existing composition API and redraws the same three didactic panels. The UI therefore changes inputs but does not own waveform or matched-filter physics.
+Both controls have slider and exact numeric-entry affordances, update immediately, and can be reset to the lesson defaults. The page also states the learning question, tells the learner what to look for, identifies the scientific representation, and declares important phenomena that are not yet shown.
 
-The sample rate remains an implementation/numerical concern in this first interaction and is automatically kept above the LFM complex-baseband Nyquist limit. Center frequency is exposed as part of the waveform definition, but no propagation consequence is implied yet: frequency-dependent attenuation will only appear after a referenced absorption model is connected to the Scientific Core.
-
-This is the first HydroSIM experience to close the intended teaching loop:
+This refines the teaching loop from merely interactive to pedagogically causal:
 
 ```text
-control -> scientific model -> observable consequence
+learning question
+    -> meaningful control
+    -> scientific model
+    -> observable consequence
+    -> interpretation boundary
 ```
 
 ## Decision: introduce the application shell now
@@ -181,6 +186,14 @@ control state
 
 The application is directly launchable after installing visualization dependencies through either `hydrosim-didactic` or `python -m hydrosim.app`. This marks the transition from a collection of scientific/visual components to an executable product shell that can receive subsequent vertical slices.
 
+## Didactic Explorer user-experience contract
+
+The product experience is now explicitly documented in `docs/architecture/didactic_explorer_experience.md`. The central design decision is that HydroSIM should feel like an interactive scientific lesson rather than a parameter-dense sonar configuration screen.
+
+A first-release lesson must make four things immediately clear: the learning question, the meaningful control, the observable consequence, and the scientific representation/fidelity boundary. Every active control must change something the learner can actually observe in that lesson.
+
+This decision also introduces progressive disclosure as a product rule: advanced parameters should appear only when they can be interpreted in the active causal chain. Planned learning blocks remain visible in navigation but are clearly marked as planned rather than appearing operational.
+
 ## Recent repository milestones
 
 | Commit | Milestone | Importance |
@@ -200,18 +213,20 @@ The application is directly launchable after installing visualization dependenci
 | `15cc615` | Add first Didactic Explorer application shell | Created the integrated PySide6 application window. |
 | `5bb33ef` | Stabilize Signal Explorer redraw boundary | Introduced the reusable in-place renderer used by interactive shells. |
 | `aaa32a3` | Add Didactic Explorer command | Made the desktop application directly launchable after visualization installation. |
+| `64b4ddf` | Define Didactic Explorer user experience contract | Formalized guided-learning and progressive-disclosure rules. |
+| `2455e39` | Test guided Didactic Explorer experience | Added checks for meaningful controls, guidance, reset, and planned-state labeling. |
 
 ## Current development direction
 
-HydroSIM now has a runnable application shell and a stable Signal snapshot-to-renderer boundary. The immediate product-integration objective has therefore been reached without expanding the scientific core merely for interface work.
+HydroSIM now has a runnable application shell, a stable snapshot-to-renderer boundary, and an explicit user-experience contract. The immediate objective is no longer to add interface surface area, but to integrate the next learning question end to end under the same rules.
 
 Near-term sequence:
 
-1. keep the application shell intentionally small while integrating only proven vertical slices;
-2. implement frequency-dependent acoustic absorption using published, traceable models rather than a HydroSIM-specific law;
-3. connect center frequency to a real observable propagation consequence in the application;
-4. integrate the existing beam/transducer models as the next visual learning slice where they answer a clear teaching question;
-5. continue through propagation/SVP -> vessel/sensors -> motion -> integrated acquisition.
+1. preserve the guided-learning contract while completing the Signal lesson;
+2. connect frequency to a real observable consequence only after a referenced frequency-dependent absorption model is available, or expose frequency first in the Beam lesson where wavelength/array effects are already represented;
+3. integrate the existing beam/transducer models as the next vertical slice with a small number of meaningful controls;
+4. continue through propagation/SVP -> vessel/sensors -> motion -> integrated acquisition;
+5. keep advanced configuration for the Survey Simulator or progressive-disclosure views rather than putting every parameter on the first didactic screen.
 
 ## When to update this log
 
