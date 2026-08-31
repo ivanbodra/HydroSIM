@@ -1,9 +1,10 @@
-"""Composition layer for the first HydroSIM Beam Explorer lesson.
+"""Composition layer for the HydroSIM Beam Explorer lesson.
 
 No new acoustic physics is introduced here. The snapshot is assembled from the
-existing Mills-Cross geometry and two-way angular-pattern model. Because the
-first lesson displays only the two principal planes, it evaluates two thin scans
-rather than computing an unused dense 2-D field on every interactive update.
+existing Mills-Cross two-way angular-pattern and flat-seafloor footprint models.
+The lesson evaluates principal-plane scans only, keeping interactive updates
+lightweight while exposing the causal chain from frequency/aperture to beamwidth
+and seafloor footprint.
 """
 
 from __future__ import annotations
@@ -12,18 +13,25 @@ from dataclasses import dataclass
 from math import pi
 
 from hydrosim.acquisition import AngularPattern2DScan, scan_mills_cross_two_way_pattern_2d
+from hydrosim.acquisition.footprint import (
+    FlatSeafloorFootprintModel,
+    InsonifiedFootprint,
+    estimate_flat_seafloor_footprint,
+)
 from hydrosim.geometry import make_reference_mills_cross
 
 
 @dataclass(frozen=True)
 class BeamExplorerControls:
-    """Small control state for the first beam-pattern lesson."""
+    """Small control state for the first complete beam-pattern lesson."""
 
     frequency_hz: float = 150_000.0
     elements_per_arm: int = 16
     sound_speed_mps: float = 1500.0
     element_spacing_m: float = 0.005
     element_size_m: float = 0.004
+    seafloor_depth_m: float = 30.0
+    pulse_duration_seconds: float = 1e-3
     angular_extent_deg: float = 60.0
     angular_sample_count: int = 121
 
@@ -38,6 +46,10 @@ class BeamExplorerControls:
             raise ValueError("element_spacing_m must be positive")
         if self.element_size_m <= 0.0:
             raise ValueError("element_size_m must be positive")
+        if self.seafloor_depth_m <= 0.0:
+            raise ValueError("seafloor_depth_m must be positive")
+        if self.pulse_duration_seconds <= 0.0:
+            raise ValueError("pulse_duration_seconds must be positive")
         if not 0.0 < self.angular_extent_deg < 90.0:
             raise ValueError("angular_extent_deg must lie between 0 and 90 degrees")
         if self.angular_sample_count < 3 or self.angular_sample_count % 2 == 0:
@@ -46,7 +58,7 @@ class BeamExplorerControls:
 
 @dataclass(frozen=True)
 class BeamExplorerSnapshot:
-    """Render-ready state for a symmetric reference Mills-Cross lesson."""
+    """Render-ready state for the reference Mills-Cross beam lesson."""
 
     controls: BeamExplorerControls
     along_track_scan: AngularPattern2DScan
@@ -54,12 +66,62 @@ class BeamExplorerSnapshot:
     wavelength_m: float
     spacing_over_wavelength: float
     element_center_span_m: float
+    along_track_half_power_beamwidth_rad: float
+    across_track_half_power_beamwidth_rad: float
+    nadir_footprint: InsonifiedFootprint
+
+
+def _principal_samples(scan: AngularPattern2DScan, *, axis: str):
+    n_along = len(scan.along_track_angles_rad)
+    n_across = len(scan.across_track_angles_rad)
+    if axis == "along":
+        j = n_across // 2
+        return (
+            [float(scan.along_track_angles_rad[i]) for i in range(n_along)],
+            [float(scan.samples[i * n_across + j].normalized_amplitude) ** 2 for i in range(n_along)],
+        )
+    if axis == "across":
+        i = n_along // 2
+        return (
+            [float(scan.across_track_angles_rad[j]) for j in range(n_across)],
+            [float(scan.samples[i * n_across + j].normalized_amplitude) ** 2 for j in range(n_across)],
+        )
+    raise ValueError("axis must be 'along' or 'across'")
+
+
+def _half_power_beamwidth(scan: AngularPattern2DScan, *, axis: str) -> float:
+    """Derive the local -3 dB width from the existing normalized two-way scan."""
+
+    angles, power = _principal_samples(scan, axis=axis)
+    peak_index = max(range(len(power)), key=power.__getitem__)
+    target = 0.5 * power[peak_index]
+
+    def crossing(i0: int, i1: int) -> float:
+        a0, a1 = angles[i0], angles[i1]
+        p0, p1 = power[i0], power[i1]
+        if p1 == p0:
+            return 0.5 * (a0 + a1)
+        return a0 + (target - p0) * (a1 - a0) / (p1 - p0)
+
+    left = None
+    for i in range(peak_index, 0, -1):
+        if power[i] >= target and power[i - 1] < target:
+            left = crossing(i - 1, i)
+            break
+    right = None
+    for i in range(peak_index, len(power) - 1):
+        if power[i] >= target and power[i + 1] < target:
+            right = crossing(i, i + 1)
+            break
+    if left is None or right is None:
+        raise ValueError("half-power crossings are outside the Beam Explorer scan")
+    return right - left
 
 
 def prepare_beam_explorer_snapshot(
     controls: BeamExplorerControls | None = None,
 ) -> BeamExplorerSnapshot:
-    """Build one beam-pattern lesson snapshot from existing scientific models."""
+    """Build beam pattern, -3 dB widths, and nadir footprint from existing models."""
 
     state = controls or BeamExplorerControls()
     state.validate()
@@ -99,6 +161,19 @@ def prepare_beam_explorer_snapshot(
         **common,
     )
     wavelength = state.sound_speed_mps / state.frequency_hz
+    along_width = _half_power_beamwidth(along_track_scan, axis="along")
+    across_width = _half_power_beamwidth(across_track_scan, axis="across")
+    footprint = estimate_flat_seafloor_footprint(
+        model=FlatSeafloorFootprintModel(
+            transmit_along_track_beamwidth_rad=along_width,
+            receive_across_track_beamwidth_rad=across_width,
+        ),
+        vertical_separation_m=state.seafloor_depth_m,
+        transmit_along_track_center_angle_rad=0.0,
+        incidence_angle_from_normal_rad=0.0,
+        pulse_duration_seconds=state.pulse_duration_seconds,
+        sound_speed_mps=state.sound_speed_mps,
+    )
     return BeamExplorerSnapshot(
         controls=state,
         along_track_scan=along_track_scan,
@@ -106,4 +181,7 @@ def prepare_beam_explorer_snapshot(
         wavelength_m=wavelength,
         spacing_over_wavelength=state.element_spacing_m / wavelength,
         element_center_span_m=(state.elements_per_arm - 1) * state.element_spacing_m,
+        along_track_half_power_beamwidth_rad=along_width,
+        across_track_half_power_beamwidth_rad=across_width,
+        nadir_footprint=footprint,
     )
