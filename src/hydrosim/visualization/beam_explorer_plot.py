@@ -136,7 +136,7 @@ def draw_beam_explorer_snapshot(snapshot: BeamExplorerSnapshot, axes) -> None:
     along_bw = degrees(snapshot.along_track_half_power_beamwidth_rad)
     across_bw = degrees(snapshot.across_track_half_power_beamwidth_rad)
     axes[0].figure.suptitle(
-        "HydroSIM Didactic Explorer — frequency × aperture × steering → beam pattern → footprint\n"
+        "HydroSIM Didactic Explorer — frequency × aperture × steering → beamwidth → footprint\n"
         f"{frequency_khz:g} kHz | λ={wavelength_mm:.2f} mm | d/λ={snapshot.spacing_over_wavelength:.2f} | "
         f"steering={snapshot.controls.across_track_steering_angle_deg:+.0f}° | "
         f"-3 dB: {along_bw:.2f}° × {across_bw:.2f}°"
