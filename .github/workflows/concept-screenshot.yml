@@ -53,10 +53,18 @@ jobs:
       - name: Verify screenshots
         shell: bash
         run: |
-          test -s assets/screenshots/signal-waveform-lab.png
-          test -s assets/screenshots/beam-directivity-lab.png
-          file assets/screenshots/signal-waveform-lab.png
-          file assets/screenshots/beam-directivity-lab.png
+          files=(
+            signal-waveform-lab.png
+            beam-directivity-lab.png
+            propagation-water-column-lab.png
+            vessel-sensors-lab.png
+            motion-platform-lab.png
+            integrated-survey-lab.png
+          )
+          for image in "${files[@]}"; do
+            test -s "assets/screenshots/$image"
+            file "assets/screenshots/$image"
+          done
 
       - name: Upload concept screenshot artifact
         uses: actions/upload-artifact@v4
