@@ -27,6 +27,11 @@ _LESSON_ROWS = {
 def _apply_capture_scenario(window, lesson: str | None) -> None:
     """Set a visible representative state when evidence benefits from non-default controls."""
 
+    if lesson == "Beam":
+        controls = window.hydrosim_beam_controls
+        controls["spacing"].setValue(7.5)
+        controls["steering"].setValue(20.0)
+        return
     if lesson != "Motion":
         return
     controls = window.hydrosim_motion_controls

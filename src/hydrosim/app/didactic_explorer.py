@@ -404,68 +404,106 @@ def launch_didactic_explorer() -> None:
     # Beam lesson -----------------------------------------------------------
     beam_page = QWidget()
     beam_root = QVBoxLayout(beam_page)
-    beam_heading = QLabel("Beam — frequency, wavelength, aperture, and footprint")
+    beam_root.setContentsMargins(8, 2, 4, 2)
+    beam_root.setSpacing(6)
+    beam_heading = QLabel()
     beam_heading.setStyleSheet("font-size: 20px; font-weight: 600;")
     beam_root.addWidget(beam_heading)
-    beam_question = QLabel(
-        "<b>Learning question:</b> How do frequency and aperture change beamwidth and the "
-        "resulting -3 dB footprint on a flat seabed?"
-    )
+    beam_question = QLabel()
     beam_question.setWordWrap(True)
     beam_root.addWidget(beam_question)
-    beam_context = QLabel(
-        "Scientific view: normalized narrowband far-field TX/RX array response plus the "
-        "existing flat-bottom beamwidth footprint approximation at fixed depth."
-    )
+    beam_context = QLabel()
     beam_context.setWordWrap(True)
+    beam_context.setStyleSheet("color: #53616d; font-size: 11px;")
     beam_root.addWidget(beam_context)
     beam_layout = QHBoxLayout()
+    beam_layout.setSpacing(10)
     beam_root.addLayout(beam_layout, 1)
     beam_controls_frame = QFrame()
-    beam_controls_frame.setMaximumWidth(315)
+    beam_controls_frame.setMaximumWidth(340)
+    beam_controls_frame.setMinimumWidth(300)
+    beam_controls_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     beam_controls = QVBoxLayout(beam_controls_frame)
-    beam_instruction = QLabel(
-        "Change frequency first, then the number of elements. Compare main-lobe width "
-        "and the footprint dimensions."
-    )
+    beam_controls.setContentsMargins(10, 8, 10, 8)
+    beam_controls.setSpacing(6)
+    beam_try_it = QLabel()
+    beam_try_it.setStyleSheet("font-size: 14px; font-weight: 650;")
+    beam_controls.addWidget(beam_try_it)
+    beam_instruction = QLabel()
     beam_instruction.setWordWrap(True)
+    beam_instruction.setStyleSheet("color: #53616d; font-size: 11px;")
     beam_controls.addWidget(beam_instruction)
     beam_form = QFormLayout()
+    beam_form.setVerticalSpacing(5)
+    beam_form.setHorizontalSpacing(8)
+
+    beam_frequency_label = QLabel()
     beam_frequency = QDoubleSpinBox()
     beam_frequency.setRange(75.0, 300.0)
     beam_frequency.setSingleStep(5.0)
     beam_frequency.setDecimals(0)
     beam_frequency.setValue(_BEAM_DEFAULTS.frequency_hz / 1e3)
     beam_frequency.setSuffix(" kHz")
-    beam_form.addRow("Frequency", beam_frequency)
+    beam_form.addRow(beam_frequency_label, beam_frequency)
     beam_frequency_slider = QSlider(Qt.Orientation.Horizontal)
     beam_frequency_slider.setRange(75, 300)
     beam_frequency_slider.setValue(round(beam_frequency.value()))
     beam_form.addRow("", beam_frequency_slider)
+
+    beam_elements_label = QLabel()
     beam_elements = QSpinBox()
     beam_elements.setRange(4, 32)
     beam_elements.setValue(_BEAM_DEFAULTS.elements_per_arm)
-    beam_form.addRow("Elements per arm", beam_elements)
+    beam_form.addRow(beam_elements_label, beam_elements)
     beam_elements_slider = QSlider(Qt.Orientation.Horizontal)
     beam_elements_slider.setRange(4, 32)
     beam_elements_slider.setValue(beam_elements.value())
     beam_form.addRow("", beam_elements_slider)
+
+    beam_spacing_label = QLabel()
+    beam_spacing = QDoubleSpinBox()
+    beam_spacing.setRange(1.0, 15.0)
+    beam_spacing.setSingleStep(0.5)
+    beam_spacing.setDecimals(1)
+    beam_spacing.setValue(_BEAM_DEFAULTS.element_spacing_m * 1e3)
+    beam_spacing.setSuffix(" mm")
+    beam_form.addRow(beam_spacing_label, beam_spacing)
+    beam_spacing_slider = QSlider(Qt.Orientation.Horizontal)
+    beam_spacing_slider.setRange(10, 150)
+    beam_spacing_slider.setValue(round(beam_spacing.value() * 10.0))
+    beam_form.addRow("", beam_spacing_slider)
+
+    beam_steering_label = QLabel()
+    beam_steering = QDoubleSpinBox()
+    beam_steering.setRange(-45.0, 45.0)
+    beam_steering.setSingleStep(1.0)
+    beam_steering.setDecimals(0)
+    beam_steering.setValue(_BEAM_DEFAULTS.across_track_steering_angle_deg)
+    beam_steering.setSuffix("°")
+    beam_form.addRow(beam_steering_label, beam_steering)
+    beam_steering_slider = QSlider(Qt.Orientation.Horizontal)
+    beam_steering_slider.setRange(-45, 45)
+    beam_steering_slider.setValue(round(beam_steering.value()))
+    beam_form.addRow("", beam_steering_slider)
     beam_controls.addLayout(beam_form)
-    beam_reset = QPushButton("Reset lesson")
+
+    beam_geometry = QLabel()
+    beam_geometry.setWordWrap(True)
+    beam_geometry.setStyleSheet("font-size: 11px; font-weight: 550;")
+    beam_controls.addWidget(beam_geometry)
+    beam_reset = QPushButton()
     beam_controls.addWidget(beam_reset)
     beam_readout = QLabel()
     beam_readout.setWordWrap(True)
+    beam_readout.setStyleSheet("font-size: 10px;")
     beam_controls.addWidget(beam_readout)
-    beam_note = QLabel(
-        "<b>What to look for</b><br>Higher frequency shortens wavelength. More elements "
-        "increase aperture. Narrower -3 dB beamwidths reduce the approximate nadir footprint."
-        "<br><br><b>Not shown yet:</b> steering, refraction, multisector transmission, "
-        "bottom scattering, or vendor-specific transducer geometry."
-    )
+    beam_note = QLabel()
     beam_note.setWordWrap(True)
+    beam_note.setStyleSheet("font-size: 10px;")
     beam_controls.addWidget(beam_note)
     beam_controls.addStretch(1)
     beam_layout.addWidget(beam_controls_frame)
+
     beam_snapshot = prepare_beam_explorer_snapshot(_BEAM_DEFAULTS)
     beam_figure, beam_axes = plot_beam_explorer_snapshot(beam_snapshot)
     beam_canvas = FigureCanvas(beam_figure)
@@ -476,45 +514,98 @@ def launch_didactic_explorer() -> None:
             frequency_hz=beam_frequency.value() * 1e3,
             elements_per_arm=beam_elements.value(),
             sound_speed_mps=_BEAM_DEFAULTS.sound_speed_mps,
-            element_spacing_m=_BEAM_DEFAULTS.element_spacing_m,
+            element_spacing_m=beam_spacing.value() * 1e-3,
             element_size_m=_BEAM_DEFAULTS.element_size_m,
             angular_extent_deg=_BEAM_DEFAULTS.angular_extent_deg,
             angular_sample_count=_BEAM_DEFAULTS.angular_sample_count,
             seafloor_depth_m=_BEAM_DEFAULTS.seafloor_depth_m,
+            pulse_duration_seconds=_BEAM_DEFAULTS.pulse_duration_seconds,
+            across_track_steering_angle_deg=beam_steering.value(),
         )
         snapshot = prepare_beam_explorer_snapshot(state)
         draw_beam_explorer_snapshot(snapshot, beam_axes)
+        localizer = Localizer(str(language_selector.currentData() or "en"))
+        steering = state.across_track_steering_angle_deg
+        if steering > 0.0:
+            direction = localizer.text("beam.port")
+        elif steering < 0.0:
+            direction = localizer.text("beam.starboard")
+        else:
+            direction = localizer.text("beam.nadir")
+        across_bw_deg = snapshot.across_track_half_power_beamwidth_rad * 180.0 / 3.141592653589793
         beam_readout.setText(
-            f"λ = {snapshot.wavelength_m * 1e3:.2f} mm<br>"
-            f"d/λ = {snapshot.spacing_over_wavelength:.2f}<br>"
-            f"-3 dB beamwidth = {snapshot.along_track_beamwidth_deg:.2f}°<br>"
-            f"Footprint = {snapshot.footprint.beam_limited_along_track_width_m:.2f} × "
-            f"{snapshot.footprint.beam_limited_across_track_width_m:.2f} m"
+            f"{localizer.text('beam.wavelength')}: {snapshot.wavelength_m * 1e3:.2f} mm<br>"
+            f"{localizer.text('beam.spacing_ratio')}: {snapshot.spacing_over_wavelength:.2f}<br>"
+            f"{localizer.text('beam.aperture_span')}: {snapshot.element_center_span_m * 1e3:.1f} mm<br>"
+            f"{localizer.text('beam.beamwidth')}: {snapshot.along_track_beamwidth_deg:.2f}° × "
+            f"{across_bw_deg:.2f}°<br>"
+            f"{localizer.text('beam.footprint')}: "
+            f"{snapshot.footprint.beam_limited_along_track_width_m:.2f} × "
+            f"{snapshot.footprint.beam_limited_across_track_width_m:.2f} m<br>"
+            f"{localizer.text('beam.steering_direction')}: {direction} ({steering:+.0f}°)<br>"
+            f"{localizer.text('beam.seabed_offset')}: "
+            f"{snapshot.steered_across_track_center_offset_m:+.2f} m"
         )
         beam_canvas.draw_idle()
 
+    def sync_beam_spinbox_to_slider(spinbox, slider, scale: float) -> None:
+        target = round(spinbox.value() * scale)
+        if slider.value() != target:
+            slider.blockSignals(True)
+            slider.setValue(target)
+            slider.blockSignals(False)
+        redraw_beam()
+
+    def sync_beam_slider_to_spinbox(slider, spinbox, scale: float) -> None:
+        target = slider.value() / scale
+        if spinbox.value() != target:
+            spinbox.blockSignals(True)
+            spinbox.setValue(target)
+            spinbox.blockSignals(False)
+        redraw_beam()
+
     beam_frequency.valueChanged.connect(
-        lambda value: beam_frequency_slider.setValue(round(value))
-        if beam_frequency_slider.value() != round(value)
-        else redraw_beam()
+        lambda _value: sync_beam_spinbox_to_slider(beam_frequency, beam_frequency_slider, 1.0)
     )
     beam_frequency_slider.valueChanged.connect(
-        lambda value: beam_frequency.setValue(float(value))
-        if beam_frequency.value() != float(value)
-        else None
+        lambda _value: sync_beam_slider_to_spinbox(beam_frequency_slider, beam_frequency, 1.0)
     )
     beam_elements.valueChanged.connect(
-        lambda value: beam_elements_slider.setValue(value)
-        if beam_elements_slider.value() != value
-        else redraw_beam()
+        lambda _value: sync_beam_spinbox_to_slider(beam_elements, beam_elements_slider, 1.0)
     )
     beam_elements_slider.valueChanged.connect(
-        lambda value: beam_elements.setValue(value) if beam_elements.value() != value else None
+        lambda _value: sync_beam_slider_to_spinbox(beam_elements_slider, beam_elements, 1.0)
+    )
+    beam_spacing.valueChanged.connect(
+        lambda _value: sync_beam_spinbox_to_slider(beam_spacing, beam_spacing_slider, 10.0)
+    )
+    beam_spacing_slider.valueChanged.connect(
+        lambda _value: sync_beam_slider_to_spinbox(beam_spacing_slider, beam_spacing, 10.0)
+    )
+    beam_steering.valueChanged.connect(
+        lambda _value: sync_beam_spinbox_to_slider(beam_steering, beam_steering_slider, 1.0)
+    )
+    beam_steering_slider.valueChanged.connect(
+        lambda _value: sync_beam_slider_to_spinbox(beam_steering_slider, beam_steering, 1.0)
     )
 
     def reset_beam() -> None:
+        beam_frequency.blockSignals(True)
+        beam_elements.blockSignals(True)
+        beam_spacing.blockSignals(True)
+        beam_steering.blockSignals(True)
         beam_frequency.setValue(_BEAM_DEFAULTS.frequency_hz / 1e3)
         beam_elements.setValue(_BEAM_DEFAULTS.elements_per_arm)
+        beam_spacing.setValue(_BEAM_DEFAULTS.element_spacing_m * 1e3)
+        beam_steering.setValue(_BEAM_DEFAULTS.across_track_steering_angle_deg)
+        beam_frequency.blockSignals(False)
+        beam_elements.blockSignals(False)
+        beam_spacing.blockSignals(False)
+        beam_steering.blockSignals(False)
+        beam_frequency_slider.setValue(round(beam_frequency.value()))
+        beam_elements_slider.setValue(beam_elements.value())
+        beam_spacing_slider.setValue(round(beam_spacing.value() * 10.0))
+        beam_steering_slider.setValue(round(beam_steering.value()))
         redraw_beam()
 
     beam_reset.clicked.connect(reset_beam)
@@ -675,6 +766,27 @@ def launch_didactic_explorer() -> None:
             f"<b>{localizer.text('common.learning_question')}:</b> "
             f"{localizer.text('beam.question')}"
         )
+        beam_context.setText(
+            f"<b>{localizer.text('common.scientific_view')}:</b> "
+            f"{localizer.text('beam.scientific_view')}"
+        )
+        beam_try_it.setText(localizer.text("common.try_it"))
+        beam_instruction.setText(localizer.text("beam.instruction"))
+        beam_frequency_label.setText(localizer.text("beam.frequency"))
+        beam_elements_label.setText(localizer.text("beam.elements_per_arm"))
+        beam_spacing_label.setText(localizer.text("beam.element_spacing"))
+        beam_steering_label.setText(localizer.text("beam.steering"))
+        beam_geometry.setText(localizer.text("beam.geometry"))
+        beam_reset.setText(localizer.text("common.reset"))
+        beam_note.setText(
+            f"<b>{localizer.text('common.what_to_look_for')}:</b> "
+            f"{localizer.text('beam.observation')}<br><br>"
+            f"<b>{localizer.text('common.scientific_boundary')}:</b> "
+            f"{localizer.text('beam.boundary')}<br><br>"
+            f"<b>{localizer.text('common.not_shown_yet')}:</b> {localizer.text('beam.not_shown')}"
+        )
+        redraw_beam()
+
         propagation_heading.setText(localizer.text("propagation.title"))
         propagation_question.setText(
             f"<b>{localizer.text('common.learning_question')}:</b> "
@@ -720,6 +832,12 @@ def launch_didactic_explorer() -> None:
         "frequency_slider": beam_frequency_slider,
         "elements": beam_elements,
         "elements_slider": beam_elements_slider,
+        "spacing": beam_spacing,
+        "spacing_slider": beam_spacing_slider,
+        "steering": beam_steering,
+        "steering_slider": beam_steering_slider,
+        "readout": beam_readout,
+        "geometry": beam_geometry,
         "reset": beam_reset,
     }
     window.hydrosim_propagation_controls = {

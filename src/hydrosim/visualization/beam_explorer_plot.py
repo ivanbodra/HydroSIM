@@ -22,16 +22,26 @@ def _power_db(amplitude: np.ndarray, floor_db: float = -40.0) -> np.ndarray:
 def _principal_plane_samples(scan, *, varying_axis: str):
     n_along = len(scan.along_track_angles_rad)
     n_across = len(scan.across_track_angles_rad)
+    peak_along_index = min(
+        range(n_along),
+        key=lambda index: abs(
+            float(scan.along_track_angles_rad[index]) - float(scan.peak_along_track_angle_rad)
+        ),
+    )
+    peak_across_index = min(
+        range(n_across),
+        key=lambda index: abs(
+            float(scan.across_track_angles_rad[index]) - float(scan.peak_across_track_angle_rad)
+        ),
+    )
     if varying_axis == "along":
-        center_across = n_across // 2
         return (
-            [scan.samples[i * n_across + center_across] for i in range(n_along)],
+            [scan.samples[i * n_across + peak_across_index] for i in range(n_along)],
             np.array([degrees(float(v)) for v in scan.along_track_angles_rad]),
         )
     if varying_axis == "across":
-        center_along = n_along // 2
         return (
-            [scan.samples[center_along * n_across + j] for j in range(n_across)],
+            [scan.samples[peak_along_index * n_across + j] for j in range(n_across)],
             np.array([degrees(float(v)) for v in scan.across_track_angles_rad]),
         )
     raise ValueError("varying_axis must be 'along' or 'across'")
@@ -104,8 +114,9 @@ def draw_beam_explorer_snapshot(snapshot: BeamExplorerSnapshot, axes) -> None:
     along_width = float(fp.beam_limited_along_track_width_m)
     across_width = float(fp.effective_across_track_width_m)
     margin = 2.5 * max(along_width, across_width)
+    projected_center = -float(snapshot.steered_across_track_center_offset_m)
     footprint_axis.set_xlim(-margin, margin)
-    footprint_axis.set_ylim(-margin, margin)
+    footprint_axis.set_ylim(projected_center - margin, projected_center + margin)
     footprint_axis.set_aspect("equal", adjustable="box")
     footprint_axis.set_xlabel("Along-track (m)")
     footprint_axis.set_ylabel("Across-track (m)")
@@ -113,7 +124,8 @@ def draw_beam_explorer_snapshot(snapshot: BeamExplorerSnapshot, axes) -> None:
     footprint_axis.text(
         0.5,
         0.04,
-        f"-3 dB ≈ {along_width:.2f} m × {across_width:.2f} m\narea ≈ {float(fp.effective_area_m2):.2f} m²",
+        f"-3 dB ≈ {along_width:.2f} m × {across_width:.2f} m\n"
+        f"steering={snapshot.controls.across_track_steering_angle_deg:+.0f}°",
         transform=footprint_axis.transAxes,
         ha="center",
         va="bottom",
@@ -124,8 +136,9 @@ def draw_beam_explorer_snapshot(snapshot: BeamExplorerSnapshot, axes) -> None:
     along_bw = degrees(snapshot.along_track_half_power_beamwidth_rad)
     across_bw = degrees(snapshot.across_track_half_power_beamwidth_rad)
     axes[0].figure.suptitle(
-        "HydroSIM Didactic Explorer — frequency × aperture → beamwidth → footprint\n"
+        "HydroSIM Didactic Explorer — frequency × aperture × steering → beamwidth → footprint\n"
         f"{frequency_khz:g} kHz | λ={wavelength_mm:.2f} mm | d/λ={snapshot.spacing_over_wavelength:.2f} | "
+        f"steering={snapshot.controls.across_track_steering_angle_deg:+.0f}° | "
         f"-3 dB: {along_bw:.2f}° × {across_bw:.2f}°"
     )
 
