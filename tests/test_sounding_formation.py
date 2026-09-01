@@ -3,6 +3,8 @@ import pytest
 from hydrosim.acquisition.bottom_detection import BottomDetection
 from hydrosim.acquisition.models import AcquisitionPing
 from hydrosim.app.sounding_formation import (
+    D8ObservationAssociation,
+    D8ObservationState,
     STAGE_ORDER,
     SoundingFormationSnapshot,
     SoundingFormationStage,
@@ -39,6 +41,7 @@ def _snapshot() -> SoundingFormationSnapshot:
     )
     detection = BottomDetection(
         parent_beam_index=0,
+        detection_index=2,
         detection_method="amplitude_peak",
         arrival_offset_seconds=0.04,
         tx_delay_seconds=0.0,
@@ -52,7 +55,7 @@ def _snapshot() -> SoundingFormationSnapshot:
         beam_direction=Vector3(x=0.0, y=0.0, z=1.0),
         slant_range=30.0,
     )
-    observed = SoundingState(
+    reconstructed = SoundingState(
         point=Vector3(x=0.0, y=0.0, z=30.0),
         sensor_origin=pose.position,
         beam_direction=Vector3(x=0.0, y=0.0, z=1.0),
@@ -61,7 +64,7 @@ def _snapshot() -> SoundingFormationSnapshot:
     comparison = SoundingComparison(
         beam_index=0,
         true=truth,
-        configured=observed,
+        configured=reconstructed,
         error_vector=Vector3(x=0.0, y=0.0, z=0.0),
         horizontal_error=0.0,
         vertical_error=0.0,
@@ -91,13 +94,56 @@ def test_sounding_formation_stage_order_covers_canonical_chain():
     )
 
 
-def test_sounding_formation_reuses_existing_scientific_outputs_without_recomputation():
+def test_sounding_formation_exposes_measurement_and_reconstruction_without_relabelling():
     snapshot = _snapshot()
 
     assert snapshot.twtt_seconds == 0.04
     assert snapshot.detected_angle_rad == 0.0
     assert snapshot.truth_sounding is snapshot.sounding.true
-    assert snapshot.observed_sounding is snapshot.sounding.configured
+    assert snapshot.reconstructed_sounding is snapshot.sounding.configured
+    assert not hasattr(snapshot, "observed_sounding")
+
+
+def test_d8_observation_state_preserves_truth_observed_configured_derived_boundary():
+    snapshot = _snapshot()
+    state = snapshot.observation_state
+
+    assert state.truth_sounding is snapshot.sounding.true
+    assert state.observation is snapshot.detection
+    assert state.association.ping_index == snapshot.ping.ping_index
+    assert state.association.beam_index == snapshot.beam.definition.index
+    assert state.association.detection_index == snapshot.detection.detection_index
+    assert state.configured_state.processing_pose is snapshot.associated_pose
+    assert state.configured_state.processing_beam is snapshot.beam
+    assert state.reconstructed_sounding is snapshot.sounding.configured
+    assert state.reconstruction_basis == "configured_geometry_reference"
+
+
+def test_d8_observation_state_rejects_mismatched_detection_association():
+    snapshot = _snapshot()
+    state = snapshot.observation_state
+
+    with pytest.raises(ValueError, match="association beam_index"):
+        D8ObservationState(
+            truth_sounding=state.truth_sounding,
+            observation=state.observation,
+            association=D8ObservationAssociation(
+                ping_index=state.association.ping_index,
+                beam_index=1,
+                detection_index=state.association.detection_index,
+            ),
+            configured_state=state.configured_state,
+            reconstructed_sounding=state.reconstructed_sounding,
+        )
+
+
+def test_d8_observation_state_requires_stable_parent_beam_identity():
+    snapshot = _snapshot()
+    detection = snapshot.detection.model_copy(update={"parent_beam_index": None})
+    without_parent = snapshot.model_copy(update={"detection": detection})
+
+    with pytest.raises(ValueError, match="parent_beam_index"):
+        _ = without_parent.observation_state
 
 
 def test_sounding_formation_stage_navigation_preserves_scientific_state():
