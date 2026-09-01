@@ -1,23 +1,25 @@
 """Analytic transmit-waveform primitives for HydroSIM.
 
-The waveform layer is intentionally separate from transducer geometry and sector
-steering. It provides deterministic complex analytic/baseband samples suitable
-for didactic pulse-compression experiments without introducing electronics,
-noise, source level, or calibrated receive amplitude.
-
-Continuous waveform definitions and their discrete numerical realization are kept
-separate. Sampling adequacy is checked explicitly for the represented baseband
-bandwidth before discrete LFM samples are generated.
+The waveform layer keeps the continuous scientific definition separate from its
+numerical realizations. Complex baseband remains the processing representation
+used by matched filtering, while passband sampling is exposed explicitly for
+scientific/didactic display. No projector transfer function, electronics, noise,
+source level, propagation, or calibrated receive amplitude is introduced here.
 """
 
 from __future__ import annotations
 
 from math import pi
+from typing import Literal
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
 from .numerical_resolution import SamplingAdequacy, assess_baseband_sampling
+
+
+EnvelopeModel = Literal["rectangular", "tukey"]
+ChirpDirection = Literal["up", "down"]
 
 
 class ContinuousWavePulse(BaseModel):
@@ -28,10 +30,13 @@ class ContinuousWavePulse(BaseModel):
     name: str = Field(default="cw", min_length=1)
     center_frequency_hz: FiniteFloat = Field(gt=0.0)
     duration_seconds: FiniteFloat = Field(gt=0.0)
+    initial_phase_rad: FiniteFloat = 0.0
+    envelope_model: EnvelopeModel = "rectangular"
+    tukey_alpha: FiniteFloat = Field(default=0.1, ge=0.0, le=1.0)
 
 
 class LinearFMPulse(BaseModel):
-    """Finite-duration linear-FM pulse with symmetric sweep around centre."""
+    """Finite-duration symmetric linear-FM pulse around centre frequency."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -39,18 +44,28 @@ class LinearFMPulse(BaseModel):
     center_frequency_hz: FiniteFloat = Field(gt=0.0)
     bandwidth_hz: FiniteFloat = Field(gt=0.0)
     duration_seconds: FiniteFloat = Field(gt=0.0)
+    chirp_direction: ChirpDirection = "up"
+    initial_phase_rad: FiniteFloat = 0.0
+    envelope_model: EnvelopeModel = "rectangular"
+    tukey_alpha: FiniteFloat = Field(default=0.1, ge=0.0, le=1.0)
 
     @property
     def start_frequency_hz(self) -> float:
-        return float(self.center_frequency_hz) - 0.5 * float(self.bandwidth_hz)
+        half_bandwidth = 0.5 * float(self.bandwidth_hz)
+        if self.chirp_direction == "up":
+            return float(self.center_frequency_hz) - half_bandwidth
+        return float(self.center_frequency_hz) + half_bandwidth
 
     @property
     def end_frequency_hz(self) -> float:
-        return float(self.center_frequency_hz) + 0.5 * float(self.bandwidth_hz)
+        half_bandwidth = 0.5 * float(self.bandwidth_hz)
+        if self.chirp_direction == "up":
+            return float(self.center_frequency_hz) + half_bandwidth
+        return float(self.center_frequency_hz) - half_bandwidth
 
     @property
     def sweep_rate_hz_per_second(self) -> float:
-        return float(self.bandwidth_hz) / float(self.duration_seconds)
+        return (self.end_frequency_hz - self.start_frequency_hz) / float(self.duration_seconds)
 
 
 WaveformPulse = ContinuousWavePulse | LinearFMPulse
@@ -68,12 +83,7 @@ class MatchedFilterSummary(BaseModel):
 
 
 class WaveformAutocorrelation(BaseModel):
-    """Normalized matched-filter response of a waveform to delayed copies of itself.
-
-    ``normalized_amplitude`` is |R_ss(tau)| / R_ss(0). ``normalized_power`` is
-    its square. The result is a discrete numerical realization of a continuous
-    waveform correlation and therefore records its sample rate explicitly.
-    """
+    """Normalized matched-filter response of a waveform to delayed copies of itself."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -84,14 +94,26 @@ class WaveformAutocorrelation(BaseModel):
 
 
 def waveform_sampling_adequacy(pulse: WaveformPulse, *, sample_rate_hz: float) -> SamplingAdequacy:
-    """Return the Nyquist diagnostic for the represented complex baseband pulse.
-
-    A baseband CW pulse is constant and therefore has zero represented baseband
-    frequency. A symmetric LFM of bandwidth B occupies approximately -B/2..+B/2,
-    so the ideal Nyquist condition is ``sample_rate_hz >= B``.
-    """
+    """Return Nyquist adequacy for the represented complex-baseband pulse."""
 
     maximum = 0.0 if isinstance(pulse, ContinuousWavePulse) else 0.5 * float(pulse.bandwidth_hz)
+    return assess_baseband_sampling(
+        sample_rate_hz=sample_rate_hz,
+        maximum_absolute_frequency_hz=maximum,
+    )
+
+
+def waveform_passband_sampling_adequacy(
+    pulse: WaveformPulse,
+    *,
+    sample_rate_hz: float,
+) -> SamplingAdequacy:
+    """Return Nyquist adequacy for a real passband numerical realization."""
+
+    if isinstance(pulse, ContinuousWavePulse):
+        maximum = float(pulse.center_frequency_hz)
+    else:
+        maximum = max(abs(pulse.start_frequency_hz), abs(pulse.end_frequency_hz))
     return assess_baseband_sampling(
         sample_rate_hz=sample_rate_hz,
         maximum_absolute_frequency_hz=maximum,
@@ -107,44 +129,104 @@ def _sample_count(duration_seconds: float, sample_rate_hz: float) -> int:
     return count
 
 
-def sample_cw_baseband(pulse: ContinuousWavePulse, *, sample_rate_hz: float) -> np.ndarray:
-    """Return unit-amplitude complex baseband samples for a CW pulse."""
+def _time_samples(pulse: WaveformPulse, sample_rate_hz: float) -> np.ndarray:
+    count = _sample_count(float(pulse.duration_seconds), sample_rate_hz)
+    return np.arange(count, dtype=float) / float(sample_rate_hz)
+
+
+def sample_waveform_envelope(pulse: WaveformPulse, *, sample_rate_hz: float) -> np.ndarray:
+    """Sample the configured unit-amplitude pulse envelope.
+
+    ``rectangular`` reproduces the previous ideal unit envelope. ``tukey`` is a
+    symmetric finite-rise/fall didactic envelope; it is not a projector impulse
+    response model.
+    """
 
     count = _sample_count(float(pulse.duration_seconds), sample_rate_hz)
-    return np.ones(count, dtype=np.complex128)
+    if pulse.envelope_model == "rectangular" or float(pulse.tukey_alpha) <= 0.0:
+        return np.ones(count, dtype=float)
+
+    alpha = float(pulse.tukey_alpha)
+    if count == 2:
+        return np.zeros(count, dtype=float)
+
+    x = np.arange(count, dtype=float) / float(count - 1)
+    window = np.ones(count, dtype=float)
+    first = x < alpha / 2.0
+    last = x > 1.0 - alpha / 2.0
+    window[first] = 0.5 * (1.0 + np.cos(pi * (2.0 * x[first] / alpha - 1.0)))
+    window[last] = 0.5 * (
+        1.0 + np.cos(pi * (2.0 * x[last] / alpha - 2.0 / alpha + 1.0))
+    )
+    return window
+
+
+def sample_waveform_instantaneous_frequency(
+    pulse: WaveformPulse,
+    *,
+    sample_rate_hz: float,
+) -> np.ndarray:
+    """Sample the physical instantaneous frequency over pulse support."""
+
+    t = _time_samples(pulse, sample_rate_hz)
+    if isinstance(pulse, ContinuousWavePulse):
+        return np.full(t.size, float(pulse.center_frequency_hz), dtype=float)
+    return pulse.start_frequency_hz + float(pulse.sweep_rate_hz_per_second) * t
+
+
+def sample_cw_baseband(pulse: ContinuousWavePulse, *, sample_rate_hz: float) -> np.ndarray:
+    """Return complex baseband samples for a finite CW pulse."""
+
+    envelope = sample_waveform_envelope(pulse, sample_rate_hz=sample_rate_hz)
+    phase = float(pulse.initial_phase_rad)
+    return envelope.astype(np.complex128) * np.exp(1j * phase)
 
 
 def sample_lfm_baseband(pulse: LinearFMPulse, *, sample_rate_hz: float) -> np.ndarray:
-    """Return unit-amplitude complex baseband samples for a centred LFM pulse.
-
-    With local time tau measured from pulse centre, the complex baseband phase is
-
-        phi(tau) = pi * k * tau^2,
-
-    where k = bandwidth / duration. The instantaneous baseband frequency is
-    k*tau and therefore sweeps from approximately -B/2 to +B/2.
-    """
+    """Return complex centred-baseband samples for a signed LFM pulse."""
 
     adequacy = waveform_sampling_adequacy(pulse, sample_rate_hz=sample_rate_hz)
     if not adequacy.meets_nyquist:
         raise ValueError(
             "sample_rate_hz is below the Nyquist rate for the represented LFM baseband bandwidth"
         )
-    count = _sample_count(float(pulse.duration_seconds), sample_rate_hz)
+    t = _time_samples(pulse, sample_rate_hz)
     duration = float(pulse.duration_seconds)
-    sweep_rate = float(pulse.sweep_rate_hz_per_second)
-    t = np.arange(count, dtype=float) / float(sample_rate_hz)
     tau = t - 0.5 * duration
-    phase = pi * sweep_rate * tau * tau
-    return np.exp(1j * phase)
+    phase = pi * float(pulse.sweep_rate_hz_per_second) * tau * tau + float(pulse.initial_phase_rad)
+    envelope = sample_waveform_envelope(pulse, sample_rate_hz=sample_rate_hz)
+    return envelope.astype(np.complex128) * np.exp(1j * phase)
 
 
 def sample_waveform_baseband(pulse: WaveformPulse, *, sample_rate_hz: float) -> np.ndarray:
-    """Sample either supported analytic/baseband pulse."""
+    """Sample either supported complex-baseband pulse."""
 
     if isinstance(pulse, ContinuousWavePulse):
         return sample_cw_baseband(pulse, sample_rate_hz=sample_rate_hz)
     return sample_lfm_baseband(pulse, sample_rate_hz=sample_rate_hz)
+
+
+def sample_waveform_passband(pulse: WaveformPulse, *, sample_rate_hz: float) -> np.ndarray:
+    """Return the real unit-amplitude acoustic/passband waveform realization.
+
+    This numerical trace is intended for scientific/didactic passband display.
+    Its sample rate is independent of the lower processing/baseband sample rate.
+    """
+
+    adequacy = waveform_passband_sampling_adequacy(pulse, sample_rate_hz=sample_rate_hz)
+    if not adequacy.meets_nyquist:
+        raise ValueError("sample_rate_hz is below the Nyquist rate for the passband waveform")
+
+    t = _time_samples(pulse, sample_rate_hz)
+    envelope = sample_waveform_envelope(pulse, sample_rate_hz=sample_rate_hz)
+    if isinstance(pulse, ContinuousWavePulse):
+        phase = 2.0 * pi * float(pulse.center_frequency_hz) * t + float(pulse.initial_phase_rad)
+    else:
+        k = float(pulse.sweep_rate_hz_per_second)
+        phase = 2.0 * pi * (pulse.start_frequency_hz * t + 0.5 * k * t * t) + float(
+            pulse.initial_phase_rad
+        )
+    return envelope * np.cos(phase)
 
 
 def waveform_autocorrelation(
@@ -152,12 +234,7 @@ def waveform_autocorrelation(
     *,
     sample_rate_hz: float,
 ) -> WaveformAutocorrelation:
-    """Return the normalized matched-filter autocorrelation envelope and power.
-
-    The result is discrete at the waveform sampling interval. It intentionally
-    represents waveform/matched-filter physics only; no receiver bandwidth,
-    analogue electronics, sampling jitter, noise or detection threshold is added.
-    """
+    """Return the normalized matched-filter autocorrelation envelope and power."""
 
     reference = sample_waveform_baseband(pulse, sample_rate_hz=sample_rate_hz)
     raw = np.correlate(reference, reference, mode="full")
@@ -183,13 +260,7 @@ def matched_filter(
     *,
     sample_rate_hz: float,
 ) -> tuple[np.ndarray, MatchedFilterSummary]:
-    """Correlate a received analytic signal with a known reference waveform.
-
-    The returned correlation is normalized by the reference energy so a perfect,
-    unit-amplitude copy has peak amplitude 1. The lag convention follows
-    ``numpy.correlate(received, reference, mode='full')``: positive lag means the
-    received copy occurs later than the reference origin.
-    """
+    """Correlate a received analytic signal with a known reference waveform."""
 
     if sample_rate_hz <= 0.0:
         raise ValueError("sample_rate_hz must be positive")
