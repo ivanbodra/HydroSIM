@@ -58,11 +58,49 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "signal.baseline_note": (
             "Baseline and Current are pedagogical comparison states, not HydroSIM scientific states."
         ),
-        "beam.title": "Beam — frequency, wavelength, aperture, and footprint",
+        "beam.title": "Beam — pattern, steering, and footprint",
         "beam.question": (
-            "How do frequency and aperture change beamwidth and the resulting -3 dB "
-            "footprint on a flat seabed?"
+            "How do frequency, aperture, element spacing, and steering change the two-way "
+            "beam pattern and its footprint on a flat seabed?"
         ),
+        "beam.scientific_view": (
+            "Normalized narrowband far-field Mills-Cross TX × RX response with the existing "
+            "flat-seafloor footprint model at fixed depth."
+        ),
+        "beam.instruction": (
+            "Change one control at a time. Watch the principal-plane patterns and the modeled "
+            "seafloor response update immediately."
+        ),
+        "beam.frequency": "Frequency",
+        "beam.elements_per_arm": "Elements per arm",
+        "beam.element_spacing": "Element spacing",
+        "beam.steering": "Across-track steering",
+        "beam.geometry": (
+            "Mills-Cross geometry: TX arm controls the along-track pattern; RX arm controls "
+            "the across-track pattern. The displayed two-way beam is TX × RX."
+        ),
+        "beam.observation": (
+            "Higher frequency or a larger aperture narrows the main lobe. Spacing changes the "
+            "array sampling relative to wavelength. Steering moves the modeled beam away from nadir."
+        ),
+        "beam.boundary": (
+            "Steering uses the canonical sensor-frame convention: 0° = +Z normal, positive = "
+            "Port (-Y), negative = Starboard (+Y)."
+        ),
+        "beam.not_shown": (
+            "Refraction, multisector transmission, dual-head geometry, bottom scattering, "
+            "weighting, and vendor-specific transducer geometry are outside this lesson."
+        ),
+        "beam.wavelength": "Wavelength",
+        "beam.spacing_ratio": "Spacing / wavelength",
+        "beam.aperture_span": "Element-center span",
+        "beam.beamwidth": "-3 dB beamwidth (along × across)",
+        "beam.footprint": "Nadir footprint",
+        "beam.steering_direction": "Steering direction",
+        "beam.seabed_offset": "Signed seabed center offset",
+        "beam.nadir": "Nadir",
+        "beam.port": "Port",
+        "beam.starboard": "Starboard",
         "propagation.title": "Propagation — SVP mismatch and reconstructed swath",
         "propagation.question": (
             "What happens when the water column is physically unchanged, but the "
@@ -142,11 +180,50 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "signal.baseline_note": (
             "Referência e Atual são estados de comparação pedagógica, não estados científicos do HydroSIM."
         ),
-        "beam.title": "Feixe — frequência, comprimento de onda, abertura e footprint",
+        "beam.title": "Feixe — padrão, direcionamento e footprint",
         "beam.question": (
-            "Como a frequência e a abertura alteram a largura do feixe e o footprint de "
-            "-3 dB resultante sobre um fundo plano?"
+            "Como frequência, abertura, espaçamento dos elementos e direcionamento alteram o "
+            "padrão bidirecional do feixe e seu footprint sobre um fundo plano?"
         ),
+        "beam.scientific_view": (
+            "Resposta Mills-Cross TX × RX normalizada, narrowband e de campo distante, usando "
+            "o modelo existente de footprint sobre fundo plano em profundidade fixa."
+        ),
+        "beam.instruction": (
+            "Altere um controle por vez. Observe a atualização imediata dos padrões nos planos "
+            "principais e da resposta modelada no fundo."
+        ),
+        "beam.frequency": "Frequência",
+        "beam.elements_per_arm": "Elementos por braço",
+        "beam.element_spacing": "Espaçamento dos elementos",
+        "beam.steering": "Direcionamento transversal",
+        "beam.geometry": (
+            "Geometria Mills-Cross: o braço TX controla o padrão longitudinal; o braço RX "
+            "controla o padrão transversal. O feixe bidirecional exibido é TX × RX."
+        ),
+        "beam.observation": (
+            "Maior frequência ou maior abertura estreita o lóbulo principal. O espaçamento altera "
+            "a amostragem do array em relação ao comprimento de onda. O direcionamento desloca "
+            "o feixe modelado para fora do nadir."
+        ),
+        "beam.boundary": (
+            "O direcionamento usa a convenção canônica do frame do sensor: 0° = normal +Z, "
+            "positivo = Bombordo (-Y), negativo = Boreste (+Y)."
+        ),
+        "beam.not_shown": (
+            "Refração, transmissão multissetorial, geometria dual-head, espalhamento no fundo, "
+            "weighting e geometria específica de fabricante estão fora desta aula."
+        ),
+        "beam.wavelength": "Comprimento de onda",
+        "beam.spacing_ratio": "Espaçamento / comprimento de onda",
+        "beam.aperture_span": "Extensão entre centros dos elementos",
+        "beam.beamwidth": "Largura -3 dB (longitudinal × transversal)",
+        "beam.footprint": "Footprint no nadir",
+        "beam.steering_direction": "Direção do direcionamento",
+        "beam.seabed_offset": "Deslocamento assinado do centro no fundo",
+        "beam.nadir": "Nadir",
+        "beam.port": "Bombordo",
+        "beam.starboard": "Boreste",
         "propagation.title": "Propagação — erro de SVP e faixa reconstruída",
         "propagation.question": (
             "O que acontece quando a coluna d'água permanece fisicamente inalterada, mas "
