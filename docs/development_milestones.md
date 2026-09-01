@@ -1,6 +1,6 @@
 # HydroSIM Development Milestones
 
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 ## Purpose
 
@@ -91,7 +91,7 @@ Enabling Matplotlib execution in CI exposed a real renderer defect: the plotting
 
 A comparison with the NOAA/UNH Pydro/HydrOffice sound-speed workflow reinforced an existing HydroSIM boundary: a finite measured sound-speed profile must not be silently extrapolated beyond its support. HydrOffice treats profile extension as an explicit operation and can use climatology, model output, or a reference cast.
 
-For the Didactic Explorer, this operational observation led to a useful new teaching model rather than a generic extrapolation rule. Below the maximum supplied depth `z_m`, the first environmental extension holds the deepest temperature and salinity constant while pressure continues to vary with depth and latitude:
+For the Didactic Explorer, this operational observation led to a useful future teaching model rather than a generic extrapolation rule. Below the maximum supplied depth `z_m`, the first environmental extension holds the deepest temperature and salinity constant while pressure continues to vary with depth and latitude:
 
 ```text
 T(z > z_m) = T_m
@@ -100,17 +100,18 @@ P = P(z, latitude)
 c = c(T_m, S_m, P)
 ```
 
-The reference seawater sound-speed formulation is Wong & Zhu (1995), correcting Chen & Millero (1977), with TEOS-10/GSW preferred for pressure/depth conversion where practical.
+The reference seawater sound-speed formulation is Wong & Zhu (1995), correcting Chen & Millero (1977). The Technical Lead approved Python `gsw` for TEOS-10/GSW-consistent pressure/depth conversion when this increment is scheduled.
 
 A second explicit mode holds sound speed constant below `z_m`. Its purpose is didactic comparison, not physical preference. The learner can therefore see that constant temperature and salinity do not imply constant sound speed because pressure continues to change with depth.
 
 The state boundary is equally important: supplied environmental samples remain Observed or Configured; extrapolated T/S are Estimated; pressure is Derived; and the resulting sound speed and ray/reconstruction are Derived. The extrapolated region must never appear as measured data.
 
-The generic layered Snell solver remains strict and finite-domain. Environmental extension is constructed explicitly before tracing. This preserves the scientific meaning of the profile while allowing the Propagation Explorer to teach both environmental physics and the consequences of extrapolation assumptions.
+The generic layered Snell solver remains strict and finite-domain. Environmental extension is constructed explicitly before tracing.
+
+This scientific model is specified but **deferred until after v0.1**. Issues #34 and #35 were closed as `not_planned` for the current release after Technical Lead sequencing; Issue #36 records the approved `gsw` dependency decision. The bounded Propagation release path therefore proceeds without this extension.
 
 Scientific specification: `docs/science/environmental_sound_speed_extension.md`.
 Registry model: `scientific_registry/models/propagation/environmental_sound_speed_extension.yaml`.
-Implementation handoff: Issue #34. Visualization handoff: Issue #35.
 
 ## Didactic Explorer learning blocks
 
@@ -118,7 +119,7 @@ The didactic product is organized as connected views of the same sounding system
 
 1. **Acoustic signal:** CW versus chirp/LFM, frequency, wavelength, duration, bandwidth, filtering, matched filtering, and frequency-dependent attenuation.
 2. **Transducer and beams:** array size, beamwidth, side lobes, footprint, SBES versus MBES, Mills Cross geometry, and multisector transmission.
-3. **Propagation:** sound-speed profiles, refraction, ray tracing, explicit profile support/extrapolation, environmental controls, and absorption/attenuation.
+3. **Propagation:** sound-speed profiles, refraction, ray tracing, explicit profile support, and absorption/attenuation. Environmental T/S/P-based extrapolation is specified for a post-v0.1 increment.
 4. **Vessel, sensors, and vertical references:** GNSS, IMU/MRU, transducer installation, lever arms, waterline, draft, transducer depth, water level, tide, and vertical datum.
 5. **Sounding in motion:** roll, pitch, yaw, heave, latency, multibeam geometry, multisector operation, and detection/reconstruction effects.
 
@@ -243,6 +244,9 @@ This decision also introduces progressive disclosure as a product rule: advanced
 | `c30c980` | Document environmental sound-speed extension | Defined explicit T/S/P-based continuation and its scientific boundaries. |
 | `269402d` | Register environmental sound-speed extension | Added the model and validation requirements to the Scientific Registry. |
 | `edbd039` | Record environmental SVP extension direction | Updated project overview and design principles for explicit environmental extrapolation. |
+| `e54c76a` | Mark environmental SVP extension as post-v0.1 | Reconciled README with Technical Lead sequencing. |
+| `ba66f2c` | Record post-v0.1 SVP extension sequencing | Marked the Scientific Registry entry as deferred and recorded `gsw` as the approved dependency. |
+| `f185215` | Clarify post-v0.1 environmental SVP status | Preserved the scientific specification while removing it from the v0.1 release gate. |
 
 ## Current development direction
 
@@ -253,9 +257,10 @@ Near-term sequence:
 1. preserve the guided-learning contract while completing the Signal lesson;
 2. connect frequency to a real observable consequence only after a referenced frequency-dependent absorption model is available, or expose frequency first in the Beam lesson where wavelength/array effects are already represented;
 3. integrate the existing beam/transducer models as a vertical slice with a small number of meaningful controls;
-4. integrate the Propagation lesson with explicit observed-profile support and environmental extension, preserving the strict ray-tracer boundary;
+4. complete the bounded finite-profile Propagation lesson without making environmental extrapolation a v0.1 dependency;
 5. continue through vessel/sensors -> motion -> integrated acquisition;
-6. keep advanced configuration for the Survey Simulator or progressive-disclosure views rather than putting every parameter on the first didactic screen.
+6. schedule the specified environmental T/S/P-based SVP extension after v0.1, using `gsw` for pressure/depth conversion;
+7. keep advanced configuration for the Survey Simulator or progressive-disclosure views rather than putting every parameter on the first didactic screen.
 
 ## When to update this log
 
