@@ -7,6 +7,7 @@ calculations remain in the Scientific Core and visualization composition layers.
 from __future__ import annotations
 
 from hydrosim.app.localization import Localizer
+from hydrosim.app.motion_lesson_page import build_motion_lesson
 from hydrosim.app.signal_compare import SignalLessonComparison, SignalLessonSnapshot
 from hydrosim.app.vessel_lesson import build_vessel_lesson
 from hydrosim.visualization import (
@@ -628,27 +629,9 @@ def launch_didactic_explorer() -> None:
     vessel_page, vessel_controls, apply_vessel_language = build_vessel_lesson(FigureCanvas)
     pages.addWidget(vessel_page)
 
-    # Planned slices --------------------------------------------------------
-    planned_headings: list[QLabel] = []
-    planned_labels: list[QLabel] = []
-    for lesson, description in _LESSONS[4:]:
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        heading = QLabel(lesson)
-        heading.setStyleSheet("font-size: 20px; font-weight: 600;")
-        layout.addWidget(heading)
-        planned = QLabel("Planned learning block")
-        layout.addWidget(planned)
-        body = QLabel(
-            description
-            + "\n\nThis view remains unavailable until its first end-to-end learning slice is integrated and tested."
-        )
-        body.setWordWrap(True)
-        layout.addWidget(body)
-        layout.addStretch(1)
-        planned_headings.append(heading)
-        planned_labels.append(planned)
-        pages.addWidget(page)
+    # Motion lesson ---------------------------------------------------------
+    motion_page, motion_controls, apply_motion_language = build_motion_lesson(FigureCanvas)
+    pages.addWidget(motion_page)
 
     def apply_language(locale: str) -> None:
         """Update presentation text without touching simulation controls or state."""
@@ -661,9 +644,8 @@ def launch_didactic_explorer() -> None:
 
         nav_keys = ("signal", "beam", "propagation", "vessel", "motion")
         for index, key in enumerate(nav_keys):
-            status_key = "status.ready" if index in {0, 1, 2, 3} else "status.planned"
             navigation.item(index).setText(
-                f"{localizer.text(f'nav.{key}')}  • {localizer.text(status_key)}"
+                f"{localizer.text(f'nav.{key}')}  • {localizer.text('status.ready')}"
             )
 
         signal_heading.setText(localizer.text("signal.title"))
@@ -699,17 +681,15 @@ def launch_didactic_explorer() -> None:
             f"{localizer.text('propagation.question')}"
         )
         apply_vessel_language(locale)
-        planned_headings[0].setText(localizer.text("nav.motion"))
+        apply_motion_language(locale)
 
     def on_language_changed(_index: int) -> None:
         apply_language(str(language_selector.currentData()))
 
     language_selector.currentIndexChanged.connect(on_language_changed)
     navigation.currentRowChanged.connect(pages.setCurrentIndex)
-    for index, (lesson, _description) in enumerate(_LESSONS):
-        item = QListWidgetItem(
-            lesson + ("  • ready" if index in {0, 1, 2, 3} else "  • planned")
-        )
+    for lesson, _description in _LESSONS:
+        item = QListWidgetItem(lesson + "  • ready")
         item.setData(Qt.ItemDataRole.UserRole, lesson)
         navigation.addItem(item)
 
@@ -748,5 +728,6 @@ def launch_didactic_explorer() -> None:
         "reset": propagation_reset,
     }
     window.hydrosim_vessel_controls = vessel_controls
+    window.hydrosim_motion_controls = motion_controls
     app.hydrosim_didactic_explorer_window = window
     app.exec()
