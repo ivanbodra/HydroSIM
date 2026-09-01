@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import SignalLab from './SignalLab';
@@ -14,28 +14,24 @@ import './advanced-labs.css';
 import './map-polish.css';
 import './experience-deepening.css';
 
-function resolveView() {
-  if (location.hash === '#signal-lab') return 'signal';
-  if (location.hash === '#beam-lab') return 'beam';
-  if (location.hash === '#propagation-lab') return 'propagation';
-  if (location.hash === '#vessel-lab') return 'vessel';
-  if (location.hash === '#motion-lab') return 'motion';
-  if (location.hash === '#integrated-lab') return 'integrated';
-  return 'map';
+type View='map'|'signal'|'beam'|'propagation'|'vessel'|'motion'|'integrated';
+type Route={view:View;focus?:string};
+function resolveRoute():Route {
+  const raw=location.hash.replace(/^#/,'');
+  const [lab,focus]=raw.split('/');
+  const map:Record<string,View>={'signal-lab':'signal','beam-lab':'beam','propagation-lab':'propagation','vessel-lab':'vessel','motion-lab':'motion','integrated-lab':'integrated'};
+  return {view:map[lab]??'map',focus};
 }
-
 function ConceptRuntime() {
-  const [view, setView] = useState(resolveView());
-  const back = () => { location.hash = ''; setView('map'); };
-  if (view === 'signal') return <SignalLab onBack={back} />;
-  if (view === 'beam') return <BeamLab onBack={back} />;
-  if (view === 'propagation') return <PropagationLab onBack={back} />;
-  if (view === 'vessel') return <VesselLab onBack={back} />;
-  if (view === 'motion') return <MotionLab onBack={back} />;
-  if (view === 'integrated') return <IntegratedLab onBack={back} />;
-  return <App />;
+  const [route,setRoute]=useState<Route>(resolveRoute());
+  useEffect(()=>{const sync=()=>setRoute(resolveRoute());window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)},[]);
+  const back=()=>{location.hash='';};
+  if(route.view==='signal') return <SignalLab onBack={back} focus={route.focus}/>;
+  if(route.view==='beam') return <BeamLab onBack={back} focus={route.focus}/>;
+  if(route.view==='propagation') return <PropagationLab onBack={back} focus={route.focus}/>;
+  if(route.view==='vessel') return <VesselLab onBack={back} focus={route.focus}/>;
+  if(route.view==='motion') return <MotionLab onBack={back} focus={route.focus}/>;
+  if(route.view==='integrated') return <IntegratedLab onBack={back} focus={route.focus}/>;
+  return <App/>;
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><ConceptRuntime /></React.StrictMode>,
-);
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><ConceptRuntime/></React.StrictMode>);
