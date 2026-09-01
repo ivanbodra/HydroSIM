@@ -54,6 +54,7 @@ jobs:
         shell: bash
         run: |
           files=(
+            system-map.png
             signal-waveform-lab.png
             beam-directivity-lab.png
             propagation-water-column-lab.png
