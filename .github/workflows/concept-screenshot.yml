@@ -47,31 +47,33 @@ jobs:
           cat /tmp/hydrosim-concept-vite.log
           exit 1
 
-      - name: Capture real Signal Waveform Lab
+      - name: Capture real concept laboratories
         run: npm run capture
 
-      - name: Verify screenshot
+      - name: Verify screenshots
         shell: bash
         run: |
           test -s assets/screenshots/signal-waveform-lab.png
+          test -s assets/screenshots/beam-directivity-lab.png
           file assets/screenshots/signal-waveform-lab.png
+          file assets/screenshots/beam-directivity-lab.png
 
       - name: Upload concept screenshot artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pedagogical-concept-screenshot
-          path: concepts/pedagogical-simulator/assets/screenshots/signal-waveform-lab.png
+          name: pedagogical-concept-screenshots
+          path: concepts/pedagogical-simulator/assets/screenshots/*.png
 
-      - name: Persist screenshot on tested branch
+      - name: Persist screenshots on tested branch
         env:
           TARGET_BRANCH: ${{ github.ref_name }}
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/screenshots/signal-waveform-lab.png
+          git add assets/screenshots/*.png
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Update real pedagogical prototype screenshot [skip ci]"
+          git commit -m "Update real pedagogical prototype screenshots [skip ci]"
           git push origin HEAD:${TARGET_BRANCH}
