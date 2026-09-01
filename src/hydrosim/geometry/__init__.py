@@ -11,6 +11,15 @@ from .rotations import (
     rotation_y,
     rotation_z,
 )
+from .sonar_systems import (
+    DualHeadGeometry,
+    SBESGeometry,
+    SonarHeadGeometry,
+    TxSectorGeometry,
+    TxSectorSetGeometry,
+    make_sbes_geometry,
+    make_sonar_head_geometry,
+)
 from .soundings import (
     SoundingComparison,
     SoundingState,
@@ -26,35 +35,4 @@ from .transforms import (
     transform_vector,
 )
 
-__all__ = [
-    "ArrayElement",
-    "Attitude",
-    "BeamDefinition",
-    "BeamRay",
-    "FlatTerrain",
-    "IdealFan",
-    "MillsCrossConfiguration",
-    "PlaneTerrain",
-    "Pose",
-    "RayIntersection",
-    "SoundingComparison",
-    "SoundingState",
-    "TransducerArray",
-    "Vector3",
-    "apply_lever_arm",
-    "attitude_from_rotation_matrix",
-    "compare_true_and_configured_sounding",
-    "compare_true_and_configured_state_sounding",
-    "generate_ideal_fan",
-    "generate_ideal_fan_degrees",
-    "make_reference_mills_cross",
-    "principal_axis_sensor_frame",
-    "rotate_vector",
-    "rotation_matrix_from_rpy",
-    "rotation_x",
-    "rotation_y",
-    "rotation_z",
-    "sensor_pose_from_vessel",
-    "transform_point",
-    "transform_vector",
-]
+__all__ = [name for name in globals() if not name.startswith("_")]
