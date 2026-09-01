@@ -1,4 +1,4 @@
-from math import isclose
+from math import isclose, pi, tan
 
 from hydrosim.visualization import BeamExplorerControls, prepare_beam_explorer_snapshot
 
@@ -68,3 +68,42 @@ def test_beam_explorer_rejects_even_angular_grid():
         assert "odd integer" in str(exc)
     else:
         raise AssertionError("expected ValueError for an even angular grid")
+
+
+def test_beam_explorer_positive_steering_is_port_and_moves_two_way_peak():
+    snapshot = prepare_beam_explorer_snapshot(
+        BeamExplorerControls(across_track_steering_angle_deg=20.0, angular_sample_count=121)
+    )
+
+    assert isclose(snapshot.across_track_steering_angle_rad, 20.0 * pi / 180.0, abs_tol=1e-12)
+    assert snapshot.steering_direction_sensor_frame.y < 0.0
+    assert snapshot.steered_across_track_center_offset_m > 0.0
+    assert isclose(
+        snapshot.steered_across_track_center_offset_m,
+        snapshot.controls.seafloor_depth_m * tan(snapshot.across_track_steering_angle_rad),
+        rel_tol=1e-12,
+    )
+    grid_step = 2.0 * snapshot.controls.angular_extent_deg / (snapshot.controls.angular_sample_count - 1)
+    peak_deg = float(snapshot.response_scan.peak_across_track_angle_rad) * 180.0 / pi
+    assert abs(peak_deg - 20.0) <= grid_step
+
+
+def test_beam_explorer_negative_steering_is_starboard():
+    snapshot = prepare_beam_explorer_snapshot(
+        BeamExplorerControls(across_track_steering_angle_deg=-15.0, angular_sample_count=121)
+    )
+
+    assert snapshot.steering_direction_sensor_frame.y > 0.0
+    assert snapshot.steered_across_track_center_offset_m < 0.0
+    assert float(snapshot.response_scan.peak_across_track_angle_rad) < 0.0
+
+
+def test_beam_explorer_steering_must_remain_inside_rendered_scan():
+    controls = BeamExplorerControls(across_track_steering_angle_deg=60.0, angular_extent_deg=60.0)
+
+    try:
+        prepare_beam_explorer_snapshot(controls)
+    except ValueError as exc:
+        assert "inside the angular scan extent" in str(exc)
+    else:
+        raise AssertionError("expected ValueError when steering lies on or outside scan boundary")
