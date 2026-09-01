@@ -1,6 +1,6 @@
 id: hydrosim.propagation.environmental_sound_speed_extension
 version: 0.1.0
-status: specified
+status: specified_deferred_post_v0_1
 
 physical_quantity: seawater sound speed below a truncated didactic environmental profile
 physical_cause: pressure-dependent seawater sound speed under explicit continuation assumptions for temperature and salinity
@@ -20,7 +20,7 @@ model:
     pressure: "P = P(z, latitude)"
     sound_speed: "c = c(T_m, S_m, P)"
   sound_speed_formulation: Wong_and_Zhu_1995_corrected_Chen_and_Millero_1977
-  pressure_depth_reference: TEOS_10_GSW_preferred
+  pressure_depth_reference: TEOS_10_GSW
 
 control_alternative:
   id: constant_sound_speed
@@ -62,11 +62,14 @@ references:
     evidence_level: supporting_implementation
 
 implementation:
-  status: pending
-  handoff_issue: 34
+  status: deferred_post_v0_1
+  previous_handoff_issue: 34
+  dependency_decision_issue: 36
+  approved_pressure_depth_dependency: gsw
+  sequencing_note: "Technical Lead deferred implementation until after v0.1; the current bounded Propagation release path remains separate."
 
 validation:
-  required:
+  required_when_scheduled:
     - continuity_at_extension_boundary
     - pressure_increases_with_depth
     - finite_physically_plausible_sound_speed
@@ -75,7 +78,8 @@ validation:
     - generic_ray_tracer_remains_strict
 
 visualization:
-  handoff_issue: 35
+  previous_handoff_issue: 35
+  status: deferred_post_v0_1
   teaching_point: constant temperature and salinity do not imply constant sound speed because pressure continues to vary with depth
 
 documentation:
