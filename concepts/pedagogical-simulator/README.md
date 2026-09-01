@@ -1,44 +1,51 @@
-# HydroSIM Pedagogical Simulator — Concept Sandbox
+# HydroSIM Pedagogical Simulator — Design Sandbox
 
-This directory is an independent visual-design sandbox for the HydroSIM Concept Simulator Designer.
+This directory is an independent conceptual design sandbox for the HydroSIM Didactic Explorer. It is intentionally separated from the production interface and from the Scientific Core.
 
-It is **not** the production HydroSIM interface and must not be treated as scientifically validated output. Values, visual responses and interactions may be illustrative placeholders created to explore a desirable pedagogical experience.
+The current executable concept uses React + TypeScript + Vite, Motion for fluid interaction, Lucide for iconography, SVG/CSS for scientific visual language, and Playwright only for reproducible runtime screenshots in CI.
 
-## Current prototype
+## Current conceptual laboratories
 
-The first macro-level prototype presents the complete learning environment as one navigable system. Six concept areas are exposed through an expandable module menu and interactive cards:
+- **Signal** — waveform, pulse, spectrum and compression as a transmit → receive → compress chain.
+- **Beam** — directivity, steering, beamwidth, sidelobes and footprint in one water-column scene.
+- **Propagation** — profile lens, layered water column, ray paths, illustrative loss and seabed interaction.
+- **Vessel & Sensors** — transparent vessel, GNSS, IMU, transducer, VRP, lever arms and vertical references.
+- **Motion** — roll, pitch, yaw and heave with baseline ghost, beam field and sounding consequence.
+- **Integrated Lab** — one virtual hydrographic survey where Signal, Beam, Propagation and Motion become focus lenses inside the same experiment.
 
-1. Signal — Waveform, Pulse, Spectrum, Compression
-2. Beam — Beam Pattern, Steering, Beamwidth, Footprint
-3. Propagation — Sound Speed, Refraction, Attenuation, Bottom Interaction
-4. Vessel & Sensors — Vessel, Transducer, GNSS, IMU, Lever Arms, Vertical References
-5. Motion — Heave, Roll, Pitch, Yaw, Motion Viewer, Sounding Impact
-6. Integrated Lab — Survey Setup, Realtime View, Sounding Generation, Uncertainty, Comparison, Experiment Presets
-
-The prototype uses React + TypeScript + Vite, Motion for subtle transitions and Lucide for scalable interface icons.
+The system map is the discovery surface. Each module has an **Enter laboratory** action. Submodules describe intended focus modes inside each laboratory rather than requiring a separate disconnected screen.
 
 ## Run locally
 
 ```bash
-cd concepts/pedagogical-simulator
 npm install
 npm run dev
 ```
 
-Build check:
+Direct routes:
+
+- `#signal-lab`
+- `#beam-lab`
+- `#propagation-lab`
+- `#vessel-lab`
+- `#motion-lab`
+- `#integrated-lab`
+
+## Build and capture
 
 ```bash
 npm run build
+npm run capture
 ```
 
-## Design intent
+The GitHub workflow `.github/workflows/concept-screenshot.yml` builds the real prototype, opens it in headless Chromium, captures the system map and all laboratories, verifies the PNG files, uploads them as a CI artifact, and persists changed screenshots in `assets/screenshots/`.
 
-The macro shell establishes the visual hierarchy before individual experiments are designed. Selecting a submodule changes the contextual hero surface and prepares the pattern for later dedicated interactive experiments.
+## Scientific status
 
-Primary interaction principle:
+This sandbox is **not scientifically validated output**. Values, ranges, geometry, motion amplification, trajectories, energy cues and scenarios may be illustrative placeholders. Their purpose is to expose interaction and visualization ideas for downstream Interface/UX and scientific validation.
 
-> INPUT → IMMEDIATE VISUAL RESPONSE → PHYSICAL INTUITION
+## Handoff
 
-## Boundary
+See `HANDOFF_INTERFACE_UX.md` for the five-part concept handoff — IDEA, WHY, IMPORTANT INTERACTION, INPUTS expected, OUTPUTS visualized — for all six modules, plus navigation and scenario language.
 
-Do not move this prototype into `src/hydrosim/` or replace official interface assets without explicit Technical Lead direction. The `interface-ux` agent remains responsible for deciding whether and how concepts are translated into the production interface.
+Interface/UX owns selection, adaptation and production translation. Do not move these concepts into production UI or the Scientific Core without the appropriate project handoff and review.
