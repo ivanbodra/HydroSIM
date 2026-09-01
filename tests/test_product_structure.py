@@ -40,6 +40,7 @@ def test_scientific_dependencies_are_explicit() -> None:
         "truth-estimated",
         "run-reset-check",
         "bias",
+        "biases",
         "displacement",
         "estimate",
         "solutions",
