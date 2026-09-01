@@ -77,11 +77,14 @@ def test_signal_frequency_control_is_bilingual_and_resettable():
     assert "carrier_frequency.setValue(_SIGNAL_DEFAULTS.center_frequency_hz / 1e3)" in source
 
 
-def test_future_learning_blocks_are_marked_as_planned():
+def test_all_five_learning_blocks_are_integrated_as_ready():
     source = _source()
 
-    assert "status.planned" in source
-    assert "Planned learning block" in source
+    assert "build_motion_lesson" in source
+    assert "pages.addWidget(motion_page)" in source
+    assert 'item = QListWidgetItem(lesson + "  • ready")' in source
+    assert 'localizer.text("status.ready")' in source
+    assert "Planned learning block" not in source
 
 
 def test_didactic_explorer_has_console_entry_point():
