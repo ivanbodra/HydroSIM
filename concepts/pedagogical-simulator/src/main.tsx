@@ -11,6 +11,7 @@ import './styles.css';
 import './signal-lab-polish.css';
 import './beam-lab.css';
 import './advanced-labs.css';
+import './map-polish.css';
 
 function resolveView() {
   if (location.hash === '#signal-lab') return 'signal';
