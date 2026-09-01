@@ -7,7 +7,7 @@ contains no rendering, persistence format, motion, squat, or new vertical scienc
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, NonNegativeFloat
 
 from hydrosim.app.vessel_vertical_reference import (
     VesselVerticalReferenceConfiguration,
@@ -27,9 +27,9 @@ class SurveyVesselConfiguration(BaseModel):
     lever_arm_vrp_to_gnss: Vector3
     lever_arm_vrp_to_imu: Vector3
     lever_arm_vrp_to_sonar: Vector3
-    waterline_z_from_vrp_m: float
-    static_draft_m: float
-    water_level_m_relative_to_datum: float = 0.0
+    waterline_z_from_vrp_m: FiniteFloat
+    static_draft_m: NonNegativeFloat
+    water_level_m_relative_to_datum: FiniteFloat = 0.0
 
 
 class SurveyVesselConfigurationSnapshot(BaseModel):
