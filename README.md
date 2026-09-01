@@ -62,13 +62,13 @@ Current foundations include:
 - piecewise-constant layered sound-speed propagation;
 - explicit sound speed at the transducer as a zero-thickness processing boundary;
 - controlled Truth-versus-Processing sound-speed error experiments;
-- a specified environmental SVP-extension model that derives sound speed from temperature, salinity and pressure below an explicit profile boundary, while preserving strict finite-profile ray tracing;
+- a specified post-v0.1 environmental SVP-extension model that derives sound speed from temperature, salinity and pressure below an explicit profile boundary while preserving strict finite-profile ray tracing;
 - first visualization composition adapters and reference renderers;
 - first integrated Didactic Explorer desktop shell with the Signal lesson embedded.
 
 The current models intentionally remain modular and limited in fidelity. Finite-bottom scattering, complete operational multisector behaviour, complete uncertainty propagation and several acquisition-system effects remain future work.
 
-The near-term development priority is vertical integration: turn the existing scientific core into usable didactic and survey-simulation workflows before broadening the physics horizontally. The Propagation Explorer is being extended to make the distinction between observed profile support and explicit environmental extrapolation visible, including a didactic comparison between constant sound speed and pressure-dependent `c(T,S,P)` continuation.
+The near-term development priority is vertical integration: turn the existing scientific core into usable didactic and survey-simulation workflows before broadening the physics horizontally. The environmental `c(T,S,P)` SVP extension is scientifically specified but explicitly deferred until after v0.1; the current Propagation release path remains bounded to the existing finite-profile lesson.
 
 ## Design principles
 
