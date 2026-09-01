@@ -67,6 +67,26 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
             "What happens when the water column is physically unchanged, but the "
             "lower-layer sound speed used during processing is wrong?"
         ),
+        "propagation.instruction": (
+            "Change only the processing lower-layer sound-speed bias. Truth stays fixed; "
+            "watch the reconstructed soundings move."
+        ),
+        "propagation.processing_bias": "Processing lower-layer bias",
+        "propagation.truth_lower_layer": "Truth lower layer",
+        "propagation.processing_lower_layer": "Processing lower layer",
+        "propagation.max_error": "Max sounding error",
+        "propagation.observation": (
+            "Truth SVP and rays remain unchanged. Only the processing profile and reconstructed "
+            "soundings respond to this control."
+        ),
+        "propagation.boundary": (
+            "Stationary monostatic principal-plane geometry; flat bottom; two piecewise-constant "
+            "layers; ideal transducer sound speed; zero array tilt."
+        ),
+        "propagation.not_shown": (
+            "Frequency-dependent absorption, continuous-gradient SVP, surface sound-speed error, "
+            "vessel motion, and uncertainty are outside this lesson."
+        ),
         "vessel.title": "Vessel — sensors and vertical references",
         "vessel.question": "How do sensor lever arms, waterline, and water level relate without mixing reference systems?",
         "vessel.instruction": "Change the transducer Z lever arm, configured waterline, or hydrographic water level and compare which view responds.",
@@ -136,6 +156,26 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "propagation.question": (
             "O que acontece quando a coluna d'água permanece fisicamente inalterada, mas "
             "a velocidade do som da camada inferior usada no processamento está errada?"
+        ),
+        "propagation.instruction": (
+            "Altere apenas o viés da velocidade do som da camada inferior usada no processamento. "
+            "A Verdade permanece fixa; observe os sondagens reconstruídas se moverem."
+        ),
+        "propagation.processing_bias": "Viés da camada inferior no processamento",
+        "propagation.truth_lower_layer": "Camada inferior — Verdade",
+        "propagation.processing_lower_layer": "Camada inferior — Processamento",
+        "propagation.max_error": "Erro máximo de sondagem",
+        "propagation.observation": (
+            "O SVP e os raios da Verdade permanecem inalterados. Apenas o perfil de processamento "
+            "e as sondagens reconstruídas respondem a este controle."
+        ),
+        "propagation.boundary": (
+            "Geometria monostática estacionária no plano principal; fundo plano; duas camadas "
+            "constantes por trechos; velocidade do som ideal no transdutor; inclinação do array nula."
+        ),
+        "propagation.not_shown": (
+            "Absorção dependente da frequência, SVP com gradiente contínuo, erro de velocidade do "
+            "som na superfície, movimento da embarcação e incerteza estão fora desta aula."
         ),
         "vessel.title": "Embarcação — sensores e referências verticais",
         "vessel.question": "Como os lever arms dos sensores, a linha d'água e o nível d'água se relacionam sem misturar sistemas de referência?",
