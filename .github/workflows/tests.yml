@@ -56,6 +56,8 @@ jobs:
           propagation_status=$?
           python tools/capture_didactic_explorer.py --lesson Vessel --output docs/images/didactic_explorer_vessel.png >> artifacts/capture.log 2>&1
           vessel_status=$?
+          python tools/capture_didactic_explorer.py --lesson Motion --output docs/images/didactic_explorer_motion.png >> artifacts/capture.log 2>&1
+          motion_status=$?
           set -e
 
           printf '%s\n' "$actual_status" > artifacts/capture.exit
@@ -63,17 +65,20 @@ jobs:
           printf '%s\n' "$beam_status" > artifacts/capture_beam.exit
           printf '%s\n' "$propagation_status" > artifacts/capture_propagation.exit
           printf '%s\n' "$vessel_status" > artifacts/capture_vessel.exit
+          printf '%s\n' "$motion_status" > artifacts/capture_motion.exit
 
           test "$actual_status" = "0"
           test "$signal_status" = "0"
           test "$beam_status" = "0"
           test "$propagation_status" = "0"
           test "$vessel_status" = "0"
+          test "$motion_status" = "0"
           test -s docs/images/didactic_explorer_actual.png
           test -s docs/images/didactic_explorer_signal.png
           test -s docs/images/didactic_explorer_beam.png
           test -s docs/images/didactic_explorer_propagation.png
           test -s docs/images/didactic_explorer_vessel.png
+          test -s docs/images/didactic_explorer_motion.png
 
       - name: Upload Didactic Explorer screenshots and diagnostics
         if: always()
@@ -95,6 +100,7 @@ jobs:
           test "$(cat artifacts/capture_beam.exit)" = "0"
           test "$(cat artifacts/capture_propagation.exit)" = "0"
           test "$(cat artifacts/capture_vessel.exit)" = "0"
+          test "$(cat artifacts/capture_motion.exit)" = "0"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/images/didactic_explorer_*.png
