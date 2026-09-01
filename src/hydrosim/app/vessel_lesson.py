@@ -67,8 +67,8 @@ def build_vessel_lesson(FigureCanvas: type[Any]) -> tuple[Any, dict[str, Any], C
     root.addLayout(body, 1)
 
     controls_frame = QFrame()
-    controls_frame.setMaximumWidth(270)
-    controls_frame.setMinimumWidth(235)
+    controls_frame.setMaximumWidth(300)
+    controls_frame.setMinimumWidth(260)
     controls_frame.setStyleSheet("QFrame { background: #f7f9fa; border-radius: 8px; }")
     controls_layout = QVBoxLayout(controls_frame)
     controls_layout.setContentsMargins(10, 8, 10, 8)
@@ -83,37 +83,52 @@ def build_vessel_lesson(FigureCanvas: type[Any]) -> tuple[Any, dict[str, Any], C
     instruction.setStyleSheet("color: #53616d; font-size: 11px;")
     controls_layout.addWidget(instruction)
 
+    def distance_spinbox(value: float, minimum: float, maximum: float) -> QDoubleSpinBox:
+        control = QDoubleSpinBox()
+        control.setRange(minimum, maximum)
+        control.setSingleStep(0.1)
+        control.setDecimals(1)
+        control.setSuffix(" m")
+        control.setValue(value)
+        return control
+
     form = QFormLayout()
     form.setVerticalSpacing(5)
-    transducer_label = QLabel()
-    transducer_z = QDoubleSpinBox()
-    transducer_z.setRange(0.5, 4.0)
-    transducer_z.setSingleStep(0.1)
-    transducer_z.setDecimals(1)
-    transducer_z.setSuffix(" m")
-    transducer_z.setValue(float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.z))
-    form.addRow(transducer_label, transducer_z)
+
+    transducer_x_label = QLabel()
+    transducer_x = distance_spinbox(
+        float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.x), -5.0, 5.0
+    )
+    form.addRow(transducer_x_label, transducer_x)
+
+    transducer_y_label = QLabel()
+    transducer_y = distance_spinbox(
+        float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.y), -5.0, 5.0
+    )
+    form.addRow(transducer_y_label, transducer_y)
+
+    transducer_z_label = QLabel()
+    transducer_z = distance_spinbox(
+        float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.z), -1.0, 5.0
+    )
+    form.addRow(transducer_z_label, transducer_z)
     transducer_slider = QSlider(Qt.Orientation.Horizontal)
-    transducer_slider.setRange(5, 40)
+    transducer_slider.setRange(-10, 50)
     transducer_slider.setValue(round(transducer_z.value() * 10.0))
     form.addRow("", transducer_slider)
 
     waterline_label = QLabel()
-    waterline_z = QDoubleSpinBox()
-    waterline_z.setRange(-0.5, 2.0)
-    waterline_z.setSingleStep(0.1)
-    waterline_z.setDecimals(1)
-    waterline_z.setSuffix(" m")
-    waterline_z.setValue(float(_DEFAULT_CONFIGURATION.waterline_z_from_vrp_m))
+    waterline_z = distance_spinbox(float(_DEFAULT_CONFIGURATION.waterline_z_from_vrp_m), -0.5, 2.0)
     form.addRow(waterline_label, waterline_z)
 
+    static_draft_label = QLabel()
+    static_draft = distance_spinbox(float(_DEFAULT_CONFIGURATION.static_draft_m), 0.0, 8.0)
+    form.addRow(static_draft_label, static_draft)
+
     water_level_label = QLabel()
-    water_level = QDoubleSpinBox()
-    water_level.setRange(-2.0, 3.0)
-    water_level.setSingleStep(0.1)
-    water_level.setDecimals(1)
-    water_level.setSuffix(" m")
-    water_level.setValue(float(_DEFAULT_CONFIGURATION.water_level_m_relative_to_datum))
+    water_level = distance_spinbox(
+        float(_DEFAULT_CONFIGURATION.water_level_m_relative_to_datum), -2.0, 3.0
+    )
     form.addRow(water_level_label, water_level)
     controls_layout.addLayout(form)
 
@@ -157,42 +172,66 @@ def build_vessel_lesson(FigureCanvas: type[Any]) -> tuple[Any, dict[str, Any], C
             lever_arm_vrp_to_gnss=_DEFAULT_CONFIGURATION.lever_arm_vrp_to_gnss,
             lever_arm_vrp_to_imu=_DEFAULT_CONFIGURATION.lever_arm_vrp_to_imu,
             lever_arm_vrp_to_transducer=Vector3(
-                x=_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.x,
-                y=_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.y,
+                x=transducer_x.value(),
+                y=transducer_y.value(),
                 z=transducer_z.value(),
             ),
             waterline_z_from_vrp_m=waterline_z.value(),
-            static_draft_m=_DEFAULT_CONFIGURATION.static_draft_m,
+            static_draft_m=static_draft.value(),
             water_level_m_relative_to_datum=water_level.value(),
         )
 
     def redraw() -> None:
         snapshot = prepare_vessel_vertical_reference_snapshot(_DEFAULT_POSE, current_configuration())
         draw_vessel_vertical_reference_snapshot(snapshot, axes)
+        position = snapshot.transducer_position
         readout.setText(
-            f"Transducer Z = {snapshot.transducer_z_from_vrp_m:+.2f} m · "
-            f"Depth below waterline = {snapshot.transducer_depth_below_waterline_m:.2f} m<br>"
+            f"Transducer XYZ = ({position.x:+.2f}, {position.y:+.2f}, {position.z:+.2f}) m<br>"
+            f"Depth below waterline = {snapshot.transducer_depth_below_waterline_m:.2f} m · "
+            f"Static draft = {snapshot.static_draft_m:.2f} m · "
+            f"Keel Z = {snapshot.keel_z_from_vrp_m:+.2f} m<br>"
             f"Hydrographic water level = {snapshot.water_level_m_relative_to_datum:+.2f} m"
         )
         canvas.draw_idle()
 
-    transducer_z.valueChanged.connect(
-        lambda value: transducer_slider.setValue(round(value * 10.0))
-        if transducer_slider.value() != round(value * 10.0)
-        else redraw()
-    )
-    transducer_slider.valueChanged.connect(
-        lambda value: transducer_z.setValue(value / 10.0)
-        if transducer_z.value() != value / 10.0
-        else None
-    )
+    def sync_transducer_z_spinbox(value: float) -> None:
+        target = round(value * 10.0)
+        if transducer_slider.value() != target:
+            transducer_slider.blockSignals(True)
+            transducer_slider.setValue(target)
+            transducer_slider.blockSignals(False)
+        redraw()
+
+    def sync_transducer_z_slider(value: int) -> None:
+        target = value / 10.0
+        if transducer_z.value() != target:
+            transducer_z.blockSignals(True)
+            transducer_z.setValue(target)
+            transducer_z.blockSignals(False)
+        redraw()
+
+    transducer_x.valueChanged.connect(lambda _value: redraw())
+    transducer_y.valueChanged.connect(lambda _value: redraw())
+    transducer_z.valueChanged.connect(sync_transducer_z_spinbox)
+    transducer_slider.valueChanged.connect(sync_transducer_z_slider)
     waterline_z.valueChanged.connect(lambda _value: redraw())
+    static_draft.valueChanged.connect(lambda _value: redraw())
     water_level.valueChanged.connect(lambda _value: redraw())
 
     def reset_lesson() -> None:
-        transducer_z.setValue(float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.z))
-        waterline_z.setValue(float(_DEFAULT_CONFIGURATION.waterline_z_from_vrp_m))
-        water_level.setValue(float(_DEFAULT_CONFIGURATION.water_level_m_relative_to_datum))
+        controls_to_reset = (
+            (transducer_x, float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.x)),
+            (transducer_y, float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.y)),
+            (transducer_z, float(_DEFAULT_CONFIGURATION.lever_arm_vrp_to_transducer.z)),
+            (waterline_z, float(_DEFAULT_CONFIGURATION.waterline_z_from_vrp_m)),
+            (static_draft, float(_DEFAULT_CONFIGURATION.static_draft_m)),
+            (water_level, float(_DEFAULT_CONFIGURATION.water_level_m_relative_to_datum)),
+        )
+        for control, value in controls_to_reset:
+            control.blockSignals(True)
+            control.setValue(value)
+            control.blockSignals(False)
+        transducer_slider.setValue(round(transducer_z.value() * 10.0))
         redraw()
 
     reset.clicked.connect(reset_lesson)
@@ -203,8 +242,11 @@ def build_vessel_lesson(FigureCanvas: type[Any]) -> tuple[Any, dict[str, Any], C
         question.setText(localizer.text("vessel.question"))
         controls_title.setText(localizer.text("common.try_it"))
         instruction.setText(localizer.text("vessel.instruction"))
-        transducer_label.setText(localizer.text("vessel.transducer_z"))
+        transducer_x_label.setText(localizer.text("vessel.transducer_x"))
+        transducer_y_label.setText(localizer.text("vessel.transducer_y"))
+        transducer_z_label.setText(localizer.text("vessel.transducer_z"))
         waterline_label.setText(localizer.text("vessel.waterline"))
+        static_draft_label.setText(localizer.text("vessel.static_draft"))
         water_level_label.setText(localizer.text("vessel.water_level"))
         reset.setText(localizer.text("common.reset"))
         observation.setText(
@@ -219,9 +261,12 @@ def build_vessel_lesson(FigureCanvas: type[Any]) -> tuple[Any, dict[str, Any], C
     redraw()
     apply_language("en")
     controls = {
+        "transducer_x": transducer_x,
+        "transducer_y": transducer_y,
         "transducer_z": transducer_z,
         "transducer_slider": transducer_slider,
         "waterline_z": waterline_z,
+        "static_draft": static_draft,
         "water_level": water_level,
         "reset": reset,
         "readout": readout,
