@@ -83,7 +83,8 @@ def test_all_five_learning_blocks_are_integrated_as_ready():
     assert "build_motion_lesson" in source
     assert "pages.addWidget(motion_page)" in source
     assert 'item = QListWidgetItem(lesson + "  • ready")' in source
-    assert 'localizer.text("status.ready")' in source
+    assert "status.ready" in source
+    assert "status.planned" not in source
     assert "Planned learning block" not in source
 
 
