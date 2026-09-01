@@ -5,6 +5,7 @@ await mkdir('assets/screenshots', { recursive: true });
 const browser = await chromium.launch({ headless: true });
 
 const captures = [
+  ['system-map.png', ''],
   ['signal-waveform-lab.png', '#signal-lab'],
   ['beam-directivity-lab.png', '#beam-lab'],
   ['propagation-water-column-lab.png', '#propagation-lab'],
