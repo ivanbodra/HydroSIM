@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from hydrosim.acquisition.bottom_detection import BottomDetection
 from hydrosim.acquisition.models import AcquisitionPing
@@ -48,6 +48,17 @@ class SoundingFormationSnapshot(BaseModel):
     associated_pose: Pose
     sounding: SoundingComparison
     active_stage: SoundingFormationStage = SoundingFormationStage.TRANSMIT
+
+    @model_validator(mode="after")
+    def scientific_outputs_must_refer_to_the_same_beam(self) -> "SoundingFormationSnapshot":
+        """Reject accidental assembly of outputs belonging to different beams."""
+
+        beam_index = self.beam.definition.index
+        if self.sounding.beam_index != beam_index:
+            raise ValueError("sounding beam_index must match the assembled beam")
+        if self.detection.parent_beam_index is not None and self.detection.parent_beam_index != beam_index:
+            raise ValueError("detection parent_beam_index must match the assembled beam")
+        return self
 
     @property
     def stage_index(self) -> int:
