@@ -61,3 +61,13 @@ def test_real_shell_exposes_motion_controls_and_language_wiring() -> None:
     assert "pages.addWidget(motion_page)" in source
     assert "apply_motion_language(locale)" in source
     assert "window.hydrosim_motion_controls = motion_controls" in source
+
+
+def test_motion_runtime_capture_uses_visible_nonzero_state() -> None:
+    source = Path("tools/capture_didactic_explorer.py").read_text(encoding="utf-8")
+
+    assert 'if lesson != "Motion"' in source
+    assert 'controls["roll"].setValue(10.0)' in source
+    assert 'controls["pitch"].setValue(-6.0)' in source
+    assert 'controls["yaw"].setValue(12.0)' in source
+    assert 'controls["heave"].setValue(0.8)' in source
