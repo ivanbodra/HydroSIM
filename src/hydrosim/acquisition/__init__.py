@@ -58,6 +58,6 @@ from .transmission_loss import OneWayTransmissionLoss, PropagationLossModel, Rec
 from .transmit_beamforming import TransmitElementSteeringDelay, TransmitSteeringLaw, ideal_transmit_steering
 from .transmit_sectors import TransmitSector, TransmitSectorSet, make_uniform_transmit_sectors
 from .two_way_pattern import TwoWayBeamPatternResponse, two_way_beam_pattern, two_way_beam_pattern_sensor_frame
-from .waveform import ContinuousWavePulse, LinearFMPulse, MatchedFilterSummary, WaveformAutocorrelation, matched_filter, sample_cw_baseband, sample_lfm_baseband, sample_waveform_baseband, waveform_autocorrelation, waveform_sampling_adequacy
+from .waveform import ChirpDirection, ContinuousWavePulse, EnvelopeModel, LinearFMPulse, MatchedFilterSummary, WaveformAutocorrelation, matched_filter, sample_cw_baseband, sample_lfm_baseband, sample_waveform_baseband, sample_waveform_envelope, sample_waveform_instantaneous_frequency, sample_waveform_passband, waveform_autocorrelation, waveform_passband_sampling_adequacy, waveform_sampling_adequacy
 
 __all__ = [name for name in globals() if not name.startswith("_")]
