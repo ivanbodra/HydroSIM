@@ -6,7 +6,8 @@ def test_vessel_lesson_is_integrated_as_ready_slice():
 
     assert "build_vessel_lesson" in source
     assert "pages.addWidget(vessel_page)" in source
-    assert 'index in {0, 1, 2, 3}' in source
+    assert "status.ready" in source
+    assert "status.planned" not in source
     assert "window.hydrosim_vessel_controls = vessel_controls" in source
 
 
