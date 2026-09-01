@@ -1,6 +1,6 @@
 # HydroSIM Pedagogical Simulator — Concept Handoff to Interface/UX
 
-Status: design sandbox handoff. These concepts are exploratory, not production UI and not scientific validation. Mock values, exaggerated motion, placeholder geometry, and illustrative visual responses are intentional where they help expose the interaction idea.
+Status: **complete first-pass conceptual module**. This is a design sandbox handoff, not production UI and not scientific validation. Mock values, exaggerated motion, placeholder geometry, and illustrative visual responses are intentional where they help expose the interaction idea.
 
 ## Shared visual language
 
@@ -104,7 +104,11 @@ Recommended conceptual presets for UX exploration:
 
 ## Navigation concept
 
-The System Map remains a discovery surface, but every module should have a clear **Enter laboratory** action. Submodules should normally change focus/state inside the module laboratory rather than open an unrelated page. The Integrated Lab is the convergence point and should feel spatially larger and more operational than earlier lessons.
+The System Map remains a discovery surface, but every module has a clear **Enter laboratory** concept action. Submodules should normally change focus/state inside the module laboratory rather than open an unrelated page. The Integrated Lab is the convergence point and deliberately feels spatially larger and more operational than earlier lessons.
+
+## First-pass milestone reached
+
+The sandbox now contains executable first-pass concepts for all six modules, a connected system map, Baseline × Current language, scenario concepts, automated runtime screenshots, and this handoff package. Further work should be driven by Interface/UX selection and feedback rather than expanding the sandbox indiscriminately.
 
 ## Recommended adoption principle
 
