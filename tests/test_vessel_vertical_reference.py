@@ -1,3 +1,6 @@
+from pydantic import ValidationError
+import pytest
+
 from hydrosim.app.vessel_vertical_reference import (
     VesselVerticalReferenceConfiguration,
     prepare_vessel_vertical_reference_snapshot,
@@ -9,21 +12,26 @@ def _zero_attitude() -> Attitude:
     return Attitude(roll=0.0, pitch=0.0, yaw=0.0)
 
 
+def _configuration(**overrides):
+    values = dict(
+        lever_arm_vrp_to_gnss=Vector3(x=2.0, y=-0.5, z=-3.0),
+        lever_arm_vrp_to_imu=Vector3(x=0.5, y=0.2, z=-0.4),
+        lever_arm_vrp_to_transducer=Vector3(x=-1.0, y=0.0, z=2.5),
+        waterline_z_from_vrp_m=1.0,
+        static_draft_m=2.0,
+        water_level_m_relative_to_datum=2.2,
+    )
+    values.update(overrides)
+    return VesselVerticalReferenceConfiguration(**values)
+
+
 def test_vessel_vertical_reference_snapshot_preserves_positive_down_signs():
     vessel_pose = Pose(
         position=Vector3(x=100.0, y=200.0, z=5.0),
         attitude=_zero_attitude(),
         frame="N",
     )
-    configuration = VesselVerticalReferenceConfiguration(
-        lever_arm_vrp_to_gnss=Vector3(x=2.0, y=-0.5, z=-3.0),
-        lever_arm_vrp_to_imu=Vector3(x=0.5, y=0.2, z=-0.4),
-        lever_arm_vrp_to_transducer=Vector3(x=-1.0, y=0.0, z=2.5),
-        waterline_z_from_vrp_m=1.0,
-        water_level_m_relative_to_datum=2.2,
-    )
-
-    snapshot = prepare_vessel_vertical_reference_snapshot(vessel_pose, configuration)
+    snapshot = prepare_vessel_vertical_reference_snapshot(vessel_pose, _configuration())
 
     assert snapshot.gnss_position == Vector3(x=102.0, y=199.5, z=2.0)
     assert snapshot.imu_position == Vector3(x=100.5, y=200.2, z=4.6)
@@ -32,32 +40,60 @@ def test_vessel_vertical_reference_snapshot_preserves_positive_down_signs():
     assert snapshot.transducer_depth_below_waterline_m == 1.5
 
 
+def test_static_draft_is_positive_down_distance_from_waterline_to_keel():
+    vessel_pose = Pose(
+        position=Vector3(x=0.0, y=0.0, z=0.0),
+        attitude=_zero_attitude(),
+        frame="N",
+    )
+    snapshot = prepare_vessel_vertical_reference_snapshot(
+        vessel_pose,
+        _configuration(waterline_z_from_vrp_m=0.8, static_draft_m=2.4),
+    )
+
+    assert snapshot.static_draft_m == 2.4
+    assert snapshot.keel_z_from_vrp_m == 3.2
+
+
+def test_static_draft_does_not_change_transducer_or_hydrographic_water_level():
+    vessel_pose = Pose(
+        position=Vector3(x=0.0, y=0.0, z=0.0),
+        attitude=_zero_attitude(),
+        frame="N",
+    )
+    shallow = prepare_vessel_vertical_reference_snapshot(
+        vessel_pose,
+        _configuration(static_draft_m=1.5),
+    )
+    deep = prepare_vessel_vertical_reference_snapshot(
+        vessel_pose,
+        _configuration(static_draft_m=3.0),
+    )
+
+    assert shallow.transducer_position == deep.transducer_position
+    assert shallow.transducer_depth_below_waterline_m == deep.transducer_depth_below_waterline_m
+    assert shallow.water_level_m_relative_to_datum == deep.water_level_m_relative_to_datum
+    assert shallow.keel_z_from_vrp_m != deep.keel_z_from_vrp_m
+
+
+def test_static_draft_rejects_negative_distance():
+    with pytest.raises(ValidationError):
+        _configuration(static_draft_m=-0.1)
+
+
 def test_water_level_remains_separate_from_vessel_geometry():
     vessel_pose = Pose(
         position=Vector3(x=0.0, y=0.0, z=0.0),
         attitude=_zero_attitude(),
         frame="N",
     )
-    common = dict(
-        lever_arm_vrp_to_gnss=Vector3(x=0.0, y=0.0, z=-2.0),
-        lever_arm_vrp_to_imu=Vector3(x=0.0, y=0.0, z=0.0),
-        lever_arm_vrp_to_transducer=Vector3(x=0.0, y=0.0, z=3.0),
-        waterline_z_from_vrp_m=1.2,
-    )
-
     low = prepare_vessel_vertical_reference_snapshot(
         vessel_pose,
-        VesselVerticalReferenceConfiguration(
-            **common,
-            water_level_m_relative_to_datum=0.5,
-        ),
+        _configuration(water_level_m_relative_to_datum=0.5),
     )
     high = prepare_vessel_vertical_reference_snapshot(
         vessel_pose,
-        VesselVerticalReferenceConfiguration(
-            **common,
-            water_level_m_relative_to_datum=2.0,
-        ),
+        _configuration(water_level_m_relative_to_datum=2.0),
     )
 
     assert low.transducer_position == high.transducer_position
@@ -72,11 +108,12 @@ def test_snapshot_reuses_existing_rigid_body_rotation_for_sensor_positions():
         attitude=Attitude.from_degrees(roll=0.0, pitch=0.0, yaw=90.0),
         frame="N",
     )
-    configuration = VesselVerticalReferenceConfiguration(
+    configuration = _configuration(
         lever_arm_vrp_to_gnss=Vector3(x=2.0, y=0.0, z=0.0),
         lever_arm_vrp_to_imu=Vector3(x=0.0, y=1.0, z=0.0),
         lever_arm_vrp_to_transducer=Vector3(x=0.0, y=0.0, z=2.0),
         waterline_z_from_vrp_m=0.5,
+        static_draft_m=1.8,
         water_level_m_relative_to_datum=1.0,
     )
 
