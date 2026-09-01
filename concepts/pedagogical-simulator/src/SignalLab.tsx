@@ -1,53 +1,28 @@
-import { motion } from 'motion/react';
-import { Activity, GitCompare, Pause, Play, RotateCcw, SlidersHorizontal, Sparkles, Waves } from 'lucide-react';
+import { motion, type PanInfo } from 'motion/react';
+import { Activity, GitCompare, Hand, Pause, Play, RotateCcw, SlidersHorizontal, Sparkles, Waves } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 function wavePath(chirp: boolean, phase = 0) {
   const pts: string[] = [];
-  for (let x = 0; x <= 760; x += 4) {
-    const t = x / 760;
-    const cycles = chirp ? 4 + 13 * t : 8;
-    const y = 90 + Math.sin((t * cycles * Math.PI * 2) + phase) * 48 * Math.sin(Math.PI * t);
-    pts.push(`${x},${y.toFixed(1)}`);
-  }
+  for (let x = 0; x <= 760; x += 4) { const t=x/760; const cycles=chirp?4+13*t:8; const y=90+Math.sin((t*cycles*Math.PI*2)+phase)*48*Math.sin(Math.PI*t); pts.push(`${x},${y.toFixed(1)}`); }
   return `M ${pts.join(' L ')}`;
 }
 
+type Experiment='cw-chirp'|'bandwidth'|'pulse';
 export default function SignalLab({ onBack }: { onBack: () => void }) {
-  const [chirp, setChirp] = useState(true);
-  const [bandwidth, setBandwidth] = useState(72);
-  const [duration, setDuration] = useState(58);
-  const [playing, setPlaying] = useState(true);
-  const tx = useMemo(() => wavePath(chirp), [chirp]);
-  const echo = useMemo(() => wavePath(chirp, .7), [chirp]);
-  const compressed = Math.max(9, 72 - bandwidth * .63);
-
+  const [chirp,setChirp]=useState(true); const [bandwidth,setBandwidth]=useState(72); const [duration,setDuration]=useState(58); const [playing,setPlaying]=useState(true); const [experiment,setExperiment]=useState<Experiment>('cw-chirp'); const [touching,setTouching]=useState(false);
+  const tx=useMemo(()=>wavePath(chirp),[chirp]); const echo=useMemo(()=>wavePath(chirp,.7),[chirp]); const compressed=Math.max(9,72-bandwidth*.63);
+  const dragEnvelope=(_:PointerEvent,info:PanInfo)=>setDuration(Math.max(10,Math.min(100,Math.round(58+info.offset.x/4))));
+  const choose=(x:Experiment)=>{setExperiment(x);if(x==='cw-chirp'){setChirp(true);setBandwidth(72);setDuration(58)}if(x==='bandwidth'){setChirp(true);setBandwidth(88);setDuration(58)}if(x==='pulse'){setChirp(false);setBandwidth(35);setDuration(82)}};
   return <div className="signal-lab">
-    <div className="lab-toolbar">
-      <button className="back-button" onClick={onBack}>← System map</button>
-      <div className="lab-breadcrumb"><Activity size={17}/><span>Signal</span><b>/</b><strong>Waveform laboratory</strong></div>
-      <div className="lab-toolbar-actions"><span className="concept-chip"><Sparkles size={13}/> illustrative</span><button onClick={() => setPlaying(v=>!v)}>{playing ? <Pause size={16}/> : <Play size={16}/>} {playing ? 'Pause' : 'Play'}</button><button><GitCompare size={16}/> Compare</button></div>
-    </div>
-
-    <div className="lab-question"><span>01 · SIGNAL</span><h1>What changes when the pulse becomes a chirp?</h1><p>Manipulate the signal. The visual chain responds immediately.</p></div>
-
-    <div className="lab-layout">
-      <aside className="control-surface">
-        <div className="control-title"><SlidersHorizontal size={17}/><strong>Signal controls</strong></div>
-        <label>Waveform<div className="segmented"><button className={!chirp?'on':''} onClick={()=>setChirp(false)}>CW</button><button className={chirp?'on':''} onClick={()=>setChirp(true)}>Chirp</button></div></label>
-        <label>Bandwidth <output>{bandwidth}%</output><input type="range" min="10" max="100" value={bandwidth} onChange={e=>setBandwidth(+e.target.value)}/></label>
-        <label>Pulse duration <output>{duration}%</output><input type="range" min="10" max="100" value={duration} onChange={e=>setDuration(+e.target.value)}/></label>
-        <div className="control-readouts"><div><small>Start</small><strong>200 kHz</strong></div><div><small>End</small><strong>{chirp?'400':'200'} kHz</strong></div><div><small>Envelope</small><strong>{duration} μs</strong></div><div><small>Mode</small><strong>{chirp?'FM':'CW'}</strong></div></div>
-        <button className="reset" onClick={()=>{setChirp(true);setBandwidth(72);setDuration(58)}}><RotateCcw size={15}/> Reset concept</button>
-      </aside>
-
-      <section className="visual-chain">
-        <div className="chain-card transmit"><header><div><small>01 · TRANSMIT</small><strong>Outgoing waveform</strong></div><span>{chirp?'CHIRP':'CW'}</span></header><svg viewBox="0 0 760 180" preserveAspectRatio="none"><path className="gridline" d="M0 90H760"/><motion.path className="wave-path" d={tx} animate={playing?{pathLength:[0,1]}:{pathLength:1}} transition={{duration:1.6,repeat:playing?Infinity:0,ease:'linear'}}/></svg><div className="axis"><span>time →</span><span>frequency {chirp?'increases →':'constant →'}</span></div></div>
-        <div className="chain-arrow"><span>water column</span><i>→</i></div>
-        <div className="chain-card receive"><header><div><small>02 · RECEIVE</small><strong>Returned echo</strong></div><span>DELAYED</span></header><svg viewBox="0 0 760 180" preserveAspectRatio="none"><path className="gridline" d="M0 90H760"/><path className="echo-path" d={echo}/></svg><div className="echo-marker" style={{left:`${26+duration*.18}%`}}><i/><span>echo arrival</span></div></div>
-        <div className="chain-arrow"><span>matched filter</span><i>→</i></div>
-        <div className="chain-card compression"><header><div><small>03 · COMPRESS</small><strong>Resolution becomes visible</strong></div><span>OUTPUT</span></header><div className="compression-plot"><div className="ghost-peak"/><motion.div className="live-peak" animate={{width:`${compressed}%`}}/><div className="resolution-bracket" style={{width:`${compressed+8}%`}}><span>effective pulse width</span></div></div><div className="insight"><Waves size={18}/><span>{chirp?'More bandwidth → visually narrower compressed response':'CW keeps a broader illustrative response'}</span></div></div>
-      </section>
-    </div>
+    <div className="lab-toolbar"><button className="back-button" onClick={onBack}>← System map</button><div className="lab-breadcrumb"><Activity size={17}/><span>Signal</span><b>/</b><strong>Waveform laboratory</strong></div><div className="lab-toolbar-actions"><span className="concept-chip"><Sparkles size={13}/> illustrative</span><button onClick={()=>setPlaying(v=>!v)}>{playing?<Pause size={16}/>:<Play size={16}/>} {playing?'Pause':'Play'}</button><button><GitCompare size={16}/> Compare</button></div></div>
+    <div className="lab-question"><span>01 · SIGNAL</span><h1>Follow one pulse from creation to compressed response.</h1><p>Choose a micro-experiment, touch the outgoing pulse, and keep transmit, return and processing visually connected.</p></div>
+    <div className="signal-experiments"><button className={experiment==='cw-chirp'?'active':''} onClick={()=>choose('cw-chirp')}>CW → Chirp</button><button className={experiment==='bandwidth'?'active':''} onClick={()=>choose('bandwidth')}>Open the bandwidth</button><button className={experiment==='pulse'?'active':''} onClick={()=>choose('pulse')}>Stretch the pulse</button></div>
+    <div className="lab-layout"><aside className="control-surface"><div className="control-title"><SlidersHorizontal size={17}/><strong>Signal controls</strong></div><label>Waveform<div className="segmented"><button className={!chirp?'on':''} onClick={()=>setChirp(false)}>CW</button><button className={chirp?'on':''} onClick={()=>setChirp(true)}>Chirp</button></div></label><label>Bandwidth <output>{bandwidth}%</output><input type="range" min="10" max="100" value={bandwidth} onChange={e=>setBandwidth(+e.target.value)}/></label><label>Pulse duration <output>{duration}%</output><input type="range" min="10" max="100" value={duration} onChange={e=>setDuration(+e.target.value)}/></label><div className="control-readouts"><div><small>Mode</small><strong>{chirp?'FM':'CW'}</strong></div><div><small>Gesture</small><strong>{touching?'Shaping':'Ready'}</strong></div><div><small>Envelope</small><strong>{duration} rel.</strong></div><div><small>Experiment</small><strong>{experiment==='cw-chirp'?'Compare':experiment==='bandwidth'?'Bandwidth':'Duration'}</strong></div></div><button className="reset" onClick={()=>choose('cw-chirp')}><RotateCcw size={15}/> Reset concept</button></aside>
+      <section className="visual-chain signal-continuous"><div className="signal-flow-label"><span>TRANSMIT</span><i/> <span>TRAVEL</span><i/><span>RETURN</span><i/><span>COMPRESS</span></div>
+        <div className="chain-card transmit"><header><div><small>01 · TRANSMIT</small><strong>Outgoing waveform</strong></div><span>{chirp?'CHIRP':'CW'}</span></header><div className="signal-touch-hint"><Hand size={13}/> drag pulse horizontally to stretch</div><svg viewBox="0 0 760 180" preserveAspectRatio="none"><path className="gridline" d="M0 90H760"/><motion.path className="wave-path" d={tx} animate={playing?{pathLength:[0,1]}:{pathLength:1}} transition={{duration:1.6,repeat:playing?Infinity:0,ease:'linear'}}/></svg><motion.button aria-label="Stretch pulse" className="pulse-drag-handle" drag="x" dragMomentum={false} dragElastic={0} onDragStart={()=>setTouching(true)} onDrag={dragEnvelope} onDragEnd={()=>setTouching(false)}/><div className="axis"><span>time →</span><span>{chirp?'frequency sweeps →':'frequency remains visually constant →'}</span></div></div>
+        <div className="chain-arrow"><span>same event</span><i>→</i></div><div className="chain-card receive"><header><div><small>02 · RETURN</small><strong>Returned echo</strong></div><span>DELAYED</span></header><svg viewBox="0 0 760 180" preserveAspectRatio="none"><path className="gridline" d="M0 90H760"/><path className="echo-path" d={echo}/></svg><div className="echo-marker" style={{left:`${26+duration*.18}%`}}><i/><span>echo arrival</span></div></div>
+        <div className="chain-arrow"><span>processing lens</span><i>→</i></div><div className="chain-card compression"><header><div><small>03 · COMPRESS</small><strong>Response changes shape</strong></div><span>OUTPUT</span></header><div className="compression-plot"><div className="ghost-peak"/><motion.div className="live-peak" animate={{width:`${compressed}%`}}/><div className="resolution-bracket" style={{width:`${compressed+8}%`}}><span>current response</span></div></div><div className="insight"><Waves size={18}/><span>{experiment==='cw-chirp'?'Toggle CW / Chirp and compare the whole chain':experiment==='bandwidth'?'Bandwidth is the active visual experiment':'Pulse duration is the active visual experiment'}</span></div></div>
+      </section></div>
   </div>;
 }
