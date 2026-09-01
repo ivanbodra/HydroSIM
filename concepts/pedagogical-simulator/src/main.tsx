@@ -41,12 +41,12 @@ function ConceptRuntime(){
   useEffect(()=>{const sync=()=>setRoute(resolveRoute());window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)},[]);
   const back=()=>{location.hash='';};
   let lab:React.ReactNode=null;
-  if(route.view==='signal')lab=<SignalLab onBack={back}/>;
-  if(route.view==='beam')lab=<BeamLab onBack={back}/>;
-  if(route.view==='propagation')lab=<PropagationLab onBack={back}/>;
-  if(route.view==='vessel')lab=<VesselLab onBack={back}/>;
-  if(route.view==='motion')lab=<MotionLab onBack={back}/>;
-  if(route.view==='integrated')lab=<IntegratedLab onBack={back}/>;
+  if(route.view==='signal')lab=<SignalLab onBack={back} focus={route.focus}/>;
+  if(route.view==='beam')lab=<BeamLab onBack={back} focus={route.focus}/>;
+  if(route.view==='propagation')lab=<PropagationLab onBack={back} focus={route.focus}/>;
+  if(route.view==='vessel')lab=<VesselLab onBack={back} focus={route.focus}/>;
+  if(route.view==='motion')lab=<MotionLab onBack={back} focus={route.focus}/>;
+  if(route.view==='integrated')lab=<IntegratedLab onBack={back} focus={route.focus}/>;
   if(route.view==='map')return <App/>;
   return <><div className={`routed-lab focus-${route.focus??'overview'}`}>{lab}</div><LabNavigator route={route}/></>;
 }
