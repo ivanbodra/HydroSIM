@@ -1,16 +1,18 @@
 # Environmental sound-speed profile extension
 
-Status: scientific specification for the first didactic environmental extension of a truncated sound-speed profile.
+Status: scientifically specified; implementation and visualization deferred until after v0.1 by Technical Lead sequencing.
 
 ## Purpose
 
-The Propagation Explorer should teach that sound speed in seawater is a derived environmental quantity rather than an independent profile parameter:
+The Propagation Explorer should eventually teach that sound speed in seawater is a derived environmental quantity rather than an independent profile parameter:
 
 \[
 c = c(T,S,P).
 \]
 
 This model also provides an explicit, scientifically interpretable way to continue a didactic profile below its maximum observed/configured depth without changing the strict finite-domain semantics of the generic layered ray tracer.
+
+The scientific specification is retained now so that the later implementation does not need to rediscover the model. It is **not** part of the current v0.1 release gate.
 
 ## Scientific distinction
 
@@ -48,7 +50,7 @@ c(z)=c[T_m,S_m,P(z,\phi)].
 
 The reference sound-speed formulation is Wong & Zhu (1995), which corrects the Chen & Millero (1977) seawater sound-speed formulation and is also implemented by the NOAA/UNH HydrOffice Sound Speed Manager.
 
-The first implementation should use a recognized pressure/depth conversion consistent with TEOS-10/GSW where practical.
+For the eventual implementation, the Technical Lead approved the Python `gsw` package for TEOS-10/GSW-consistent pressure/depth conversion rather than copying or approximating that relationship locally.
 
 ## Didactic control case
 
@@ -83,7 +85,7 @@ Its purpose is to:
 3. provide a deterministic comparison with constant-c continuation; and
 4. support ray-tracing lessons without hiding extrapolation inside the generic propagation solver.
 
-For realistic operational or environmental reconstruction, a deeper cast, reference cast, climatology, or ocean model should be preferred. Future extensions may use WOA, RTOFS, or equivalent referenced environmental sources, but those are outside the first vertical slice.
+For realistic operational or environmental reconstruction, a deeper cast, reference cast, climatology, or ocean model should be preferred. Future extensions may use WOA, RTOFS, or equivalent referenced environmental sources, but those are outside this first specified model.
 
 ## Architecture boundary
 
@@ -93,7 +95,7 @@ The environmental extension belongs in a scientific helper/composition path used
 
 ## Expected tests
 
-The implementation should test at least:
+When implementation is scheduled after v0.1, it should test at least:
 
 - continuity at `z_m`;
 - increasing pressure with increasing depth for a fixed latitude;
@@ -112,8 +114,10 @@ IOC, SCOR & IAPSO (2010). *The international thermodynamic equation of seawater 
 
 NOAA/UNH HydrOffice Sound Speed Manager, `hydroffice/hyo2_soundspeed`, including the oceanographic sound-speed and pressure/depth utilities and explicit profile-extension workflow.
 
-## Coordination
+## Coordination and sequencing
 
-Implementation handoff: Issue #34.
+Issue #34 requested implementation and was closed as `not_planned` for v0.1 after Technical Lead sequencing.
 
-Didactic visualization handoff: Issue #35.
+Issue #35 requested the corresponding UI/visualization and was likewise closed as `not_planned` for v0.1.
+
+Issue #36 records the dependency decision: use `gsw` when this model is scheduled post-v0.1.
