@@ -15,23 +15,21 @@ import './map-polish.css';
 import './experience-deepening.css';
 
 type View='map'|'signal'|'beam'|'propagation'|'vessel'|'motion'|'integrated';
-type Route={view:View;focus?:string};
-function resolveRoute():Route {
-  const raw=location.hash.replace(/^#/,'');
-  const [lab,focus]=raw.split('/');
+function resolveView():View {
+  const lab=location.hash.replace(/^#/,'').split('/')[0];
   const map:Record<string,View>={'signal-lab':'signal','beam-lab':'beam','propagation-lab':'propagation','vessel-lab':'vessel','motion-lab':'motion','integrated-lab':'integrated'};
-  return {view:map[lab]??'map',focus};
+  return map[lab]??'map';
 }
 function ConceptRuntime() {
-  const [route,setRoute]=useState<Route>(resolveRoute());
-  useEffect(()=>{const sync=()=>setRoute(resolveRoute());window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)},[]);
+  const [view,setView]=useState<View>(resolveView());
+  useEffect(()=>{const sync=()=>setView(resolveView());window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)},[]);
   const back=()=>{location.hash='';};
-  if(route.view==='signal') return <SignalLab onBack={back} focus={route.focus}/>;
-  if(route.view==='beam') return <BeamLab onBack={back} focus={route.focus}/>;
-  if(route.view==='propagation') return <PropagationLab onBack={back} focus={route.focus}/>;
-  if(route.view==='vessel') return <VesselLab onBack={back} focus={route.focus}/>;
-  if(route.view==='motion') return <MotionLab onBack={back} focus={route.focus}/>;
-  if(route.view==='integrated') return <IntegratedLab onBack={back} focus={route.focus}/>;
+  if(view==='signal') return <SignalLab onBack={back}/>;
+  if(view==='beam') return <BeamLab onBack={back}/>;
+  if(view==='propagation') return <PropagationLab onBack={back}/>;
+  if(view==='vessel') return <VesselLab onBack={back}/>;
+  if(view==='motion') return <MotionLab onBack={back}/>;
+  if(view==='integrated') return <IntegratedLab onBack={back}/>;
   return <App/>;
 }
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><ConceptRuntime/></React.StrictMode>);
