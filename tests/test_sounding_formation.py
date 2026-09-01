@@ -1,3 +1,5 @@
+import pytest
+
 from hydrosim.acquisition.bottom_detection import BottomDetection
 from hydrosim.acquisition.models import AcquisitionPing
 from hydrosim.app.sounding_formation import (
@@ -114,3 +116,31 @@ def test_sounding_formation_stage_navigation_saturates_and_resets():
 
     assert snapshot.next_stage().active_stage == SoundingFormationStage.TRUTH_OBSERVED
     assert snapshot.reset().active_stage == SoundingFormationStage.TRANSMIT
+
+
+def test_sounding_formation_rejects_detection_from_another_beam():
+    snapshot = _snapshot()
+    other_detection = snapshot.detection.model_copy(update={"parent_beam_index": 1})
+
+    with pytest.raises(ValueError, match="detection parent_beam_index"):
+        SoundingFormationSnapshot(
+            ping=snapshot.ping,
+            beam=snapshot.beam,
+            detection=other_detection,
+            associated_pose=snapshot.associated_pose,
+            sounding=snapshot.sounding,
+        )
+
+
+def test_sounding_formation_rejects_sounding_from_another_beam():
+    snapshot = _snapshot()
+    other_sounding = snapshot.sounding.model_copy(update={"beam_index": 1})
+
+    with pytest.raises(ValueError, match="sounding beam_index"):
+        SoundingFormationSnapshot(
+            ping=snapshot.ping,
+            beam=snapshot.beam,
+            detection=snapshot.detection,
+            associated_pose=snapshot.associated_pose,
+            sounding=other_sounding,
+        )
