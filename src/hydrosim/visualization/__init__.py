@@ -29,7 +29,12 @@ from .propagation_explorer import (
     PropagationExplorerControls,
     prepare_propagation_explorer_snapshot,
 )
-from .signal_explorer import SignalExplorerSnapshot, prepare_signal_explorer_snapshot
+from .signal_explorer import (
+    SignalExplorerDisplayTrace,
+    SignalExplorerSnapshot,
+    prepare_signal_explorer_display_trace,
+    prepare_signal_explorer_snapshot,
+)
 from .signal_explorer_interactive import (
     SignalExplorerControls,
     launch_signal_explorer_interactive,
@@ -48,6 +53,7 @@ __all__ = [
     "MillsCrossPatternPanels",
     "PropagationExplorerControls",
     "SignalExplorerControls",
+    "SignalExplorerDisplayTrace",
     "SignalExplorerSnapshot",
     "draw_beam_explorer_snapshot",
     "draw_layered_svp_explorer_snapshot",
@@ -62,5 +68,6 @@ __all__ = [
     "prepare_mills_cross_pattern_panels",
     "prepare_propagation_explorer_snapshot",
     "prepare_signal_explorer_comparison",
+    "prepare_signal_explorer_display_trace",
     "prepare_signal_explorer_snapshot",
 ]
