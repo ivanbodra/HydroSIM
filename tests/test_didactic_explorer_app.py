@@ -22,12 +22,16 @@ def test_didactic_explorer_shell_uses_stable_signal_renderer_boundary():
     assert "Scientific Core" in source
 
 
-def test_signal_lesson_exposes_only_controls_with_visible_current_consequences():
+def test_signal_lesson_exposes_controls_with_visible_current_consequences():
     source = _source()
+    signal_source = source.split("# Signal lesson", 1)[1].split("# Beam lesson", 1)[0]
 
-    assert "duration = QDoubleSpinBox()" in source
-    assert "bandwidth = QDoubleSpinBox()" in source
-    assert "center_frequency" not in source.split("# Signal lesson", 1)[1].split("# Beam lesson", 1)[0].split("SignalExplorerControls(", 1)[0]
+    assert "carrier_frequency = QDoubleSpinBox()" in signal_source
+    assert "duration = QDoubleSpinBox()" in signal_source
+    assert "bandwidth = QDoubleSpinBox()" in signal_source
+    assert "center_frequency_hz=carrier_frequency.value() * 1e3" in signal_source
+    assert "reference_wavelength_m = _BEAM_DEFAULTS.sound_speed_mps / state.center_frequency_hz" in signal_source
+    assert "λ@" in signal_source
 
 
 def test_signal_lesson_uses_guided_learning_hierarchy():
@@ -60,7 +64,17 @@ def test_signal_quantitative_panel_derives_readouts_from_current_controls():
 
     assert "time_bandwidth = state.duration_seconds * state.lfm_bandwidth_hz" in source
     assert "reciprocal_bandwidth_us" in source
+    assert "reference_wavelength_m" in source
     assert 'f"TB={time_bandwidth:.1f}' in source
+
+
+def test_signal_frequency_control_is_bilingual_and_resettable():
+    source = _source()
+
+    assert 'carrier_frequency_label.setText(localizer.text("signal.carrier_frequency"))' in source
+    assert '"frequency": carrier_frequency' in source
+    assert '"frequency_slider": carrier_frequency_slider' in source
+    assert "carrier_frequency.setValue(_SIGNAL_DEFAULTS.center_frequency_hz / 1e3)" in source
 
 
 def test_future_learning_blocks_are_marked_as_planned():
