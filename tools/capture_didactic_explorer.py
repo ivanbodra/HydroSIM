@@ -24,6 +24,18 @@ _LESSON_ROWS = {
 }
 
 
+def _apply_capture_scenario(window, lesson: str | None) -> None:
+    """Set a visible representative state when evidence benefits from non-default controls."""
+
+    if lesson != "Motion":
+        return
+    controls = window.hydrosim_motion_controls
+    controls["roll"].setValue(10.0)
+    controls["pitch"].setValue(-6.0)
+    controls["yaw"].setValue(12.0)
+    controls["heave"].setValue(0.8)
+
+
 def capture(output: Path, delay_ms: int = 1200, lesson: str | None = None) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     app = QApplication.instance() or QApplication([])
@@ -35,6 +47,7 @@ def capture(output: Path, delay_ms: int = 1200, lesson: str | None = None) -> No
             raise RuntimeError("Didactic Explorer window was not created")
         if lesson is not None:
             window.hydrosim_navigation.setCurrentRow(_LESSON_ROWS[lesson])
+            _apply_capture_scenario(window, lesson)
             app.processEvents()
         window.repaint()
         app.processEvents()
