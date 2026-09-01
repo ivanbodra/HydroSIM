@@ -156,6 +156,20 @@ def launch_didactic_explorer() -> None:
     form = QFormLayout()
     form.setVerticalSpacing(5)
     form.setHorizontalSpacing(8)
+
+    carrier_frequency_label = QLabel()
+    carrier_frequency = QDoubleSpinBox()
+    carrier_frequency.setRange(50.0, 700.0)
+    carrier_frequency.setSingleStep(10.0)
+    carrier_frequency.setDecimals(0)
+    carrier_frequency.setValue(_SIGNAL_DEFAULTS.center_frequency_hz / 1e3)
+    carrier_frequency.setSuffix(" kHz")
+    form.addRow(carrier_frequency_label, carrier_frequency)
+    carrier_frequency_slider = QSlider(Qt.Orientation.Horizontal)
+    carrier_frequency_slider.setRange(50, 700)
+    carrier_frequency_slider.setValue(round(carrier_frequency.value()))
+    form.addRow("", carrier_frequency_slider)
+
     duration_label = QLabel()
     duration = QDoubleSpinBox()
     duration.setRange(0.1, 5.0)
@@ -296,7 +310,7 @@ def launch_didactic_explorer() -> None:
     def redraw_signal() -> None:
         bandwidth_hz = bandwidth.value() * 1e3
         state = SignalExplorerControls(
-            center_frequency_hz=_SIGNAL_DEFAULTS.center_frequency_hz,
+            center_frequency_hz=carrier_frequency.value() * 1e3,
             duration_seconds=duration.value() * 1e-3,
             lfm_bandwidth_hz=bandwidth_hz,
             sample_rate_hz=max(_SIGNAL_DEFAULTS.sample_rate_hz, 1.25 * bandwidth_hz),
@@ -305,7 +319,10 @@ def launch_didactic_explorer() -> None:
         draw_signal_explorer_comparison(new_cw, new_lfm, signal_axes)
         time_bandwidth = state.duration_seconds * state.lfm_bandwidth_hz
         reciprocal_bandwidth_us = 1e6 / state.lfm_bandwidth_hz
+        reference_wavelength_m = _BEAM_DEFAULTS.sound_speed_mps / state.center_frequency_hz
         signal_readout.setText(
+            f"f={state.center_frequency_hz / 1e3:.0f} kHz · "
+            f"λ@{_BEAM_DEFAULTS.sound_speed_mps:.0f} m/s={reference_wavelength_m * 1e3:.2f} mm · "
             f"T={state.duration_seconds * 1e3:.1f} ms · "
             f"B={state.lfm_bandwidth_hz / 1e3:.0f} kHz · "
             f"TB={time_bandwidth:.1f} · "
@@ -314,21 +331,43 @@ def launch_didactic_explorer() -> None:
         update_signal_comparison_display()
         signal_canvas.draw_idle()
 
+    def sync_signal_spinbox_to_slider(spinbox, slider, scale: float) -> None:
+        target = round(spinbox.value() * scale)
+        if slider.value() != target:
+            slider.blockSignals(True)
+            slider.setValue(target)
+            slider.blockSignals(False)
+        redraw_signal()
+
+    def sync_signal_slider_to_spinbox(slider, spinbox, scale: float) -> None:
+        target = slider.value() / scale
+        if spinbox.value() != target:
+            spinbox.blockSignals(True)
+            spinbox.setValue(target)
+            spinbox.blockSignals(False)
+        redraw_signal()
+
+    carrier_frequency.valueChanged.connect(
+        lambda _value: sync_signal_spinbox_to_slider(
+            carrier_frequency, carrier_frequency_slider, 1.0
+        )
+    )
+    carrier_frequency_slider.valueChanged.connect(
+        lambda _value: sync_signal_slider_to_spinbox(
+            carrier_frequency_slider, carrier_frequency, 1.0
+        )
+    )
     duration.valueChanged.connect(
-        lambda value: duration_slider.setValue(round(value * 10.0))
-        if duration_slider.value() != round(value * 10.0)
-        else redraw_signal()
+        lambda _value: sync_signal_spinbox_to_slider(duration, duration_slider, 10.0)
     )
     duration_slider.valueChanged.connect(
-        lambda value: duration.setValue(value / 10.0) if duration.value() != value / 10.0 else None
+        lambda _value: sync_signal_slider_to_spinbox(duration_slider, duration, 10.0)
     )
     bandwidth.valueChanged.connect(
-        lambda value: bandwidth_slider.setValue(round(value))
-        if bandwidth_slider.value() != round(value)
-        else redraw_signal()
+        lambda _value: sync_signal_spinbox_to_slider(bandwidth, bandwidth_slider, 1.0)
     )
     bandwidth_slider.valueChanged.connect(
-        lambda value: bandwidth.setValue(float(value)) if bandwidth.value() != float(value) else None
+        lambda _value: sync_signal_slider_to_spinbox(bandwidth_slider, bandwidth, 1.0)
     )
 
     def set_signal_baseline() -> None:
@@ -342,8 +381,18 @@ def launch_didactic_explorer() -> None:
         update_signal_comparison_display()
 
     def reset_signal() -> None:
+        carrier_frequency.blockSignals(True)
+        duration.blockSignals(True)
+        bandwidth.blockSignals(True)
+        carrier_frequency.setValue(_SIGNAL_DEFAULTS.center_frequency_hz / 1e3)
         duration.setValue(_SIGNAL_DEFAULTS.duration_seconds * 1e3)
         bandwidth.setValue(_SIGNAL_DEFAULTS.lfm_bandwidth_hz / 1e3)
+        carrier_frequency.blockSignals(False)
+        duration.blockSignals(False)
+        bandwidth.blockSignals(False)
+        carrier_frequency_slider.setValue(round(carrier_frequency.value()))
+        duration_slider.setValue(round(duration.value() * 10.0))
+        bandwidth_slider.setValue(round(bandwidth.value()))
         redraw_signal()
 
     signal_set_baseline.clicked.connect(set_signal_baseline)
@@ -591,8 +640,8 @@ def launch_didactic_explorer() -> None:
         planned = QLabel("Planned learning block")
         layout.addWidget(planned)
         body = QLabel(
-            description + "\n\nThis view remains unavailable until its first end-to-end "
-            "learning slice is integrated and tested."
+            description
+            + "\n\nThis view remains unavailable until its first end-to-end learning slice is integrated and tested."
         )
         body.setWordWrap(True)
         layout.addWidget(body)
@@ -622,6 +671,7 @@ def launch_didactic_explorer() -> None:
         question.setText(localizer.text("signal.question_focus"))
         try_it_label.setText(localizer.text("common.try_it"))
         instruction.setText(localizer.text("signal.instruction"))
+        carrier_frequency_label.setText(localizer.text("signal.carrier_frequency"))
         duration_label.setText(localizer.text("signal.pulse_duration"))
         bandwidth_label.setText(localizer.text("signal.lfm_bandwidth"))
         baseline_hint.setText(localizer.text("signal.compare_hint"))
@@ -673,10 +723,13 @@ def launch_didactic_explorer() -> None:
     window.hydrosim_navigation = navigation
     window.hydrosim_language_selector = language_selector
     window.hydrosim_signal_controls = {
+        "frequency": carrier_frequency,
+        "frequency_slider": carrier_frequency_slider,
         "duration": duration,
         "duration_slider": duration_slider,
         "bandwidth": bandwidth,
         "bandwidth_slider": bandwidth_slider,
+        "readout": signal_readout,
         "set_baseline": signal_set_baseline,
         "clear_baseline": signal_clear_baseline,
         "comparison_readout": signal_comparison_readout,
