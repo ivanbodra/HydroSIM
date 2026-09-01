@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import SignalLab from './SignalLab';
 import './styles.css';
+import './signal-lab-polish.css';
 
 function ConceptRuntime() {
   const [view, setView] = useState(location.hash === '#signal-lab' ? 'signal' : 'map');
