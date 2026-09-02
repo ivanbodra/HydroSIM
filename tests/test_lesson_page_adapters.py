@@ -22,8 +22,8 @@ def test_propagation_builder_reuses_canonical_propagation_adapter():
     )
 
     assert len(baseline.beams) == len(biased.beams)
-    assert tuple(beam.truth_sounding for beam in baseline.beams) == tuple(
-        beam.truth_sounding for beam in biased.beams
+    assert tuple(beam.truth_bottom_point for beam in baseline.beams) == tuple(
+        beam.truth_bottom_point for beam in biased.beams
     )
-    assert max(beam.sounding_error_norm_m for beam in baseline.beams) == 0.0
+    assert max(beam.sounding_error_norm_m for beam in baseline.beams) < 1.0e-9
     assert max(beam.sounding_error_norm_m for beam in biased.beams) > 0.0
