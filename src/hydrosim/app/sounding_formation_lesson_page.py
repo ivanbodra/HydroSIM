@@ -173,7 +173,7 @@ def _reference_snapshot() -> SoundingFormationSnapshot:
 
 
 def build_sounding_formation_lesson() -> tuple[object, dict[str, object], Callable[[str], None]]:
-    from PySide6.QtCore import QTimer
+    from PySide6.QtCore import QTimer, Qt
     from PySide6.QtWidgets import (
         QFrame,
         QHBoxLayout,
@@ -202,7 +202,7 @@ def build_sounding_formation_lesson() -> tuple[object, dict[str, object], Callab
     stage_labels: list[QLabel] = []
     for _stage in STAGE_ORDER:
         label = QLabel()
-        label.setAlignment(0x84)  # AlignCenter
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setWordWrap(True)
         label.setMinimumHeight(38)
         stage_labels.append(label)
@@ -223,7 +223,7 @@ def build_sounding_formation_lesson() -> tuple[object, dict[str, object], Callab
     side_layout = QVBoxLayout(side)
     readout = QLabel()
     readout.setWordWrap(True)
-    readout.setTextInteractionFlags(1)  # TextSelectableByMouse
+    readout.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     side_layout.addWidget(readout)
     semantics = QLabel()
     semantics.setWordWrap(True)
