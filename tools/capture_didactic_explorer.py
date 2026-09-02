@@ -23,6 +23,7 @@ _LESSON_ROWS = {
     "Vessel": 4,
     "Motion": 5,
     "Sonar Systems": 6,
+    "Sounding Formation": 7,
 }
 
 
@@ -44,6 +45,11 @@ def _apply_capture_scenario(window, lesson: str | None) -> None:
         controls = window.hydrosim_sonar_geometry_controls
         controls["swath"].setValue(130.0)
         controls["cant"].setValue(25.0)
+        return
+    if lesson == "Sounding Formation":
+        controls = window.hydrosim_sounding_formation_controls
+        for _ in range(9):
+            controls["next"].click()
         return
     if lesson != "Motion":
         return
