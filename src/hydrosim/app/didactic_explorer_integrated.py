@@ -45,8 +45,8 @@ def launch_didactic_explorer() -> None:
         old_signal_page.deleteLater()
         window.hydrosim_pages.insertWidget(0, signal_page)
 
-        sonar_page, sonar_controls, apply_sonar_language = build_sonar_equation_lesson()
-        window.hydrosim_pages.insertWidget(2, sonar_page)
+        page, sonar_controls, apply_sonar_language = build_sonar_equation_lesson()
+        window.hydrosim_pages.insertWidget(2, page)
         nav_item = QListWidgetItem()
         nav_item.setData(Qt.ItemDataRole.UserRole, "Sonar Equation")
         window.hydrosim_navigation.insertItem(2, nav_item)
