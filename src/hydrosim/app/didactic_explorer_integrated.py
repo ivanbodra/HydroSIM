@@ -48,9 +48,9 @@ def launch_didactic_explorer() -> None:
 
         page, sonar_controls, apply_sonar_language = build_sonar_equation_lesson()
         window.hydrosim_pages.insertWidget(2, page)
-        sonar_item = QListWidgetItem()
-        sonar_item.setData(Qt.ItemDataRole.UserRole, "Sonar Equation")
-        window.hydrosim_navigation.insertItem(2, sonar_item)
+        nav_item = QListWidgetItem()
+        nav_item.setData(Qt.ItemDataRole.UserRole, "Sonar Equation")
+        window.hydrosim_navigation.insertItem(2, nav_item)
 
         geometry_page, geometry_controls, apply_geometry_language = build_sonar_geometry_lesson()
         window.hydrosim_pages.addWidget(geometry_page)
