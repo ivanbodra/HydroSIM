@@ -6,11 +6,20 @@ def _source() -> str:
     return Path("src/hydrosim/app/didactic_explorer.py").read_text(encoding="utf-8")
 
 
-def test_didactic_explorer_shell_declares_all_learning_blocks():
+def test_base_didactic_explorer_shell_declares_established_learning_blocks():
     source = _source()
 
     for lesson in ("Signal", "Beam", "Propagation", "Vessel", "Motion"):
         assert f'(\"{lesson}\",' in source
+
+
+def test_integrated_shell_adds_sonar_equation_between_beam_and_propagation():
+    source = Path("src/hydrosim/app/didactic_explorer_integrated.py").read_text(encoding="utf-8")
+
+    assert '"Sonar Equation"' in source
+    assert "insertWidget(2, page)" in source
+    assert "insertItem(2, nav_item)" in source
+    assert "build_sonar_equation_lesson" in source
 
 
 def test_didactic_explorer_shell_uses_stable_signal_renderer_boundary():
@@ -77,26 +86,31 @@ def test_signal_frequency_control_is_bilingual_and_resettable():
     assert "carrier_frequency.setValue(_SIGNAL_DEFAULTS.center_frequency_hz / 1e3)" in source
 
 
-def test_all_five_learning_blocks_are_integrated_as_ready():
-    source = _source()
+def test_all_six_learning_blocks_are_exposed_as_ready():
+    base_source = _source()
+    integrated_source = Path("src/hydrosim/app/didactic_explorer_integrated.py").read_text(
+        encoding="utf-8"
+    )
 
-    assert "build_motion_lesson" in source
-    assert "pages.addWidget(motion_page)" in source
-    assert 'item = QListWidgetItem(lesson + "  • ready")' in source
-    assert "status.ready" in source
-    assert "status.planned" not in source
-    assert "Planned learning block" not in source
+    assert "build_motion_lesson" in base_source
+    assert "pages.addWidget(motion_page)" in base_source
+    assert 'item = QListWidgetItem(lesson + "  • ready")' in base_source
+    assert '"Sonar Equation"' in integrated_source
+    assert '"Equação Sonar"' in integrated_source
+    assert '"ready"' in integrated_source
+    assert '"disponível"' in integrated_source
 
 
-def test_didactic_explorer_has_console_entry_point():
+def test_didactic_explorer_has_integrated_console_entry_point():
     config = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
     assert config["project"]["scripts"]["hydrosim-didactic"] == (
-        "hydrosim.app.didactic_explorer:launch_didactic_explorer"
+        "hydrosim.app.didactic_explorer_integrated:launch_didactic_explorer"
     )
 
 
 def test_didactic_explorer_supports_python_module_launch():
     source = Path("src/hydrosim/app/__main__.py").read_text(encoding="utf-8")
 
+    assert "didactic_explorer_integrated" in source
     assert "launch_didactic_explorer()" in source
