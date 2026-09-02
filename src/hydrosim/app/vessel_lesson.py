@@ -32,8 +32,17 @@ _DEFAULT_CONFIGURATION = VesselVerticalReferenceConfiguration(
 )
 
 
-def build_vessel_lesson(FigureCanvas: type[Any]) -> tuple[Any, dict[str, Any], Callable[[str], None]]:
-    """Build the compact bilingual Vessel lesson without duplicating scientific logic."""
+def build_vessel_lesson(
+    FigureCanvas: type[Any] | None = None,
+) -> tuple[Any, dict[str, Any], Callable[[str], None]]:
+    """Build the compact bilingual Vessel lesson without duplicating scientific logic.
+
+    ``FigureCanvas`` remains injectable for the legacy shell and tests. The default
+    zero-argument form is the reusable page-builder contract used by the product shell.
+    """
+
+    if FigureCanvas is None:
+        from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import (
