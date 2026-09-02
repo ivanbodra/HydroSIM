@@ -1,6 +1,6 @@
 """Run the HydroSIM Didactic Explorer with ``python -m hydrosim.app``."""
 
-from .didactic_explorer import launch_didactic_explorer
+from .didactic_explorer_integrated import launch_didactic_explorer
 
 
 if __name__ == "__main__":

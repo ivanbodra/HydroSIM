@@ -13,14 +13,15 @@ from pathlib import Path
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
-from hydrosim.app.didactic_explorer import launch_didactic_explorer
+from hydrosim.app.didactic_explorer_integrated import launch_didactic_explorer
 
 _LESSON_ROWS = {
     "Signal": 0,
     "Beam": 1,
-    "Propagation": 2,
-    "Vessel": 3,
-    "Motion": 4,
+    "Sonar Equation": 2,
+    "Propagation": 3,
+    "Vessel": 4,
+    "Motion": 5,
 }
 
 
@@ -31,6 +32,12 @@ def _apply_capture_scenario(window, lesson: str | None) -> None:
         controls = window.hydrosim_beam_controls
         controls["spacing"].setValue(7.5)
         controls["steering"].setValue(20.0)
+        return
+    if lesson == "Sonar Equation":
+        controls = window.hydrosim_sonar_equation_controls
+        controls["range"].setValue(120.0)
+        controls["frequency"].setValue(400.0)
+        controls["scattering_strength"].setValue(-25.0)
         return
     if lesson != "Motion":
         return

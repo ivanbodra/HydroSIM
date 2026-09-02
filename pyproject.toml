@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-hydrosim-didactic = "hydrosim.app.didactic_explorer:launch_didactic_explorer"
+hydrosim-didactic = "hydrosim.app.didactic_explorer_integrated:launch_didactic_explorer"
 
 [project.optional-dependencies]
 dev = [

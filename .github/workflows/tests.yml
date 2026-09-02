@@ -52,6 +52,8 @@ jobs:
           signal_status=$?
           python tools/capture_didactic_explorer.py --lesson Beam --output docs/images/didactic_explorer_beam.png >> artifacts/capture.log 2>&1
           beam_status=$?
+          python tools/capture_didactic_explorer.py --lesson "Sonar Equation" --output docs/images/didactic_explorer_sonar_equation.png >> artifacts/capture.log 2>&1
+          sonar_equation_status=$?
           python tools/capture_didactic_explorer.py --lesson Propagation --output docs/images/didactic_explorer_propagation.png >> artifacts/capture.log 2>&1
           propagation_status=$?
           python tools/capture_didactic_explorer.py --lesson Vessel --output docs/images/didactic_explorer_vessel.png >> artifacts/capture.log 2>&1
@@ -63,6 +65,7 @@ jobs:
           printf '%s\n' "$actual_status" > artifacts/capture.exit
           printf '%s\n' "$signal_status" > artifacts/capture_signal.exit
           printf '%s\n' "$beam_status" > artifacts/capture_beam.exit
+          printf '%s\n' "$sonar_equation_status" > artifacts/capture_sonar_equation.exit
           printf '%s\n' "$propagation_status" > artifacts/capture_propagation.exit
           printf '%s\n' "$vessel_status" > artifacts/capture_vessel.exit
           printf '%s\n' "$motion_status" > artifacts/capture_motion.exit
@@ -70,12 +73,14 @@ jobs:
           test "$actual_status" = "0"
           test "$signal_status" = "0"
           test "$beam_status" = "0"
+          test "$sonar_equation_status" = "0"
           test "$propagation_status" = "0"
           test "$vessel_status" = "0"
           test "$motion_status" = "0"
           test -s docs/images/didactic_explorer_actual.png
           test -s docs/images/didactic_explorer_signal.png
           test -s docs/images/didactic_explorer_beam.png
+          test -s docs/images/didactic_explorer_sonar_equation.png
           test -s docs/images/didactic_explorer_propagation.png
           test -s docs/images/didactic_explorer_vessel.png
           test -s docs/images/didactic_explorer_motion.png
@@ -98,6 +103,7 @@ jobs:
           test "$(cat artifacts/capture.exit)" = "0"
           test "$(cat artifacts/capture_signal.exit)" = "0"
           test "$(cat artifacts/capture_beam.exit)" = "0"
+          test "$(cat artifacts/capture_sonar_equation.exit)" = "0"
           test "$(cat artifacts/capture_propagation.exit)" = "0"
           test "$(cat artifacts/capture_vessel.exit)" = "0"
           test "$(cat artifacts/capture_motion.exit)" = "0"
