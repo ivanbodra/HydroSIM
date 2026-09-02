@@ -14,8 +14,17 @@ from hydrosim.visualization.motion_lesson_plot import (
 )
 
 
-def build_motion_lesson(FigureCanvas: type[Any]) -> tuple[Any, dict[str, Any], Callable[[str], None]]:
-    """Build the compact Motion page using the existing Motion lesson adapter."""
+def build_motion_lesson(
+    FigureCanvas: type[Any] | None = None,
+) -> tuple[Any, dict[str, Any], Callable[[str], None]]:
+    """Build the compact Motion page using the existing Motion lesson adapter.
+
+    ``FigureCanvas`` remains injectable for legacy integration/tests, while the default
+    zero-argument form is a stable page-builder contract for the pedagogical shell.
+    """
+
+    if FigureCanvas is None:
+        from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
     from PySide6.QtWidgets import (
         QDoubleSpinBox,
