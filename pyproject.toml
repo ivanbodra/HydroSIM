@@ -24,6 +24,10 @@ visualization = [
     "plotly",
     "PySide6"
 ]
+web = [
+    "fastapi==0.116.1",
+    "uvicorn[standard]==0.35.0"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
