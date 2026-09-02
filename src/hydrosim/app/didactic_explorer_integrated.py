@@ -1,8 +1,8 @@
 """Integrated HydroSIM Didactic Explorer launcher.
 
 The mature base shell remains the owner of navigation and established lessons.
-This wrapper replaces D1 with the canonical Signal experience and inserts D3,
-without duplicating scientific logic in presentation code.
+This wrapper replaces D1 with the canonical Signal experience and inserts later
+lesson pages without duplicating scientific logic in presentation code.
 """
 
 from __future__ import annotations
@@ -10,16 +10,17 @@ from __future__ import annotations
 from hydrosim.app.didactic_explorer import launch_didactic_explorer as _launch_base
 from hydrosim.app.signal_lesson_page import build_signal_lesson
 from hydrosim.app.sonar_equation_lesson_page import build_sonar_equation_lesson
+from hydrosim.app.sonar_geometry_lesson_page import build_sonar_geometry_lesson
 
 _NAV = {
-    "en": ("Signal", "Beam", "Sonar Equation", "Propagation", "Vessel", "Motion"),
-    "pt-BR": ("Sinal", "Feixe", "Equação Sonar", "Propagação", "Embarcação", "Movimento"),
+    "en": ("Signal", "Beam", "Sonar Equation", "Propagation", "Vessel", "Motion", "Sonar Systems"),
+    "pt-BR": ("Sinal", "Feixe", "Equação Sonar", "Propagação", "Embarcação", "Movimento", "Sistemas Sonar"),
 }
 _READY = {"en": "ready", "pt-BR": "disponível"}
 
 
 def launch_didactic_explorer() -> None:
-    """Launch the real shell with corrected D1 and integrated D3."""
+    """Launch the real shell with corrected D1 plus integrated D3 and D7."""
 
     try:
         from PySide6.QtCore import QTimer, Qt
@@ -36,7 +37,7 @@ def launch_didactic_explorer() -> None:
         window = getattr(app, "hydrosim_didactic_explorer_window", None)
         if window is None:
             raise RuntimeError("Base Didactic Explorer window was not created")
-        if hasattr(window, "hydrosim_signal_lesson_controls"):
+        if hasattr(window, "hydrosim_sonar_geometry_controls"):
             return
 
         signal_page, signal_controls, apply_signal_language = build_signal_lesson()
@@ -51,6 +52,12 @@ def launch_didactic_explorer() -> None:
         nav_item.setData(Qt.ItemDataRole.UserRole, "Sonar Equation")
         window.hydrosim_navigation.insertItem(2, nav_item)
 
+        geometry_page, geometry_controls, apply_geometry_language = build_sonar_geometry_lesson()
+        window.hydrosim_pages.addWidget(geometry_page)
+        geometry_item = QListWidgetItem()
+        geometry_item.setData(Qt.ItemDataRole.UserRole, "Sonar Systems")
+        window.hydrosim_navigation.addItem(geometry_item)
+
         def apply_integrated_language(locale: str) -> None:
             locale = locale if locale in _NAV else "en"
             ready = _READY[locale]
@@ -58,6 +65,7 @@ def launch_didactic_explorer() -> None:
                 window.hydrosim_navigation.item(index).setText(f"{label}  • {ready}")
             apply_signal_language(locale)
             apply_sonar_language(locale)
+            apply_geometry_language(locale)
 
         selector = window.hydrosim_language_selector
         selector.currentIndexChanged.connect(
@@ -69,6 +77,8 @@ def launch_didactic_explorer() -> None:
         window.hydrosim_apply_signal_lesson_language = apply_signal_language
         window.hydrosim_sonar_equation_controls = sonar_controls
         window.hydrosim_apply_sonar_equation_language = apply_sonar_language
+        window.hydrosim_sonar_geometry_controls = geometry_controls
+        window.hydrosim_apply_sonar_geometry_language = apply_geometry_language
 
     QTimer.singleShot(0, integrate_lessons)
     _launch_base()

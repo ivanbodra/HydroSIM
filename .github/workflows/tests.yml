@@ -60,6 +60,8 @@ jobs:
           vessel_status=$?
           python tools/capture_didactic_explorer.py --lesson Motion --output docs/images/didactic_explorer_motion.png >> artifacts/capture.log 2>&1
           motion_status=$?
+          python tools/capture_didactic_explorer.py --lesson "Sonar Systems" --output docs/images/didactic_explorer_sonar_systems.png >> artifacts/capture.log 2>&1
+          sonar_systems_status=$?
           set -e
 
           printf '%s\n' "$actual_status" > artifacts/capture.exit
@@ -69,6 +71,7 @@ jobs:
           printf '%s\n' "$propagation_status" > artifacts/capture_propagation.exit
           printf '%s\n' "$vessel_status" > artifacts/capture_vessel.exit
           printf '%s\n' "$motion_status" > artifacts/capture_motion.exit
+          printf '%s\n' "$sonar_systems_status" > artifacts/capture_sonar_systems.exit
 
           test "$actual_status" = "0"
           test "$signal_status" = "0"
@@ -77,6 +80,7 @@ jobs:
           test "$propagation_status" = "0"
           test "$vessel_status" = "0"
           test "$motion_status" = "0"
+          test "$sonar_systems_status" = "0"
           test -s docs/images/didactic_explorer_actual.png
           test -s docs/images/didactic_explorer_signal.png
           test -s docs/images/didactic_explorer_beam.png
@@ -84,6 +88,7 @@ jobs:
           test -s docs/images/didactic_explorer_propagation.png
           test -s docs/images/didactic_explorer_vessel.png
           test -s docs/images/didactic_explorer_motion.png
+          test -s docs/images/didactic_explorer_sonar_systems.png
 
       - name: Upload Didactic Explorer screenshots and diagnostics
         if: always()
@@ -107,6 +112,7 @@ jobs:
           test "$(cat artifacts/capture_propagation.exit)" = "0"
           test "$(cat artifacts/capture_vessel.exit)" = "0"
           test "$(cat artifacts/capture_motion.exit)" = "0"
+          test "$(cat artifacts/capture_sonar_systems.exit)" = "0"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/images/didactic_explorer_*.png

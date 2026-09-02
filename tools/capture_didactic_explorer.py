@@ -22,6 +22,7 @@ _LESSON_ROWS = {
     "Propagation": 3,
     "Vessel": 4,
     "Motion": 5,
+    "Sonar Systems": 6,
 }
 
 
@@ -38,6 +39,11 @@ def _apply_capture_scenario(window, lesson: str | None) -> None:
         controls["range"].setValue(120.0)
         controls["frequency"].setValue(400.0)
         controls["scattering_strength"].setValue(-25.0)
+        return
+    if lesson == "Sonar Systems":
+        controls = window.hydrosim_sonar_geometry_controls
+        controls["swath"].setValue(130.0)
+        controls["cant"].setValue(25.0)
         return
     if lesson != "Motion":
         return
