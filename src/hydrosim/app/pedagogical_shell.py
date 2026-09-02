@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from importlib import import_module
+from inspect import signature
 
 from hydrosim.app.pedagogical_catalog import PEDAGOGICAL_EXPERIENCES, experiences_for
 
@@ -47,6 +48,21 @@ def _resolve_builder(path: str):
     return getattr(import_module(module_name), function_name)
 
 
+def _invoke_builder(builder, FigureCanvas):
+    """Invoke a reusable lesson builder with its declared presentation dependency.
+
+    Most current builders own their canvas import and take no arguments. The
+    Motion builder predates that convention and explicitly requires the Qt
+    FigureCanvas type. Keep the shell compatible with both contracts without
+    catching unrelated TypeError exceptions raised inside a builder.
+    """
+
+    parameters = signature(builder).parameters
+    if "FigureCanvas" in parameters:
+        return builder(FigureCanvas)
+    return builder()
+
+
 def launch_pedagogical_shell() -> None:
     """Launch the 31-experience HydroSIM system map and available lessons."""
 
@@ -66,9 +82,11 @@ def launch_pedagogical_shell() -> None:
             QVBoxLayout,
             QWidget,
         )
+        from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "PySide6 is required for the HydroSIM desktop shell; install the visualization extra"
+            "PySide6 and Matplotlib are required for the HydroSIM desktop shell; "
+            "install the visualization extra"
         ) from exc
 
     app = QApplication.instance() or QApplication([])
@@ -147,7 +165,8 @@ def launch_pedagogical_shell() -> None:
             map_grid.addWidget(button, row, column)
 
             if experience.availability == "available" and experience.page_builder:
-                page, _controls, apply_language = _resolve_builder(experience.page_builder)()
+                builder = _resolve_builder(experience.page_builder)
+                page, _controls, apply_language = _invoke_builder(builder, FigureCanvas)
                 pages.addWidget(page)
                 lesson_pages[experience.id] = page
                 lesson_localizers[experience.id] = apply_language
