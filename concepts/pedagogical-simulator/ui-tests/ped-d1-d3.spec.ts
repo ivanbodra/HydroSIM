@@ -127,6 +127,6 @@ test('PED-D3 posts configured controls and renders canonical derived outputs bil
   await expect(page.getByRole('heading', { name: 'Acompanhe a energia acústica da fonte ao retorno — e veja onde a margem é consumida.' })).toBeVisible();
   await expect(page.getByText('Entradas configuradas')).toBeVisible();
   await expect(page.getByText('DERIVADO', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('Nível de fonte', { exact: true })).toBeVisible();
+  await expect(page.locator('.d3-budget').getByText('Nível de fonte', { exact: true })).toBeVisible();
   await expect(page.getByText(/71\.8 dB · ida e volta/)).toBeVisible();
 });
