@@ -46,8 +46,8 @@ def test_d3_range_curve_decreases_received_level_and_snr():
 
     received = response.received_level_vs_range.y
     snr = response.snr_vs_range.y
-    assert all(left > right for left, right in zip(received, received[1:], strict=True))
-    assert all(left > right for left, right in zip(snr, snr[1:], strict=True))
+    assert all(left > right for left, right in zip(received, received[1:]))
+    assert all(left > right for left, right in zip(snr, snr[1:]))
 
 
 def test_d3_source_and_noise_controls_preserve_level_domain_relationships():
