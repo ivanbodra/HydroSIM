@@ -10,7 +10,11 @@ HydroSIM active product completion is measured against 31 pedagogical experience
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-Current certified completion: **0/31**.
+Current certified completion: **1/31**.
+
+Certified experiences:
+
+- `PED-D1` — Wave Fundamentals. Runnable bilingual React experience on `main`, canonical Python wave-kinematics API, focused learner-facing UI/state validation integrated through PR #153, and independent scientific/computational QA PASS in Issue #148 with no material finding.
 
 This does not discard reusable prototype work. Reuse readiness is diagnostic only and does not count as completion.
 
@@ -30,9 +34,9 @@ Build outside-in until the scientific boundary, then complete experiences vertic
 
 ## Current pipeline
 
-- Product shell / bilingual navigation — `interface-ux`, Issue #112.
-- Localization engineering support only if concretely needed — `software-engineering`, Issue #113.
-- First scientific experience contracts — activated by Technical Lead as the shell advances.
+- `PED-D2` — finalize production end-to-end integration evidence and certification readiness (`#122`, `#125`).
+- `PED-D3` — production React Sonar Equation learner experience is implemented; focused learner validation is on `main` via PR #153, with certification follow-through tracked by `#144`.
+- Product shell / bilingual navigation remains the shared production shell baseline.
 
 ## Historical boundary
 
