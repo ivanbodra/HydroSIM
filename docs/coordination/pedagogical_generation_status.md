@@ -2,48 +2,54 @@
 
 Status: canonical coordination baseline
 
-## Product denominator
+## Product indicators
 
-HydroSIM active product completion is measured against 31 pedagogical experiences:
+The active roadmap contains 31 learner-facing submodules:
 
 - `PED-D1`–`PED-D18`: Didactic Module
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-Current certified completion: **2/31**.
+**Submodule indicator: 3/31 ready submodules.**
 
-Certified experiences:
+Ready submodules:
 
 - `PED-D1` — Wave Fundamentals. Runnable bilingual React experience on `main`, canonical Python wave-kinematics API, focused learner-facing UI/state validation integrated through PR #153, and independent scientific/computational QA PASS in Issue #148 with no material finding.
 - `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
+- `PED-D3` — Sonar Equation & Propagation Loss. Runnable bilingual production React experience on `main`, focused learner-facing validation, canonical Python sonar-equation API, and risk-proportionate independent QA closure in Issue #155. QA reused the previously validated D3 physics from #97 and checked only the new React/API boundary, finding no material scientific/computational risk.
 
-This does not discard reusable prototype work. Reuse readiness is diagnostic only and does not count as completion.
+**Atom indicator: not yet reportable because the canonical all-roadmap learner input/output inventory has not yet been completed.** The denominator must not be inferred from contracts, APIs, tests, PRs, or broad content labels. Until every planned learner input and learner-visible output across the 31-submodule roadmap has an explicit inventory entry, no atom percentage is authoritative.
+
+This is a baseline deficiency, not zero product functionality. Existing production learner controls and outputs remain real functionality but are not to be counted against an invented denominator.
 
 ## Completion rule
 
-An experience is complete only when its Learning, Scientific and Visualization contracts are satisfied in a runnable bilingual implementation on `main`, with focused tests and QA where scientific/computational risk warrants it.
+A submodule enters the numerator only when its complete required Learning, Scientific and Visualization behavior is runnable bilingually on `main`, with focused tests and only the risk-proportionate independent QA actually warranted.
+
+A learner atom is one functional learner input or one functional learner-visible output in the production path. Contracts, documentation, APIs, adapters, tests, PRs, CI, infrastructure, screenshots and coordination tasks are enabling work and are not atoms.
 
 Every visible scientific quantity must trace to a Scientific Contract output.
 
 ## Delivery strategy
 
-Build outside-in until the scientific boundary, then complete experiences vertically.
+Build outside-in until the scientific boundary, then complete submodules vertically.
 
 1. Product shell: Home/System Map → Didactic / Patch Test / Acquisition, with all 31 entries and explicit availability state.
-2. Scientific experiences: complete one experience through science → application/visualization → UX → focused validation → integration before counting it.
-3. Keep the active pipeline small (normally 2–3 results in flight). Do not create horizontal implementation inventories for all 31 experiences.
+2. Scientific submodules: complete one submodule through science → application/visualization → UX → focused validation → integration before counting it.
+3. Keep the active pipeline small (normally 2–3 results in flight). Do not create horizontal implementation inventories merely to generate work.
+4. The atom inventory is a measurement baseline: it must describe planned learner-facing inputs/outputs, not create new implementation scope.
 
 ## Current pipeline
 
-- `PED-D3` — primary certification target. Production React Sonar Equation learner experience and focused learner validation are on `main`; narrow independent scientific/computational certification is pending in Issue #155.
-- `PED-D4` — production React Sound Speed & Refraction integration is active in Issue #163 against the canonical bridge already on `main`.
-- `PED-D6` — downstream-ready application/API work is active in Issue #159 and must remain secondary to completion of the nearer D3/D4 vertical slices.
+- `PED-D4` — nearest incomplete production submodule and next readiness target.
+- `PED-D7` — QA-found Port/Starboard TX-sector identity defect corrected on `main` through PR #185 / squash `a20f377aef4dbd050d18ab97057c381a9f9bf8b7`; production learner PR #186 must be reconciled and tested against this corrected baseline before integration. Existing QA #107 is limited to narrow post-fix confirmation.
+- `PED-D8` — minimal application/API bridge is active in Issue #187 and remains downstream of nearer learner-facing completion work.
 
 ## Historical boundary
 
 `v0.0.1-prototype` preserves the pre-transition Didactic Explorer prototype at commit `d76c4222959afc5be119e8941173c4a67ddddb76`.
 
-The former eight-submodule `V01-D*` inventory is historical and must not be used as the active product denominator.
+The former eight-submodule `V01-D*` inventory is historical and must not be used as a current product indicator.
 
 ## UX / terminology rule
 
