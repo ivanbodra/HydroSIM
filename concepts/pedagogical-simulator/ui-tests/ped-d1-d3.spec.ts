@@ -45,11 +45,7 @@ const d3Response = {
 };
 
 async function setRangeValue(locator: import('@playwright/test').Locator, value: string) {
-  await locator.evaluate((element, nextValue) => {
-    const input = element as HTMLInputElement;
-    input.value = String(nextValue);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  }, value);
+  await locator.fill(value);
 }
 
 test('PED-D1 keeps canonical API data flow, interaction and bilingual state visible', async ({ page }) => {
