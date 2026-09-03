@@ -20,8 +20,11 @@ export default function CurriculumMap({ onOpenLegacy }: { onOpenLegacy: () => vo
     setSelected(nextTrack.experiences[0]);
   };
 
-  const productionRoute = (experience: Experience) =>
-    experience.id === 'D1' ? '#wave-lab' : experience.route;
+  const productionRoute = (experience: Experience) => {
+    if (experience.id === 'D1') return '#wave-lab';
+    if (experience.id === 'D3') return '#sonar-equation-lab';
+    return experience.route;
+  };
 
   const open = (experience: Experience) => {
     setSelected(experience);
@@ -36,8 +39,8 @@ export default function CurriculumMap({ onOpenLegacy }: { onOpenLegacy: () => vo
           <span>HYDROSIM · PEDAGOGICAL CONCEPT MAP</span>
           <h1>Learn through the acquisition chain.</h1>
           <p>
-            The canonical pedagogical plan now drives the concept structure. Inputs and outputs are
-            exposed as visual design material, not scientific implementation.
+            The canonical pedagogical plan drives the learner structure while production experiences
+            connect their visible scientific outputs to the Python Scientific Core.
           </p>
         </div>
         <button onClick={onOpenLegacy}>
@@ -132,8 +135,8 @@ export default function CurriculumMap({ onOpenLegacy }: { onOpenLegacy: () => vo
             </button>
           )}
           <p className="scope-note">
-            Illustrative design only · equations, ranges, geometry and scientific behavior are
-            intentionally not authoritative here.
+            Production scientific values are authoritative only where an experience is connected to a
+            canonical Python API; unfinished visual foundations remain conceptual.
           </p>
         </aside>
       </div>
