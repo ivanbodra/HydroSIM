@@ -1,8 +1,7 @@
-"""Application/API bridge for React PED-D1/PED-D2 acoustic-signal lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3 pedagogical lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
-frontend remains presentation-only and must not reimplement waveform or wave-
-kinematics equations.
+frontend remains presentation-only and must not reimplement scientific equations.
 """
 
 from __future__ import annotations
@@ -15,6 +14,11 @@ from hydrosim.acquisition import ContinuousWavePulse, LinearFMPulse
 from hydrosim.acquisition.wave_kinematics import (
     AcousticWaveKinematics,
     monostatic_two_way_range_offset,
+)
+from hydrosim.app.sonar_equation_api import (
+    D3SonarEquationRequest,
+    D3SonarEquationResponse,
+    prepare_d3_sonar_equation_response,
 )
 from hydrosim.visualization import (
     prepare_signal_explorer_display_trace,
@@ -249,6 +253,10 @@ def create_fastapi_app():
     @app.post("/api/v1/pedagogical/signal", response_model=SignalResponse)
     def signal(request: SignalRequest) -> SignalResponse:
         return prepare_signal_response(request)
+
+    @app.post("/api/v1/pedagogical/sonar-equation", response_model=D3SonarEquationResponse)
+    def sonar_equation(request: D3SonarEquationRequest) -> D3SonarEquationResponse:
+        return prepare_d3_sonar_equation_response(request)
 
     return app
 
