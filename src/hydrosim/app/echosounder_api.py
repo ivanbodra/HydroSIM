@@ -125,20 +125,24 @@ def _build_profile(request: D8EchosounderRequest) -> LayeredSoundSpeedProfile:
     )
 
 
-def _signed_endpoint_m(
+def _trace_endpoint_and_incidence(
     *,
     profile: LayeredSoundSpeedProfile,
     angle_rad: float,
     target_depth_m: float,
     start_depth_m: float,
-) -> float:
+) -> tuple[float, float]:
     path = trace_layered_ray_to_depth(
         profile=profile,
         launch_angle_from_vertical_rad=abs(angle_rad),
         target_depth_m=target_depth_m,
         start_depth_m=start_depth_m,
     )
-    return copysign(float(path.horizontal_distance_m), angle_rad) if angle_rad != 0.0 else 0.0
+    endpoint = (
+        copysign(float(path.horizontal_distance_m), angle_rad) if angle_rad != 0.0 else 0.0
+    )
+    incidence = float(path.segments[-1].angle_from_vertical_rad)
+    return endpoint, incidence
 
 
 def _footprint(
@@ -177,17 +181,18 @@ def _beam_result(
     target_depth_m: float,
     angle_rad: float,
 ) -> D8BeamResult:
+    endpoint, incidence = _trace_endpoint_and_incidence(
+        profile=profile,
+        angle_rad=angle_rad,
+        target_depth_m=target_depth_m,
+        start_depth_m=request.start_depth_m,
+    )
     return D8BeamResult(
         steering_angle_rad=angle_rad,
         steering_angle_deg=degrees(angle_rad),
-        endpoint_across_track_m=_signed_endpoint_m(
-            profile=profile,
-            angle_rad=angle_rad,
-            target_depth_m=target_depth_m,
-            start_depth_m=request.start_depth_m,
-        ),
-        incidence_angle_from_normal_deg=degrees(abs(angle_rad)),
-        footprint=_footprint(request, incidence_angle_rad=angle_rad),
+        endpoint_across_track_m=endpoint,
+        incidence_angle_from_normal_deg=degrees(incidence),
+        footprint=_footprint(request, incidence_angle_rad=incidence),
     )
 
 
@@ -237,7 +242,6 @@ def prepare_d8_echosounder_response(request: D8EchosounderRequest) -> D8Echosoun
 
     profile = _build_profile(request)
     target_depth = request.start_depth_m + request.vertical_separation_m
-    # Validate that the supplied profile covers both endpoints before composing the payload.
     profile.layer_at_depth(request.start_depth_m)
     profile.layer_at_depth(target_depth)
 
