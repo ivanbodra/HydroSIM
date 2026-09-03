@@ -70,7 +70,7 @@ test('PED-D1 keeps canonical API data flow, interaction and bilingual state visi
   await expect(page.getByText('DERIVADO', { exact: true }).first()).toBeVisible();
 });
 
-test('PED-D2 posts learner controls to the canonical signal endpoint and stays bilingual', async ({ page }) => {
+test('PED-D2 posts pulse-duration control to the canonical signal endpoint and stays bilingual', async ({ page }) => {
   const requests: Array<Record<string, unknown>> = [];
   await page.route('**/api/v1/pedagogical/signal', async (route) => {
     requests.push(route.request().postDataJSON() as Record<string, unknown>);
@@ -85,10 +85,12 @@ test('PED-D2 posts learner controls to the canonical signal endpoint and stays b
   await expect(page.getByText('Instantaneous frequency', { exact: true })).toBeVisible();
   await expect(page.getByText('Matched-filter / autocorrelation response', { exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'CW' }).click();
+  const duration = page.locator('label').filter({ hasText: 'Pulse duration' }).locator('input[type="range"]');
+  await duration.focus();
+  await duration.press('ArrowRight');
   await expect.poll(() => requests.length).toBeGreaterThan(1);
-  expect(requests.at(-1)?.pulse_type).toBe('cw');
-  await expect(page.locator('label').filter({ hasText: 'LFM bandwidth' }).locator('input')).toBeDisabled();
+  expect(Number(requests.at(-1)?.duration_ms)).toBeGreaterThan(1);
+  await expect(page.getByText('0–5 ms', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', { name: 'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.' })).toBeVisible();
