@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 20_000,
   expect: { timeout: 5_000 },
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: process.env.HYDROSIM_UI_BASE_URL ?? 'http://127.0.0.1:4173',
     browserName: 'chromium',
     headless: true,
   },
