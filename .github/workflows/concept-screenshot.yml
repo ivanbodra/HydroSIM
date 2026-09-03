@@ -1,19 +1,13 @@
 name: concept-screenshot
 
 on:
-  push:
-    paths:
-      - 'concepts/pedagogical-simulator/**'
-      - 'src/hydrosim/app/**'
-      - '.github/workflows/concept-screenshot.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   capture-concept:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -117,17 +111,3 @@ jobs:
         with:
           name: pedagogical-concept-screenshots
           path: concepts/pedagogical-simulator/assets/screenshots/*.png
-
-      - name: Persist screenshots on tested branch
-        env:
-          TARGET_BRANCH: ${{ github.ref_name }}
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/screenshots/*.png
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m "Update real pedagogical prototype screenshots [skip ci]"
-          git push origin HEAD:${TARGET_BRANCH}
