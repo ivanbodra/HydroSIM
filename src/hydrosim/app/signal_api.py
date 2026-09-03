@@ -1,4 +1,4 @@
-"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7 lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8 lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
 frontend remains presentation-only and must not reimplement scientific equations.
@@ -20,6 +20,11 @@ from hydrosim.app.beamforming_api import (
     D7BeamformingRequest,
     D7BeamformingResponse,
     prepare_d7_beamforming_response,
+)
+from hydrosim.app.echosounder_api import (
+    D8EchosounderRequest,
+    D8EchosounderResponse,
+    prepare_d8_echosounder_response,
 )
 from hydrosim.app.refraction_api import (
     D4RefractionRequest,
@@ -283,6 +288,13 @@ def create_fastapi_app():
     @app.post("/api/v1/pedagogical/beamforming", response_model=D7BeamformingResponse)
     def beamforming(request: D7BeamformingRequest) -> D7BeamformingResponse:
         return prepare_d7_beamforming_response(request)
+
+    @app.post("/api/v1/pedagogical/echosounders", response_model=D8EchosounderResponse)
+    def echosounders(request: D8EchosounderRequest) -> D8EchosounderResponse:
+        try:
+            return prepare_d8_echosounder_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     return app
 
