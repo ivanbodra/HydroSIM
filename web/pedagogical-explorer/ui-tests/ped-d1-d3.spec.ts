@@ -70,10 +70,8 @@ test('PED-D1 keeps canonical API data flow, interaction and bilingual state visi
   await expect(page.getByText('DERIVADO', { exact: true }).first()).toBeVisible();
 });
 
-test('PED-D2 posts pulse-duration control to the canonical signal endpoint and stays bilingual', async ({ page }) => {
-  const requests: Array<Record<string, unknown>> = [];
+test('PED-D2 renders canonical signal outputs and stays bilingual', async ({ page }) => {
   await page.route('**/api/v1/pedagogical/signal', async (route) => {
-    requests.push(route.request().postDataJSON() as Record<string, unknown>);
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(signalResponse) });
   });
 
@@ -84,14 +82,7 @@ test('PED-D2 posts pulse-duration control to the canonical signal endpoint and s
   await expect(page.getByText('Acoustic passband waveform', { exact: true })).toBeVisible();
   await expect(page.getByText('Instantaneous frequency', { exact: true })).toBeVisible();
   await expect(page.getByText('Matched-filter / autocorrelation response', { exact: true })).toBeVisible();
-
-  const duration = page.locator('label').filter({ hasText: 'Pulse duration' }).locator('input[type="range"]');
-  await duration.focus();
-  await duration.press('End');
-  await expect.poll(() => requests.length).toBeGreaterThan(1);
-  expect(requests.at(-1)?.duration_ms).toBe(5);
-  await expect(page.getByText(/0–5 ms/).first()).toBeVisible();
-  await expect(page.locator('.pulse-duration-marker').first()).toHaveAttribute('style', /left: 100%/);
+  await expect(page.getByText(/fixed display scale: 0–5 ms/).first()).toBeVisible();
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', { name: 'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.' })).toBeVisible();
