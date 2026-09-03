@@ -44,6 +44,14 @@ const d3Response = {
   metadata: { state_input: 'Configured', state_output: 'Derived' },
 };
 
+async function setRangeValue(locator: import('@playwright/test').Locator, value: string) {
+  await locator.evaluate((element, nextValue) => {
+    const input = element as HTMLInputElement;
+    input.value = String(nextValue);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, value);
+}
+
 test('PED-D1 keeps canonical API data flow, interaction and bilingual state visible', async ({ page }) => {
   const requests: Array<Record<string, unknown>> = [];
   await page.route('**/api/v1/pedagogical/wave-kinematics', async (route) => {
@@ -86,7 +94,7 @@ test('PED-D2 posts learner controls to the canonical signal endpoint and stays b
   await expect(page.getByText('Matched-filter / autocorrelation response', { exact: true })).toBeVisible();
 
   const frequency = page.locator('label').filter({ hasText: 'Centre frequency' }).locator('input[type="range"]');
-  await frequency.fill('300');
+  await setRangeValue(frequency, '300');
   await expect.poll(() => requests.length).toBeGreaterThan(1);
   expect(requests.at(-1)?.center_frequency_khz).toBe(300);
 
