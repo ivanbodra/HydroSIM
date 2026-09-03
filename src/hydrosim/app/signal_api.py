@@ -1,4 +1,4 @@
-"""Application/API bridge for React PED-D1/PED-D2/PED-D3 pedagogical lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4 lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
 frontend remains presentation-only and must not reimplement scientific equations.
@@ -14,6 +14,11 @@ from hydrosim.acquisition import ContinuousWavePulse, LinearFMPulse
 from hydrosim.acquisition.wave_kinematics import (
     AcousticWaveKinematics,
     monostatic_two_way_range_offset,
+)
+from hydrosim.app.refraction_api import (
+    D4RefractionRequest,
+    D4RefractionResponse,
+    prepare_d4_refraction_response,
 )
 from hydrosim.app.sonar_equation_api import (
     D3SonarEquationRequest,
@@ -226,7 +231,7 @@ def create_fastapi_app():
     """Create the optional local HTTP adapter used by Vite/React development."""
 
     try:
-        from fastapi import FastAPI
+        from fastapi import FastAPI, HTTPException
         from fastapi.middleware.cors import CORSMiddleware
     except ImportError as exc:  # pragma: no cover - exercised only without web extra
         raise RuntimeError(
@@ -257,6 +262,13 @@ def create_fastapi_app():
     @app.post("/api/v1/pedagogical/sonar-equation", response_model=D3SonarEquationResponse)
     def sonar_equation(request: D3SonarEquationRequest) -> D3SonarEquationResponse:
         return prepare_d3_sonar_equation_response(request)
+
+    @app.post("/api/v1/pedagogical/refraction", response_model=D4RefractionResponse)
+    def refraction(request: D4RefractionRequest) -> D4RefractionResponse:
+        try:
+            return prepare_d4_refraction_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     return app
 
