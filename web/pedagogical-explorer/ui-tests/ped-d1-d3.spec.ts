@@ -87,7 +87,7 @@ test('PED-D2 renders canonical signal outputs and stays bilingual', async ({ pag
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', { name: 'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.' })).toBeVisible();
   await expect(page.getByText('Entrada configurada')).toBeVisible();
-  await expect(page.getByText('Resposta visual derivada')).toBeVisible();
+  await expect(page.getByText('Resposta visual derivada').first()).toBeVisible();
 });
 
 test('PED-D3 posts configured controls and renders canonical derived outputs bilingually', async ({ page }) => {
