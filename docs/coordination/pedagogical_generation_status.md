@@ -10,11 +10,12 @@ HydroSIM active product completion is measured against 31 pedagogical experience
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-Current certified completion: **1/31**.
+Current certified completion: **2/31**.
 
 Certified experiences:
 
 - `PED-D1` — Wave Fundamentals. Runnable bilingual React experience on `main`, canonical Python wave-kinematics API, focused learner-facing UI/state validation integrated through PR #153, and independent scientific/computational QA PASS in Issue #148 with no material finding.
+- `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
 
 This does not discard reusable prototype work. Reuse readiness is diagnostic only and does not count as completion.
 
@@ -34,9 +35,9 @@ Build outside-in until the scientific boundary, then complete experiences vertic
 
 ## Current pipeline
 
-- `PED-D2` — finalize production end-to-end integration evidence and certification readiness (`#122`, `#125`).
-- `PED-D3` — production React Sonar Equation learner experience is implemented; focused learner validation is on `main` via PR #153, with certification follow-through tracked by `#144`.
-- Product shell / bilingual navigation remains the shared production shell baseline.
+- `PED-D3` — primary certification target. Production React Sonar Equation learner experience and focused learner validation are on `main`; narrow independent scientific/computational certification is pending in Issue #155.
+- `PED-D4` — production React Sound Speed & Refraction integration is active in Issue #163 against the canonical bridge already on `main`.
+- `PED-D6` — downstream-ready application/API work is active in Issue #159 and must remain secondary to completion of the nearer D3/D4 vertical slices.
 
 ## Historical boundary
 
