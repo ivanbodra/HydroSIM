@@ -18,6 +18,31 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
+      - name: Detect legacy visual regression scope
+        id: legacy_visual
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_capture=false
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            run_capture=true
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
+            changed_files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")"
+            if grep -Eq '^(src/hydrosim/(app|visualization)/|tools/capture_didactic_explorer\.py|tests/test_.*(didactic|renderer|visual|beam|motion|vessel|sonar|propagation))' <<<"$changed_files"; then
+              run_capture=true
+            fi
+          else
+            changed_files="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+            if grep -Eq '^(src/hydrosim/(app|visualization)/|tools/capture_didactic_explorer\.py|tests/test_.*(didactic|renderer|visual|beam|motion|vessel|sonar|propagation))' <<<"$changed_files"; then
+              run_capture=true
+            fi
+          fi
+
+          echo "run_capture=$run_capture" >> "$GITHUB_OUTPUT"
+          echo "Legacy visual capture required: $run_capture"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -39,6 +64,7 @@ jobs:
         run: pytest -q
 
       - name: Capture real Didactic Explorer lessons
+        if: steps.legacy_visual.outputs.run_capture == 'true'
         env:
           QT_QPA_PLATFORM: offscreen
           MPLBACKEND: QtAgg
@@ -96,7 +122,7 @@ jobs:
           test -s docs/images/didactic_explorer_sounding_formation.png
 
       - name: Upload Didactic Explorer screenshots and diagnostics
-        if: always()
+        if: always() && steps.legacy_visual.outputs.run_capture == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: didactic-explorer-screenshot
@@ -105,7 +131,7 @@ jobs:
             artifacts/
 
       - name: Persist real screenshots on the tested branch
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.legacy_visual.outputs.run_capture == 'true'
         env:
           TARGET_BRANCH: ${{ github.ref_name }}
         shell: bash
