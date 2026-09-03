@@ -158,9 +158,9 @@ def build_sonar_geometry_lesson() -> tuple[object, dict[str, object], Callable[[
 
         sectors = TxSectorSetGeometry(
             sectors=(
-                TxSectorGeometry(sector_id="port", sector_index=0, system_id="mbes-single", head_id="head-a", array_id="single-rx", along_track_min_rad=-0.05, along_track_max_rad=0.05, across_track_min_rad=radians(-60), across_track_max_rad=radians(-20), centre_across_track_angle_rad=radians(-40)),
+                TxSectorGeometry(sector_id="starboard", sector_index=0, system_id="mbes-single", head_id="head-a", array_id="single-rx", along_track_min_rad=-0.05, along_track_max_rad=0.05, across_track_min_rad=radians(-60), across_track_max_rad=radians(-20), centre_across_track_angle_rad=radians(-40)),
                 TxSectorGeometry(sector_id="centre", sector_index=1, system_id="mbes-single", head_id="head-a", array_id="single-rx", along_track_min_rad=-0.05, along_track_max_rad=0.05, across_track_min_rad=radians(-20), across_track_max_rad=radians(20), centre_across_track_angle_rad=0.0),
-                TxSectorGeometry(sector_id="starboard", sector_index=2, system_id="mbes-single", head_id="head-a", array_id="single-rx", along_track_min_rad=-0.05, along_track_max_rad=0.05, across_track_min_rad=radians(20), across_track_max_rad=radians(60), centre_across_track_angle_rad=radians(40)),
+                TxSectorGeometry(sector_id="port", sector_index=2, system_id="mbes-single", head_id="head-a", array_id="single-rx", along_track_min_rad=-0.05, along_track_max_rad=0.05, across_track_min_rad=radians(20), across_track_max_rad=radians(60), centre_across_track_angle_rad=radians(40)),
             )
         )
         for sector in sectors.sectors:
