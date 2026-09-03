@@ -101,11 +101,11 @@ def test_all_six_learning_blocks_are_exposed_as_ready():
     assert '"disponível"' in integrated_source
 
 
-def test_didactic_explorer_has_integrated_console_entry_point():
+def test_didactic_explorer_console_entry_point_targets_canonical_pedagogical_shell():
     config = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
     assert config["project"]["scripts"]["hydrosim-didactic"] == (
-        "hydrosim.app.didactic_explorer_integrated:launch_didactic_explorer"
+        "hydrosim.app.pedagogical_shell:launch_pedagogical_shell"
     )
 
 
