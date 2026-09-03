@@ -14,6 +14,7 @@ export default function CurriculumMap({ onOpenLegacy }: { onOpenLegacy: () => vo
     if (experience.id === 'D1') return '#wave-lab';
     if (experience.id === 'D3') return '#sonar-equation-lab';
     if (experience.id === 'D4') return '#refraction-lab';
+    if (experience.id === 'D6') return '#array-directivity-lab';
     return experience.route;
   };
   const open = (experience: Experience) => { setSelected(experience); const route = productionRoute(experience); if (route) window.location.hash = route; };
