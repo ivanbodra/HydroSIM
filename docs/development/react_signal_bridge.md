@@ -45,23 +45,41 @@ The response exposes application-ready traces and metadata: acoustic/passband wa
 
 ## Frontend
 
-The production pedagogical frontend lives in `concepts/pedagogical-simulator/`. `SignalLab.tsx` calls the endpoint above; it contains interaction and presentation logic, not waveform physics.
+The production pedagogical frontend lives in `web/pedagogical-explorer/`. The former `concepts/pedagogical-simulator/` tree is retained as a design sandbox and historical visual reference; it is not the production frontend.
 
-For local development:
+`web/pedagogical-explorer/src/SignalLab.tsx` calls the endpoint above and contains interaction and presentation logic only, not waveform physics.
+
+For local development, from the repository root:
 
 ```powershell
-cd concepts\pedagogical-simulator
+cd web\pedagogical-explorer
 npm ci
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Vite normally serves the frontend at `http://127.0.0.1:5173` or `http://localhost:5173`; those origins are admitted by the local HydroSIM API.
+Open the product at:
+
+```text
+http://127.0.0.1:5173/
+```
+
+For direct PED-D2 pulse testing:
+
+```text
+http://127.0.0.1:5173/#signal-lab/pulse
+```
 
 The frontend API base defaults to `http://127.0.0.1:8000`. Override it with `VITE_HYDROSIM_API_BASE` only when the API is intentionally served elsewhere.
 
+## PED-D2 visual comparison rule
+
+The production plots render values returned by the canonical Python API while preserving stable display domains for learner comparison. In particular, the waveform and instantaneous-frequency views use a fixed 0–5 ms time window so changing pulse duration changes the visible pulse extent instead of rescaling every result to fill the plot.
+
+The pre-scientific Signal concept remains frozen on `archive/pedagogical-concept-pre-science` at commit `10516fea640b3636d3548d690cdb60b36a21345d` for visual and interaction reference.
+
 ## Production-path validation
 
-The learner-facing production build is validated with:
+The learner-facing production build is validated from `web/pedagogical-explorer/` with:
 
 ```powershell
 npm ci
@@ -75,7 +93,7 @@ npm run preview -- --host 127.0.0.1
 npm run test:ui
 ```
 
-The focused PED-D2 test intercepts only HTTP transport so that React state and interaction can be validated deterministically. It verifies that learner controls are posted to `/api/v1/pedagogical/signal`, CW/LFM presentation state responds correctly, canonical returned traces are rendered, and EN/PT-BR switching remains coherent. Scientific/numerical correctness of those returned values remains owned by Python Core/API tests.
+The focused PED-D2 tests validate canonical endpoint wiring, learner pulse controls, fixed-scale display behavior and EN/PT-BR switching. A dedicated CI smoke test starts the real Python API and the React frontend together and verifies the PED-D2 React↔Python path. Scientific/numerical correctness of returned values remains owned by Python Core/API tests.
 
 ## Dependency policy
 
