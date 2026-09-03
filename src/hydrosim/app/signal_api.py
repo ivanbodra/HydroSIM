@@ -1,4 +1,4 @@
-"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4 lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6 lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
 frontend remains presentation-only and must not reimplement scientific equations.
@@ -15,6 +15,7 @@ from hydrosim.acquisition.wave_kinematics import (
     AcousticWaveKinematics,
     monostatic_two_way_range_offset,
 )
+from hydrosim.app.array_api import D6ArrayRequest, D6ArrayResponse, prepare_d6_array_response
 from hydrosim.app.refraction_api import (
     D4RefractionRequest,
     D4RefractionResponse,
@@ -269,6 +270,10 @@ def create_fastapi_app():
             return prepare_d4_refraction_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/v1/pedagogical/array-directivity", response_model=D6ArrayResponse)
+    def array_directivity(request: D6ArrayRequest) -> D6ArrayResponse:
+        return prepare_d6_array_response(request)
 
     return app
 
