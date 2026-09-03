@@ -22,7 +22,15 @@ def test_catalog_ids_are_unique_and_follow_new_generation_structure():
 
 def test_only_independently_instantiable_lessons_are_available():
     available = {item.id for item in PEDAGOGICAL_EXPERIENCES if item.availability == "available"}
-    assert available == {"PED-D2", "PED-D3", "PED-D8", "PED-D12", "PED-D15"}
+    assert available == {
+        "PED-D2",
+        "PED-D3",
+        "PED-D4",
+        "PED-D8",
+        "PED-D11",
+        "PED-D12",
+        "PED-D15",
+    }
     assert all(experience_by_id(item).page_builder for item in available)
 
 
