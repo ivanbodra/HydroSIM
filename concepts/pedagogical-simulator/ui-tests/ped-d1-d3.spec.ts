@@ -81,9 +81,9 @@ test('PED-D2 posts learner controls to the canonical signal endpoint and stays b
   await expect(page.getByRole('heading', { name: 'Change the transmitted pulse and watch the same scientific state reshape every visual.' })).toBeVisible();
   await expect(page.getByText('Configured', { exact: true })).toBeVisible();
   await expect(page.getByText('Derived', { exact: true })).toBeVisible();
-  await expect(page.getByText('Acoustic passband waveform')).toBeVisible();
-  await expect(page.getByText('Instantaneous frequency')).toBeVisible();
-  await expect(page.getByText('Matched-filter / autocorrelation response')).toBeVisible();
+  await expect(page.getByText('Acoustic passband waveform', { exact: true })).toBeVisible();
+  await expect(page.getByText('Instantaneous frequency', { exact: true })).toBeVisible();
+  await expect(page.getByText('Matched-filter / autocorrelation response', { exact: true })).toBeVisible();
 
   const frequency = page.locator('label').filter({ hasText: 'Centre frequency' }).locator('input[type="range"]');
   await frequency.fill('300');
@@ -128,5 +128,5 @@ test('PED-D3 posts configured controls and renders canonical derived outputs bil
   await expect(page.getByText('Entradas configuradas')).toBeVisible();
   await expect(page.getByText('DERIVADO', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Nível de fonte', { exact: true })).toBeVisible();
-  await expect(page.getByText('ida e volta', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/71\.8 dB · ida e volta/)).toBeVisible();
 });
