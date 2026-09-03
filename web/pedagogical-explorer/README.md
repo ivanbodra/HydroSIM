@@ -1,51 +1,45 @@
-# HydroSIM Pedagogical Simulator — Design Sandbox
+# HydroSIM Pedagogical Explorer — Production React Frontend
 
-This directory is an independent conceptual design sandbox for the HydroSIM Didactic Explorer. It is intentionally separated from the production interface and from the Scientific Core.
+This directory is the learner-facing React/TypeScript frontend for the HydroSIM pedagogical product.
 
-The current executable concept uses React + TypeScript + Vite, Motion for fluid interaction, Lucide for iconography, SVG/CSS for scientific visual language, and Playwright only for reproducible runtime screenshots in CI.
+It is intentionally separate from `concepts/pedagogical-simulator/`.
 
-## Current conceptual laboratories
+## Architecture boundary
 
-- **Signal** — waveform, pulse, spectrum and compression as a transmit → receive → compress chain.
-- **Beam** — directivity, steering, beamwidth, sidelobes and footprint in one water-column scene.
-- **Propagation** — profile lens, layered water column, ray paths, illustrative loss and seabed interaction.
-- **Vessel & Sensors** — transparent vessel, GNSS, IMU, transducer, VRP, lever arms and vertical references.
-- **Motion** — roll, pitch, yaw and heave with baseline ghost, beam field and sounding consequence.
-- **Integrated Lab** — one virtual hydrographic survey where Signal, Beam, Propagation and Motion become focus lenses inside the same experiment.
+- `web/pedagogical-explorer/` owns learner interaction, information architecture, visualization and bilingual presentation.
+- `src/hydrosim/` owns the canonical Python Scientific Core and application/API bridge.
+- `concepts/pedagogical-simulator/` remains a design sandbox and historical visual reference. It is not the production scientific source of truth.
 
-The system map is the discovery surface. Each module has an **Enter laboratory** action. Submodules describe intended focus modes inside each laboratory rather than requiring a separate disconnected screen.
+The production rule is:
 
-## Run locally
+`React presentation -> application/API bridge -> Python Scientific Core`
+
+Scientific equations and numerical models must not be reimplemented in TypeScript.
+
+## Concept preservation
+
+The pre-scientific Signal design is additionally frozen on branch:
+
+`archive/pedagogical-concept-pre-science`
+
+at commit `10516fea640b3636d3548d690cdb60b36a21345d`.
+
+That snapshot preserves the original interaction language, animated graph styling and visual experiments before canonical Python traces replaced illustrative frontend-generated curves.
+
+## Local run
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Direct routes:
+Run the Python pedagogical API separately according to `docs/development/react_signal_bridge.md`.
 
-- `#signal-lab`
-- `#beam-lab`
-- `#propagation-lab`
-- `#vessel-lab`
-- `#motion-lab`
-- `#integrated-lab`
-
-## Build and capture
+## Build and focused UI tests
 
 ```bash
 npm run build
-npm run capture
+npm run test:ui
 ```
 
-The GitHub workflow `.github/workflows/concept-screenshot.yml` builds the real prototype, opens it in headless Chromium, captures the system map and all laboratories, verifies the PNG files, uploads them as a CI artifact, and persists changed screenshots in `assets/screenshots/`.
-
-## Scientific status
-
-This sandbox is **not scientifically validated output**. Values, ranges, geometry, motion amplification, trajectories, energy cues and scenarios may be illustrative placeholders. Their purpose is to expose interaction and visualization ideas for downstream Interface/UX and scientific validation.
-
-## Handoff
-
-See `HANDOFF_INTERFACE_UX.md` for the five-part concept handoff — IDEA, WHY, IMPORTANT INTERACTION, INPUTS expected, OUTPUTS visualized — for all six modules, plus navigation and scenario language.
-
-Interface/UX owns selection, adaptation and production translation. Do not move these concepts into production UI or the Scientific Core without the appropriate project handoff and review.
+Production CI should run from this directory. Changes to the concept sandbox must not silently alter the production frontend.
