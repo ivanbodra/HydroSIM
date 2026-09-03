@@ -84,15 +84,18 @@ def test_wave_kinematics_phase_and_positive_x_field_are_core_derived():
             sound_speed_mps=1500.0,
             normalized_amplitude=1.0,
             initial_phase_rad=0.0,
-            sample_count=5,
+            sample_count=33,
             display_cycles=1.0,
             snapshot_time_fraction_of_period=0.25,
         )
     )
 
-    assert quarter_cycle.temporal_waveform.y[1] == pytest.approx(0.0, abs=1e-12)
+    quarter_cycle_index = 8
+    assert quarter_cycle.temporal_waveform.y[quarter_cycle_index] == pytest.approx(
+        0.0, abs=1e-12
+    )
     assert quarter_cycle.spatial_waveform.y[0] == pytest.approx(0.0, abs=1e-12)
-    assert quarter_cycle.spatial_waveform.y[1] == pytest.approx(1.0)
+    assert quarter_cycle.spatial_waveform.y[quarter_cycle_index] == pytest.approx(1.0)
 
 
 def test_wave_kinematics_range_lag_uses_canonical_monostatic_conversion():
