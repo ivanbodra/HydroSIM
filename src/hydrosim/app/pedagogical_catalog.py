@@ -66,7 +66,9 @@ _ACQUISITION_NAMES = (
 _BUILDERS = {
     "PED-D2": "hydrosim.app.signal_lesson_page.build_signal_lesson",
     "PED-D3": "hydrosim.app.sonar_equation_lesson_page.build_sonar_equation_lesson",
+    "PED-D4": "hydrosim.app.propagation_lesson_page.build_propagation_lesson",
     "PED-D8": "hydrosim.app.sonar_geometry_lesson_page.build_sonar_geometry_lesson",
+    "PED-D11": "hydrosim.app.vessel_lesson.build_vessel_lesson",
     "PED-D12": "hydrosim.app.motion_lesson_page.build_motion_lesson",
     "PED-D15": "hydrosim.app.sounding_formation_lesson_page.build_sounding_formation_lesson",
 }
