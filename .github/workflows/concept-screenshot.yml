@@ -47,6 +47,9 @@ jobs:
           cat /tmp/hydrosim-concept-vite.log
           exit 1
 
+      - name: Run focused learner UI tests
+        run: npm run test:ui
+
       - name: Capture real concept laboratories
         run: npm run capture
 
