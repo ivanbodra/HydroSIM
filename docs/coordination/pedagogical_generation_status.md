@@ -10,18 +10,19 @@ The active roadmap contains 31 learner-facing submodules:
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-**Submodule indicator: 4/31 ready submodules.**
+**Submodule indicator: 4/31 ready submodules (12.9%).**
 
 Ready submodules:
 
 - `PED-D1` — Wave Fundamentals. Runnable bilingual React experience on `main`, canonical Python wave-kinematics API, focused learner-facing UI/state validation integrated through PR #153, and independent scientific/computational QA PASS in Issue #148 with no material finding.
 - `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
-- `PED-D3` — Sonar Equation & Propagation Loss. Runnable bilingual production React experience on `main`, focused learner-facing validation, canonical Python sonar-equation API, and risk-proportionate independent QA closure in Issue #155. QA reused the previously validated D3 physics from #97 and checked only the new React/API boundary, finding no material scientific/computational risk.
-- `PED-D4` — Sound Speed & Refraction. Runnable bilingual production React experience on `main` via PR #165, focused learner-facing tests, canonical Python refraction bridge/Core, and narrow independent QA PASS in Issue #170 with no material scientific/computational finding.
+- `PED-D3` — Sonar Equation & Propagation Loss. Runnable bilingual production React experience on `main`, focused learner-facing validation, canonical Python sonar-equation API, and risk-proportionate independent QA closure in Issue #155.
+- `PED-D4` — Sound Speed & Refraction. Runnable bilingual production React experience on `main` via PR #165, focused learner-facing tests, canonical Python refraction bridge/Core, and narrow independent QA PASS in Issue #170.
 
-**Atom indicator: not yet reportable because the canonical all-roadmap learner input/output inventory has not yet been completed.** The denominator must not be inferred from contracts, APIs, tests, PRs, or broad content labels. Until every planned learner input and learner-visible output across the 31-submodule roadmap has an explicit inventory entry, no atom percentage is authoritative.
+**Atom indicator: 34/243 ready learner atoms (14.0%).**  
+Canonical denominator and counting rules: `docs/coordination/product_atom_inventory.md`.
 
-This is a baseline deficiency, not zero product functionality. Existing production learner controls and outputs remain real functionality but are not to be counted against an invented denominator.
+The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Readiness is conservative: partial atoms are counted only with production-path evidence on `main`; enabling work is never counted as product atoms.
 
 ## Completion rule
 
@@ -38,13 +39,19 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 1. Product shell: Home/System Map → Didactic / Patch Test / Acquisition, with all 31 entries and explicit availability state.
 2. Scientific submodules: complete one submodule through science → application/visualization → UX → focused validation → integration before counting it.
 3. Keep the active pipeline small (normally 2–3 results in flight). Do not create horizontal implementation inventories merely to generate work.
-4. The atom inventory is a measurement baseline: it must describe planned learner-facing inputs/outputs, not create new implementation scope.
+4. Maintain `product_atom_inventory.md` as a measurement baseline; it describes planned learner-facing inputs/outputs and must not create implementation scope by itself.
 
 ## Current pipeline
 
-- `PED-D7` — nearest incomplete learner-facing target. QA-found Port/Starboard TX-sector identity defect corrected on `main` through PR #185 / squash `a20f377aef4dbd050d18ab97057c381a9f9bf8b7`; production learner PR #186 must be reconciled and tested against this corrected baseline before integration. Existing QA #107 is limited to narrow post-fix confirmation.
-- `PED-D8` — minimal application/API bridge is active in Issue #187 and remains downstream of nearer learner-facing completion work.
-- `PED-D6` — retain only already-active near-term work; do not expand WIP while D7 is on the shortest completion path.
+- `PED-D7` — nearest completion target. The Port/Starboard TX-sector correction is on `main` through PR #185. The obsolete concept-sandbox production attempt PR #186 is closed without merge. UX rebuilt the learner slice in the correct production location under `web/pedagogical-explorer/` as PR #193, based on the corrected mainline. Integrate #193 after its focused production frontend gates are green. Issue #107 remains only the already-defined narrow post-fix scientific confirmation; do not broaden it.
+- `PED-D8` — canonical application/API bridge integrated through PR #190 / squash `8192ac0f0f54cc795868f6a0d2e0201e39708bca`. Production UX delivery is active in Issue #191 under `web/pedagogical-explorer/`, preserving the Concept sandbox.
+- `PED-D6` — retain only already-active near-term work; do not expand WIP while D7/D8 are the shortest completion paths.
+
+## Design / implementation boundary
+
+- `concepts/pedagogical-simulator/` is the preserved approved Concept Simulator design baseline.
+- `web/pedagogical-explorer/` is the production learner application.
+- Routine production work must not alter the Concept baseline. UX implements the approved design language in production while canonical Python Core/API remains scientific authority.
 
 ## Historical boundary
 
