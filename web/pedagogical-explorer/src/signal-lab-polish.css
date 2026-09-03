@@ -1,0 +1,99 @@
+.chain-card > svg {
+  width: 100%;
+  height: 245px;
+  margin-top: 42px;
+  overflow: visible;
+}
+
+.insight svg {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  overflow: visible;
+  flex: 0 0 18px;
+}
+
+.compression .compression-plot {
+  margin-top: 34px;
+  height: 270px;
+  border: 1px solid rgba(82, 201, 224, .16);
+  border-radius: 13px;
+  background:
+    linear-gradient(rgba(77, 178, 201, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77, 178, 201, .045) 1px, transparent 1px),
+    radial-gradient(circle at 50% 100%, rgba(52, 217, 239, .09), transparent 48%);
+  background-size: 28px 28px, 28px 28px, auto;
+  overflow: visible;
+}
+
+.compression .ghost-peak { height: 64%; opacity: .55; }
+.compression .live-peak { height: 76%; bottom: 0; }
+.compression .resolution-bracket { bottom: 16px; }
+.compression .resolution-bracket span { top: 10px; padding: 2px 6px; border-radius: 5px; background: #081722; }
+
+.compression .insight {
+  bottom: 18px;
+  left: 16px;
+  right: 16px;
+  min-height: 42px;
+  line-height: 1.35;
+  background: rgba(8, 31, 43, .92);
+  backdrop-filter: blur(8px);
+}
+
+.chain-card {
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.chain-card:hover {
+  border-color: rgba(52, 217, 239, .28);
+  transform: translateY(-2px);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .28), 0 0 35px rgba(52, 217, 239, .035);
+}
+
+.trace-units {
+  display: flex;
+  justify-content: space-between;
+  margin: -30px 18px 10px;
+  color: #608095;
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.scientific-status,
+.scientific-error {
+  margin-top: 10px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(52, 217, 239, .18);
+  background: rgba(7, 25, 36, .75);
+  color: #75a4b6;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.scientific-error {
+  border-color: rgba(255, 166, 92, .28);
+  color: #d8a67e;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.scientific-error button {
+  width: fit-content;
+  border: 1px solid rgba(255, 166, 92, .25);
+  background: transparent;
+  color: #edb58c;
+  border-radius: 7px;
+  padding: 5px 8px;
+}
+.disabled-control { opacity: .42; }
+
+.signal-causal {
+  max-width: 1500px;
+  margin: 18px auto 0;
+  border: 1px solid rgba(52, 217, 239, .12);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.signal-causal strong { color: #d8f7fb; }
+.signal-causal small { color: #34d9ef; }
