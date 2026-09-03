@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import { Activity, RotateCcw, SlidersHorizontal, Sparkles, Waves } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -7,28 +8,44 @@ type EnvelopeModel='rectangular'|'tukey';
 type Trace={x:number[];y:number[];x_unit:string;y_unit:string};
 type SignalResponse={pulse_type:PulseType;waveform:Trace;instantaneous_frequency:Trace;matched_filter:Trace;metadata:Record<string,number|string>};
 type Locale='en'|'pt-BR';
-
+type Domain={min:number;max:number};
 type SignalConfig={pulse_type:PulseType;center_frequency_khz:number;duration_ms:number;bandwidth_khz:number;chirp_direction:ChirpDirection;envelope_model:EnvelopeModel};
 
 const API_BASE=(import.meta.env.VITE_HYDROSIM_API_BASE as string|undefined)??'http://127.0.0.1:8000';
 const initial:SignalConfig={pulse_type:'lfm',center_frequency_khz:200,duration_ms:1,bandwidth_khz:100,chirp_direction:'up',envelope_model:'rectangular'};
+const TIME_DOMAIN:Domain={min:0,max:5};
+const WAVE_DOMAIN:Domain={min:-1.05,max:1.05};
+const FREQUENCY_DOMAIN:Domain={min:0,max:850};
+const MATCHED_LAG_DOMAIN:Domain={min:-5000,max:5000};
+const MATCHED_DOMAIN:Domain={min:-1.05,max:1.05};
 
 const text={
- en:{back:'← System map',lab:'Signal laboratory',signal:'Signal',focusPulse:'Pulse',focusFrequency:'Frequency',focusCompression:'Compression',focusWaveform:'Waveform',kicker:'PED-D2 · PULSE & SIGNAL PROCESSING',title:'Change the transmitted pulse and watch the same scientific state reshape every visual.',subtitle:'The traces below come from HydroSIM’s canonical Python signal model. React owns interaction and presentation only.',controls:'Signal controls',waveform:'Waveform',frequency:'Centre frequency',duration:'Pulse duration',bandwidth:'LFM bandwidth',direction:'Sweep direction',envelope:'Envelope',up:'Up',down:'Down',rectangular:'Rectangular',tukey:'Tukey',reset:'Reset',transmit:'01 · TRANSMIT',frequencyLens:'02 · FREQUENCY LENS',process:'03 · PROCESS',flowTransmit:'TRANSMIT',flowFrequency:'FREQUENCY',flowProcess:'PROCESS',processingLens:'processing lens',passband:'Acoustic passband waveform',instant:'Instantaneous frequency',matched:'Matched-filter / autocorrelation response',loading:'Updating Python scientific model…',offline:'Scientific API unavailable',retry:'Retry',ready:'Python scientific core',mode:'Mode',cause:'Configured input',effect:'Derived visual response',configured:'Configured',derived:'Derived',intuition:'Physical intuition',inputResponse:'INPUT → RESPONSE',causeBody:'Pulse type, frequency, duration and bandwidth',effectBody:'Waveform, instantaneous frequency and matched-filter response',intuitionBody:'One configuration propagates through every view.'},
- 'pt-BR':{back:'← Mapa do sistema',lab:'Laboratório de sinais',signal:'Sinal',focusPulse:'Pulso',focusFrequency:'Frequência',focusCompression:'Compressão',focusWaveform:'Forma de onda',kicker:'PED-D2 · PULSO E PROCESSAMENTO DE SINAL',title:'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.',subtitle:'As curvas abaixo vêm do modelo canônico de sinais em Python do HydroSIM. O React cuida apenas da interação e apresentação.',controls:'Controles do sinal',waveform:'Forma de onda',frequency:'Frequência central',duration:'Duração do pulso',bandwidth:'Largura de banda LFM',direction:'Direção da varredura',envelope:'Envoltória',up:'Ascendente',down:'Descendente',rectangular:'Retangular',tukey:'Tukey',reset:'Restaurar',transmit:'01 · TRANSMISSÃO',frequencyLens:'02 · VISÃO DE FREQUÊNCIA',process:'03 · PROCESSAMENTO',flowTransmit:'TRANSMISSÃO',flowFrequency:'FREQUÊNCIA',flowProcess:'PROCESSAMENTO',processingLens:'visão de processamento',passband:'Forma de onda acústica em banda passante',instant:'Frequência instantânea',matched:'Resposta de filtro casado / autocorrelação',loading:'Atualizando o modelo científico em Python…',offline:'API científica indisponível',retry:'Tentar novamente',ready:'Scientific Core em Python',mode:'Modo',cause:'Entrada configurada',effect:'Resposta visual derivada',configured:'Configurado',derived:'Derivado',intuition:'Intuição física',inputResponse:'ENTRADA → RESPOSTA',causeBody:'Tipo de pulso, frequência, duração e largura de banda',effectBody:'Forma de onda, frequência instantânea e resposta do filtro casado',intuitionBody:'Uma configuração se propaga por todas as visualizações.'}
+ en:{back:'← System map',lab:'Signal laboratory',signal:'Signal',focusPulse:'Pulse',focusFrequency:'Frequency',focusCompression:'Compression',focusWaveform:'Waveform',kicker:'PED-D2 · PULSE & SIGNAL PROCESSING',title:'Change the transmitted pulse and watch the same scientific state reshape every visual.',subtitle:'The traces below come from HydroSIM’s canonical Python signal model. React owns interaction and presentation only.',controls:'Signal controls',waveform:'Waveform',frequency:'Centre frequency',duration:'Pulse duration',bandwidth:'LFM bandwidth',direction:'Sweep direction',envelope:'Envelope',up:'Up',down:'Down',rectangular:'Rectangular',tukey:'Tukey',reset:'Reset',transmit:'01 · TRANSMIT',frequencyLens:'02 · FREQUENCY LENS',process:'03 · PROCESS',flowTransmit:'TRANSMIT',flowFrequency:'FREQUENCY',flowProcess:'PROCESS',processingLens:'processing lens',passband:'Acoustic passband waveform',instant:'Instantaneous frequency',matched:'Matched-filter / autocorrelation response',loading:'Updating Python scientific model…',offline:'Scientific API unavailable',retry:'Retry',ready:'Python scientific core',mode:'Mode',cause:'Configured input',effect:'Derived visual response',configured:'Configured',derived:'Derived',intuition:'Physical intuition',inputResponse:'INPUT → RESPONSE',causeBody:'Pulse type, frequency, duration and bandwidth',effectBody:'Waveform, instantaneous frequency and matched-filter response',intuitionBody:'One configuration propagates through every view.',pulseWindow:'configured pulse duration',fixedScale:'fixed display scale'},
+ 'pt-BR':{back:'← Mapa do sistema',lab:'Laboratório de sinais',signal:'Sinal',focusPulse:'Pulso',focusFrequency:'Frequência',focusCompression:'Compressão',focusWaveform:'Forma de onda',kicker:'PED-D2 · PULSO E PROCESSAMENTO DE SINAL',title:'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.',subtitle:'As curvas abaixo vêm do modelo canônico de sinais em Python do HydroSIM. O React cuida apenas da interação e apresentação.',controls:'Controles do sinal',waveform:'Forma de onda',frequency:'Frequência central',duration:'Duração do pulso',bandwidth:'Largura de banda LFM',direction:'Direção da varredura',envelope:'Envoltória',up:'Ascendente',down:'Descendente',rectangular:'Retangular',tukey:'Tukey',reset:'Restaurar',transmit:'01 · TRANSMISSÃO',frequencyLens:'02 · VISÃO DE FREQUÊNCIA',process:'03 · PROCESSAMENTO',flowTransmit:'TRANSMISSÃO',flowFrequency:'FREQUÊNCIA',flowProcess:'PROCESSAMENTO',processingLens:'visão de processamento',passband:'Forma de onda acústica em banda passante',instant:'Frequência instantânea',matched:'Resposta de filtro casado / autocorrelação',loading:'Atualizando o modelo científico em Python…',offline:'API científica indisponível',retry:'Tentar novamente',ready:'Scientific Core em Python',mode:'Modo',cause:'Entrada configurada',effect:'Resposta visual derivada',configured:'Configurado',derived:'Derivado',intuition:'Intuição física',inputResponse:'ENTRADA → RESPOSTA',causeBody:'Tipo de pulso, frequência, duração e largura de banda',effectBody:'Forma de onda, frequência instantânea e resposta do filtro casado',intuitionBody:'Uma configuração se propaga por todas as visualizações.',pulseWindow:'duração configurada do pulso',fixedScale:'escala de exibição fixa'}
 } as const;
 
-function tracePath(trace:Trace|undefined,width=760,height=180){
+function tracePath(trace:Trace|undefined,xDomain:Domain,yDomain:Domain,width=760,height=180){
  if(!trace||trace.x.length<2||trace.x.length!==trace.y.length)return '';
- let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
- for(let i=0;i<trace.x.length;i++){minX=Math.min(minX,trace.x[i]);maxX=Math.max(maxX,trace.x[i]);minY=Math.min(minY,trace.y[i]);maxY=Math.max(maxY,trace.y[i]);}
- const dx=maxX-minX||1,dy=maxY-minY||1;
- return trace.x.map((x,i)=>`${i?'L':'M'} ${(((x-minX)/dx)*width).toFixed(2)} ${(height-((trace.y[i]-minY)/dy)*height).toFixed(2)}`).join(' ');
+ const dx=xDomain.max-xDomain.min||1,dy=yDomain.max-yDomain.min||1;
+ return trace.x.map((x,i)=>{
+  const px=((x-xDomain.min)/dx)*width;
+  const py=height-((trace.y[i]-yDomain.min)/dy)*height;
+  return `${i?'L':'M'} ${px.toFixed(2)} ${py.toFixed(2)}`;
+ }).join(' ');
 }
 
-function ScientificTrace({trace,className='wave-path'}:{trace?:Trace;className?:string}){
- const d=useMemo(()=>tracePath(trace),[trace]);
- return <svg viewBox="0 0 760 180" preserveAspectRatio="none"><path className="gridline" d="M0 90H760"/><path className={className} d={d}/></svg>;
+function ScientificTrace({trace,xDomain,yDomain,className='wave-path',pulseEnd,labelLeft,labelMid,labelRight}:{trace?:Trace;xDomain:Domain;yDomain:Domain;className?:string;pulseEnd?:number;labelLeft:string;labelMid:string;labelRight:string}){
+ const d=useMemo(()=>tracePath(trace,xDomain,yDomain),[trace,xDomain.min,xDomain.max,yDomain.min,yDomain.max]);
+ const pulsePosition=pulseEnd===undefined?null:Math.max(0,Math.min(100,((pulseEnd-xDomain.min)/(xDomain.max-xDomain.min))*100));
+ return <div className="scientific-plot">
+  <svg viewBox="0 0 760 180" preserveAspectRatio="none" aria-hidden="true">
+   <path className="plot-grid" d="M0 45H760 M0 90H760 M0 135H760 M190 0V180 M380 0V180 M570 0V180"/>
+   <path className="gridline" d="M0 90H760"/>
+   <motion.path className={className} d={d} initial={{opacity:.45}} animate={{opacity:1}} transition={{duration:.22}}/>
+  </svg>
+  {pulsePosition!==null&&<div className="pulse-duration-marker" style={{left:`${pulsePosition}%`}}><i/><span>{pulseEnd?.toFixed(1)} ms</span></div>}
+  <div className="fixed-axis"><span>{labelLeft}</span><span>{labelMid}</span><span>{labelRight}</span></div>
+ </div>;
 }
 
 export default function SignalLab({onBack,focus}:{onBack:()=>void;focus?:string}){
@@ -73,11 +90,11 @@ export default function SignalLab({onBack,focus}:{onBack:()=>void;focus?:string}
    {loading&&<div className="scientific-status">{t.loading}</div>}{error&&<div className="scientific-error"><strong>{t.offline}</strong><span>{error}</span><button onClick={()=>setRequestVersion(v=>v+1)}>{t.retry}</button></div>}
   </aside>
   <section className="visual-chain signal-continuous"><div className="signal-flow-label"><span>{t.flowTransmit}</span><i/><span>{t.flowFrequency}</span><i/><span>{t.flowProcess}</span></div>
-   <div className="chain-card transmit"><header><div><small>{t.transmit}</small><strong>{t.passband}</strong></div><span>{config.pulse_type==='lfm'?'LFM':'CW'}</span></header><ScientificTrace trace={data?.waveform}/><div className="trace-units"><span>{data?.waveform.x_unit??'ms'}</span><span>{data?.waveform.y_unit??''}</span></div></div>
+   <div className="chain-card transmit"><header><div><small>{t.transmit}</small><strong>{t.passband}</strong></div><span>{config.pulse_type==='lfm'?'LFM':'CW'}</span></header><div className="plot-note"><span>{t.pulseWindow}</span><b>{t.fixedScale}: 0–5 ms</b></div><ScientificTrace trace={data?.waveform} xDomain={TIME_DOMAIN} yDomain={WAVE_DOMAIN} pulseEnd={config.duration_ms} labelLeft="0 ms" labelMid="2.5 ms" labelRight="5 ms"/><div className="trace-units"><span>{data?.waveform.x_unit??'ms'}</span><span>{data?.waveform.y_unit??''}</span></div></div>
    <div className="chain-arrow"><span>{t.effect}</span><i>→</i></div>
-   <div className="chain-card receive"><header><div><small>{t.frequencyLens}</small><strong>{t.instant}</strong></div><span>{metadata?.chirp_direction??'—'}</span></header><ScientificTrace trace={data?.instantaneous_frequency} className="echo-path"/><div className="trace-units"><span>{data?.instantaneous_frequency.x_unit??'ms'}</span><span>{data?.instantaneous_frequency.y_unit??'kHz'}</span></div></div>
+   <div className="chain-card receive"><header><div><small>{t.frequencyLens}</small><strong>{t.instant}</strong></div><span>{metadata?.chirp_direction??'—'}</span></header><div className="plot-note"><span>{config.pulse_type==='lfm'?`${config.bandwidth_khz.toFixed(0)} kHz · ${config.chirp_direction}`:'CW'}</span><b>{t.fixedScale}: 0–850 kHz</b></div><ScientificTrace trace={data?.instantaneous_frequency} xDomain={TIME_DOMAIN} yDomain={FREQUENCY_DOMAIN} className="echo-path" pulseEnd={config.duration_ms} labelLeft="0 ms" labelMid="2.5 ms" labelRight="5 ms"/><div className="trace-units"><span>{data?.instantaneous_frequency.x_unit??'ms'}</span><span>{data?.instantaneous_frequency.y_unit??'kHz'}</span></div></div>
    <div className="chain-arrow"><span>{t.processingLens}</span><i>→</i></div>
-   <div className="chain-card compression"><header><div><small>{t.process}</small><strong>{t.matched}</strong></div><span>{t.derived.toUpperCase()}</span></header><ScientificTrace trace={data?.matched_filter}/><div className="trace-units"><span>{data?.matched_filter.x_unit??'us'}</span><span>{data?.matched_filter.y_unit??''}</span></div><div className="insight"><Waves size={18}/><span>{t.intuitionBody}</span></div></div>
+   <div className="chain-card compression"><header><div><small>{t.process}</small><strong>{t.matched}</strong></div><span>{t.derived.toUpperCase()}</span></header><div className="plot-note"><span>{config.envelope_model}</span><b>{t.fixedScale}: ±5000 µs</b></div><ScientificTrace trace={data?.matched_filter} xDomain={MATCHED_LAG_DOMAIN} yDomain={MATCHED_DOMAIN} labelLeft="−5000 µs" labelMid="0" labelRight="+5000 µs"/><div className="trace-units"><span>{data?.matched_filter.x_unit??'us'}</span><span>{data?.matched_filter.y_unit??''}</span></div><div className="insight"><Waves size={18}/><span>{t.intuitionBody}</span></div></div>
   </section></div>
   <div className="causal-strip signal-causal"><div><small>{t.cause}</small><strong>{t.configured}</strong><span>{t.causeBody}</span></div><div><small>{t.effect}</small><strong>{t.derived}</strong><span>{t.effectBody}</span></div><div><small>{t.intuition}</small><strong>{t.inputResponse}</strong><span>{t.intuitionBody}</span></div></div>
  </div>;
