@@ -26,11 +26,13 @@ test('PED-D2 runs end to end against the real Python pedagogical API', async ({ 
   await expect(page.getByText('Matched-filter / autocorrelation response', { exact: true })).toBeVisible();
   await expect(page.getByText('Configured', { exact: true })).toBeVisible();
   await expect(page.getByText('Derived', { exact: true })).toBeVisible();
+  await expect(page.getByText('0–5 ms', { exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'CW' }).click();
+  const duration = page.locator('label').filter({ hasText: 'Pulse duration' }).locator('input[type="range"]');
+  await duration.focus();
+  await duration.press('ArrowRight');
   await expect.poll(() => signalResponses.length).toBeGreaterThan(1);
   expect(signalResponses.at(-1)).toBe(200);
-  await expect(page.locator('label').filter({ hasText: 'LFM bandwidth' }).locator('input')).toBeDisabled();
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', {
