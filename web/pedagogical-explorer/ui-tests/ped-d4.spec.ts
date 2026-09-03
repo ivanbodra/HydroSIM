@@ -16,5 +16,6 @@ test('PED-D4 uses canonical refraction response, comparison state and bilingual 
  await expect(page.getByText(/Δx -1.30 m/)).toBeVisible();
  await page.getByRole('button',{name:'PT-BR'}).click();
  await expect(page.getByRole('heading',{name:'Curve o raio alterando a coluna d’água.'})).toBeVisible();
- await expect(page.getByText('Configurado',{exact:true})).toBeVisible();
+ await expect(page.getByText('Referência / Verdade',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Perfil de processamento incorreto'})).toBeVisible();
 });
