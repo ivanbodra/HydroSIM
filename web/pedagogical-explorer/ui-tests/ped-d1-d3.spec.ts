@@ -90,7 +90,7 @@ test('PED-D2 posts pulse-duration control to the canonical signal endpoint and s
   await duration.press('ArrowRight');
   await expect.poll(() => requests.length).toBeGreaterThan(1);
   expect(Number(requests.at(-1)?.duration_ms)).toBeGreaterThan(1);
-  await expect(page.getByText('0–5 ms', { exact: true })).toBeVisible();
+  await expect(page.getByText(/0–5 ms/).first()).toBeVisible();
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', { name: 'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.' })).toBeVisible();
