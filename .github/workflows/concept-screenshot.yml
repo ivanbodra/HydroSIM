@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'concepts/pedagogical-simulator/**'
+      - 'src/hydrosim/app/**'
       - '.github/workflows/concept-screenshot.yml'
   workflow_dispatch:
 
@@ -26,8 +27,18 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install HydroSIM web bridge
+        working-directory: ${{ github.workspace }}
+        run: python -m pip install -e '.[web]'
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
@@ -49,6 +60,37 @@ jobs:
 
       - name: Run focused learner UI tests
         run: npm run test:ui
+
+      - name: Start real pedagogical API
+        working-directory: ${{ github.workspace }}
+        shell: bash
+        run: |
+          python -m uvicorn hydrosim.app.signal_api:app --host 127.0.0.1 --port 8000 > /tmp/hydrosim-api.log 2>&1 &
+          echo $! > /tmp/hydrosim-api.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/hydrosim-api.log
+          exit 1
+
+      - name: Start learner frontend on API-authorized origin
+        shell: bash
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/hydrosim-concept-dev.log 2>&1 &
+          echo $! > /tmp/hydrosim-concept-dev.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:5173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/hydrosim-concept-dev.log
+          exit 1
+
+      - name: Run targeted PED-D2 real API end-to-end smoke
+        env:
+          HYDROSIM_E2E_REAL_API: '1'
+          HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
+        run: npx playwright test ui-tests/ped-d2-real-api.spec.ts
 
       - name: Capture real concept laboratories
         run: npm run capture
