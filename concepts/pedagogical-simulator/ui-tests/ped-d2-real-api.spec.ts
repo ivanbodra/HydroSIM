@@ -27,15 +27,10 @@ test('PED-D2 runs end to end against the real Python pedagogical API', async ({ 
   await expect(page.getByText('Configured', { exact: true })).toBeVisible();
   await expect(page.getByText('Derived', { exact: true })).toBeVisible();
 
-  const frequency = page.locator('label').filter({ hasText: 'Centre frequency' }).locator('input[type="range"]');
-  await frequency.evaluate((element) => {
-    const input = element as HTMLInputElement;
-    input.value = '300';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-
+  await page.getByRole('button', { name: 'CW' }).click();
   await expect.poll(() => signalResponses.length).toBeGreaterThan(1);
   expect(signalResponses.at(-1)).toBe(200);
+  await expect(page.locator('label').filter({ hasText: 'LFM bandwidth' }).locator('input')).toBeDisabled();
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', {
