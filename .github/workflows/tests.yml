@@ -127,3 +127,44 @@ jobs:
           fi
           git commit -m "Update real Didactic Explorer screenshots [skip ci]"
           git push origin HEAD:${TARGET_BRANCH}
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: concepts/pedagogical-simulator
+    steps:
+      - name: Checkout tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Resolve lockfile from pinned dependencies
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Install from lockfile
+        run: npm ci
+
+      - name: Build pedagogical frontend
+        run: npm run build
+
+      - name: Persist generated lockfile on pushed engineering branch
+        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
+        working-directory: .
+        env:
+          TARGET_BRANCH: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          git add concepts/pedagogical-simulator/package-lock.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "build: lock pedagogical frontend dependencies [skip ci]"
+          git push origin HEAD:${TARGET_BRANCH}
