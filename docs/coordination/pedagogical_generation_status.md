@@ -10,13 +10,14 @@ The active roadmap contains 31 learner-facing submodules:
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-**Submodule indicator: 3/31 ready submodules.**
+**Submodule indicator: 4/31 ready submodules.**
 
 Ready submodules:
 
 - `PED-D1` — Wave Fundamentals. Runnable bilingual React experience on `main`, canonical Python wave-kinematics API, focused learner-facing UI/state validation integrated through PR #153, and independent scientific/computational QA PASS in Issue #148 with no material finding.
 - `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
 - `PED-D3` — Sonar Equation & Propagation Loss. Runnable bilingual production React experience on `main`, focused learner-facing validation, canonical Python sonar-equation API, and risk-proportionate independent QA closure in Issue #155. QA reused the previously validated D3 physics from #97 and checked only the new React/API boundary, finding no material scientific/computational risk.
+- `PED-D4` — Sound Speed & Refraction. Runnable bilingual production React experience on `main` via PR #165, focused learner-facing tests, canonical Python refraction bridge/Core, and narrow independent QA PASS in Issue #170 with no material scientific/computational finding.
 
 **Atom indicator: not yet reportable because the canonical all-roadmap learner input/output inventory has not yet been completed.** The denominator must not be inferred from contracts, APIs, tests, PRs, or broad content labels. Until every planned learner input and learner-visible output across the 31-submodule roadmap has an explicit inventory entry, no atom percentage is authoritative.
 
@@ -41,9 +42,9 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 
 ## Current pipeline
 
-- `PED-D4` — nearest incomplete production submodule and next readiness target.
-- `PED-D7` — QA-found Port/Starboard TX-sector identity defect corrected on `main` through PR #185 / squash `a20f377aef4dbd050d18ab97057c381a9f9bf8b7`; production learner PR #186 must be reconciled and tested against this corrected baseline before integration. Existing QA #107 is limited to narrow post-fix confirmation.
+- `PED-D7` — nearest incomplete learner-facing target. QA-found Port/Starboard TX-sector identity defect corrected on `main` through PR #185 / squash `a20f377aef4dbd050d18ab97057c381a9f9bf8b7`; production learner PR #186 must be reconciled and tested against this corrected baseline before integration. Existing QA #107 is limited to narrow post-fix confirmation.
 - `PED-D8` — minimal application/API bridge is active in Issue #187 and remains downstream of nearer learner-facing completion work.
+- `PED-D6` — retain only already-active near-term work; do not expand WIP while D7 is on the shortest completion path.
 
 ## Historical boundary
 
