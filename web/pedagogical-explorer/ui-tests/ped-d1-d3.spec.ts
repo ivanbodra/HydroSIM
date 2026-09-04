@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const waveResponse = {
   period_seconds: 0.000005,
   wavelength_m: 0.0075,
-  temporal_waveform: { x: [0, 1, 2], y: [0, 1, 0], x_unit: 's', y_unit: 'normalized amplitude' },
+  temporal_waveform: { x: [0, 0.007, 0.014], y: [0, 1, 0], x_unit: 'ms', y_unit: 'normalized amplitude' },
   spatial_waveform: { x: [0, 0.00375, 0.0075], y: [0, 1, 0], x_unit: 'm', y_unit: 'normalized amplitude' },
   range_offset_m: null,
   metadata: { propagation_direction: '+x' },
@@ -44,7 +44,7 @@ const d3Response = {
   metadata: { state_input: 'Configured', state_output: 'Derived' },
 };
 
-test('PED-D1 keeps canonical API data flow, interaction and bilingual state visible', async ({ page }) => {
+test('PED-D1 keeps API data flow, interaction and bilingual fixed-scale view visible', async ({ page }) => {
   const requests: Array<Record<string, unknown>> = [];
   await page.route('**/api/v1/pedagogical/wave-kinematics', async (route) => {
     requests.push(route.request().postDataJSON() as Record<string, unknown>);
@@ -52,12 +52,12 @@ test('PED-D1 keeps canonical API data flow, interaction and bilingual state visi
   });
 
   await page.goto('/#wave-lab');
-  await expect(page.getByRole('heading', { name: 'Change frequency and watch time and space respond together.' })).toBeVisible();
-  await expect(page.getByText('CONFIGURED', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('DERIVED', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Change the wave and see the effect immediately.' })).toBeVisible();
   await expect(page.getByText('5.00 µs')).toBeVisible();
   await expect(page.getByText('0.0075 m')).toBeVisible();
-  await expect(page.getByText(/Propagation direction: \+x/)).toBeVisible();
+  await expect(page.getByText('Time (ms)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Normalized amplitude', { exact: true })).toBeVisible();
+  await expect(page.getByText('0.014', { exact: true })).toBeVisible();
 
   const frequency = page.locator('label').filter({ hasText: 'Frequency' }).locator('input[type="range"]');
   await frequency.fill('300');
@@ -65,9 +65,9 @@ test('PED-D1 keeps canonical API data flow, interaction and bilingual state visi
   expect(requests.at(-1)?.frequency_khz).toBe(300);
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
-  await expect(page.getByRole('heading', { name: 'Altere a frequência e veja tempo e espaço responderem juntos.' })).toBeVisible();
-  await expect(page.getByText('CONFIGURADO', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('DERIVADO', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Altere a onda e veja o efeito imediatamente.' })).toBeVisible();
+  await expect(page.getByText('Tempo (ms)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Amplitude normalizada', { exact: true })).toBeVisible();
 });
 
 test('PED-D2 renders canonical signal outputs and stays bilingual', async ({ page }) => {
