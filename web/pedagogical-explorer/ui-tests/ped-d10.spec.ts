@@ -27,7 +27,7 @@ test('PED-D10 posts canonical sector controls and renders timing/coverage conseq
   await page.goto('/#multisector-lab');
   await expect(page.getByRole('heading', { name: 'Multisector MBES' })).toBeVisible();
   await expect(page.getByText('PORT + / STARBOARD −')).toBeVisible();
-  await expect(page.getByText(/port \+ starboard/i).first()).toBeVisible();
+  await expect(page.getByText('ONE PING · MULTIPLE TX EVENTS')).toBeVisible();
   await expect.poll(() => requests.length).toBeGreaterThan(0);
 
   const initial = requests.at(-1)!;
@@ -47,6 +47,9 @@ test('PED-D10 posts canonical sector controls and renders timing/coverage conseq
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', { name: 'MBES Multissetorial' })).toBeVisible();
+  await expect(page.getByText('CADEIA DE AQUISIÇÃO')).toBeVisible();
+  await expect(page.getByText('BOMBORDO + / BORESTE −')).toBeVisible();
+  await expect(page.getByText('UM PING · MÚLTIPLOS EVENTOS TX')).toBeVisible();
   await expect(page.getByText('Bombordo')).toBeVisible();
   await expect(page.getByText('Boreste')).toBeVisible();
 });
