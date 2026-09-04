@@ -1,0 +1,3 @@
+import { useEffect, useState } from 'react';
+type Transition={from:string;to:string;title:string;family:string};
+export default function LessonTransition(){const[data,setData]=useState<Transition|null>(null);useEffect(()=>{const raw=sessionStorage.getItem('hydrosim-lesson-transition');if(!raw)return;sessionStorage.removeItem('hydrosim-lesson-transition');try{setData(JSON.parse(raw));const timer=setTimeout(()=>setData(null),850);return()=>clearTimeout(timer)}catch{return}},[]);if(!data)return null;return <div className={`lesson-transition family-${data.family}`}><div className="lesson-transition-line"/><small>NEXT LESSON</small><strong><span>{data.to}</span>{data.title}</strong><div className="lesson-transition-line"/></div>}
