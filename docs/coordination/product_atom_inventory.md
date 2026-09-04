@@ -19,7 +19,7 @@ This file defines the denominator for HydroSIM's granular product-progress indic
 ## Product indicator
 
 **243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 100/243 ready (41.2%).**
+**Current atom indicator: 101/243 ready (41.6%).**
 
 Readiness counts learner-facing production behavior on `main`. The current conservative reconciliation includes only atom IDs explicitly evidenced by merged production work; unsupported or inferred behavior remains unready.
 
@@ -30,7 +30,7 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | PED-D3 | 6 | 4 | 10 | 10 |
 | PED-D4 | 3 | 1 | 4 | 4 |
 | PED-D5 | 3 | 2 | 5 | 0 |
-| PED-D6 | 8 | 4 | 12 | 11 |
+| PED-D6 | 8 | 4 | 12 | 12 |
 | PED-D7 | 6 | 4 | 10 | 10 |
 | PED-D8 | 6 | 5 | 11 | 11 |
 | PED-D9 | 6 | 5 | 11 | 5 |
@@ -56,11 +56,11 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **100** |
+| **TOTAL** | **144** | **99** | **243** | **101** |
 
 ### Ready atom evidence for partially/newly reconciled submodules
 
-- **PED-D6 — 11/12:** `I01`, `I02`, `I03`, `I04`, `I05`, `I07`, `I08`, `O01`, `O02`, `O03`, `O04`. `I06` eccentricity remains unresolved.
+- **PED-D6 — 12/12:** `I01`–`I08`, `O01`–`O04`. `I06` eccentricity is learner-operable on `main` through PR #236, with RX X/Y/Z controls and canonical TX→RX vector/magnitude readout.
 - **PED-D9 — 5/11:** `I01`, `I06`, `O01`, `O02`, `O04`.
 - **PED-D10 — 10/10:** `I01`–`I06`, `O01`–`O04`.
 - **PED-D11 — 8/11:** `I03`, `I04`, `I05`, `I06`, `I07`, `O01`, `O02`, `O03`.
