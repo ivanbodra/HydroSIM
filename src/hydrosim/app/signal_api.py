@@ -1,4 +1,4 @@
-"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10/PED-D11/PED-D12/PED-D14/PED-D18 lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10/PED-D11/PED-D12/PED-D14/PED-D15/PED-D18 lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
 frontend remains presentation-only and must not reimplement scientific equations.
@@ -45,6 +45,11 @@ from hydrosim.app.sonar_equation_api import (
     D3SonarEquationRequest,
     D3SonarEquationResponse,
     prepare_d3_sonar_equation_response,
+)
+from hydrosim.app.sounding_formation_api import (
+    D15SoundingFormationRequest,
+    D15SoundingFormationResponse,
+    prepare_d15_sounding_formation_response,
 )
 from hydrosim.app.timing_api import (
     D14TimingRequest,
@@ -354,6 +359,12 @@ def create_fastapi_app():
             return prepare_d14_timing_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/v1/pedagogical/sounding-formation", response_model=D15SoundingFormationResponse)
+    def sounding_formation(
+        request: D15SoundingFormationRequest,
+    ) -> D15SoundingFormationResponse:
+        return prepare_d15_sounding_formation_response(request)
 
     @app.post("/api/v1/pedagogical/uncertainty", response_model=D18UncertaintyResponse)
     def uncertainty(request: D18UncertaintyRequest) -> D18UncertaintyResponse:
