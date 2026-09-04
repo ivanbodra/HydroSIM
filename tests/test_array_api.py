@@ -66,3 +66,53 @@ def test_d6_more_elements_at_fixed_spacing_increase_aperture_and_narrow_beam() -
 def test_d6_rejects_zero_spacing_for_multi_element_array() -> None:
     with pytest.raises(ValueError, match="element_spacing_m"):
         D6ArrayRequest(element_count=2, element_spacing_m=0.0)
+
+
+def test_d6_coincident_tx_rx_has_zero_eccentricity_in_declared_frame() -> None:
+    response = prepare_d6_array_response(
+        D6ArrayRequest(
+            tx_reference_position_m=(1.0, -2.0, 3.0),
+            rx_reference_position_m=(1.0, -2.0, 3.0),
+            reference_frame="B",
+        )
+    )
+
+    assert response.eccentricity_vector_m == pytest.approx((0.0, 0.0, 0.0))
+    assert response.eccentricity_magnitude_m == pytest.approx(0.0)
+    assert response.reference_frame == "B"
+    assert response.metadata["eccentricity_unit"] == "m"
+    assert response.metadata["eccentricity_frame"] == "B"
+
+
+def test_d6_tx_rx_eccentricity_preserves_vector_and_magnitude() -> None:
+    response = prepare_d6_array_response(
+        D6ArrayRequest(
+            tx_reference_position_m=(0.0, 0.0, 0.0),
+            rx_reference_position_m=(1.0, 2.0, 2.0),
+            reference_frame="sensor-array",
+        )
+    )
+
+    assert response.tx_reference_position_m == pytest.approx((0.0, 0.0, 0.0))
+    assert response.rx_reference_position_m == pytest.approx((1.0, 2.0, 2.0))
+    assert response.eccentricity_vector_m == pytest.approx((1.0, 2.0, 2.0))
+    assert response.eccentricity_magnitude_m == pytest.approx(3.0)
+    assert response.reference_frame == "sensor-array"
+
+
+def test_d6_tx_rx_eccentricity_is_invariant_under_common_translation() -> None:
+    baseline = prepare_d6_array_response(
+        D6ArrayRequest(
+            tx_reference_position_m=(0.0, 0.0, 0.0),
+            rx_reference_position_m=(1.0, 2.0, 2.0),
+        )
+    )
+    translated = prepare_d6_array_response(
+        D6ArrayRequest(
+            tx_reference_position_m=(10.0, -4.0, 7.0),
+            rx_reference_position_m=(11.0, -2.0, 9.0),
+        )
+    )
+
+    assert translated.eccentricity_vector_m == pytest.approx(baseline.eccentricity_vector_m)
+    assert translated.eccentricity_magnitude_m == pytest.approx(baseline.eccentricity_magnitude_m)
