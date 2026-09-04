@@ -19,9 +19,9 @@ This file defines the denominator for HydroSIM's granular product-progress indic
 ## Product indicator
 
 **243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 55/243 ready (22.6%).**
+**Current atom indicator: 100/243 ready (41.2%).**
 
-Readiness counts learner-facing production behavior on `main`. PED-D7 and PED-D8 are now integrated in the production React path; their complete inventoried learner atoms are therefore ready.
+Readiness counts learner-facing production behavior on `main`. The current conservative reconciliation includes only atom IDs explicitly evidenced by merged production work; unsupported or inferred behavior remains unready.
 
 | Submodule | Inputs | Outputs | Total | Ready |
 |---|---:|---:|---:|---:|
@@ -30,18 +30,18 @@ Readiness counts learner-facing production behavior on `main`. PED-D7 and PED-D8
 | PED-D3 | 6 | 4 | 10 | 10 |
 | PED-D4 | 3 | 1 | 4 | 4 |
 | PED-D5 | 3 | 2 | 5 | 0 |
-| PED-D6 | 8 | 4 | 12 | 0 |
+| PED-D6 | 8 | 4 | 12 | 11 |
 | PED-D7 | 6 | 4 | 10 | 10 |
 | PED-D8 | 6 | 5 | 11 | 11 |
-| PED-D9 | 6 | 5 | 11 | 0 |
-| PED-D10 | 6 | 4 | 10 | 0 |
-| PED-D11 | 7 | 4 | 11 | 0 |
-| PED-D12 | 4 | 4 | 8 | 0 |
+| PED-D9 | 6 | 5 | 11 | 5 |
+| PED-D10 | 6 | 4 | 10 | 10 |
+| PED-D11 | 7 | 4 | 11 | 8 |
+| PED-D12 | 4 | 4 | 8 | 5 |
 | PED-D13 | 6 | 4 | 10 | 0 |
 | PED-D14 | 5 | 4 | 9 | 0 |
 | PED-D15 | 7 | 3 | 10 | 0 |
 | PED-D16 | 7 | 4 | 11 | 0 |
-| PED-D17 | 9 | 5 | 14 | 0 |
+| PED-D17 | 9 | 5 | 14 | 6 |
 | PED-D18 | 7 | 4 | 11 | 0 |
 | P1 | 4 | 2 | 6 | 0 |
 | P2 | 4 | 2 | 6 | 0 |
@@ -56,7 +56,18 @@ Readiness counts learner-facing production behavior on `main`. PED-D7 and PED-D8
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **55** |
+| **TOTAL** | **144** | **99** | **243** | **100** |
+
+### Ready atom evidence for partially/newly reconciled submodules
+
+- **PED-D6 — 11/12:** `I01`, `I02`, `I03`, `I04`, `I05`, `I07`, `I08`, `O01`, `O02`, `O03`, `O04`. `I06` eccentricity remains unresolved.
+- **PED-D9 — 5/11:** `I01`, `I06`, `O01`, `O02`, `O04`.
+- **PED-D10 — 10/10:** `I01`–`I06`, `O01`–`O04`.
+- **PED-D11 — 8/11:** `I03`, `I04`, `I05`, `I06`, `I07`, `O01`, `O02`, `O03`.
+- **PED-D12 — 5/8:** `I01`–`I04`, `O01`.
+- **PED-D17 — 6/14:** `I01`, `I05`, `I06`, `I09`, `O01`, `O02`.
+
+Existing complete ready baselines remain PED-D1, PED-D2, PED-D3, PED-D4, PED-D7 and PED-D8 (55 atoms total).
 
 ## Atom definitions
 
