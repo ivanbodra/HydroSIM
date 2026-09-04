@@ -23,9 +23,11 @@ test('PED-D17 links learner controls to canonical D8 and D10 outputs', async ({ 
 
   await page.goto('/#tradeoff-lab');
   await expect(page.getByRole('heading',{name:'Acquisition trade-offs'})).toBeVisible();
-  await expect(page.getByText('160.0 m')).toBeVisible();
-  await expect(page.getByText('80.0 m')).toBeVisible();
-  await expect(page.getByText('5.00 mm')).toBeVisible();
+  await expect(page.getByText('160.0 m').first()).toBeVisible();
+  await expect(page.getByText('80.0 m').first()).toBeVisible();
+  await expect(page.getByText('5.00 mm').first()).toBeVisible();
+  await expect(page.getByText('Baseline',{exact:true})).toBeVisible();
+  await expect(page.getByText('Current',{exact:true})).toBeVisible();
 
   const depth=page.locator('label').filter({hasText:'Depth'}).locator('input');
   await setRangeValue(depth,'200');
@@ -37,4 +39,5 @@ test('PED-D17 links learner controls to canonical D8 and D10 outputs', async ({ 
 
   await page.getByRole('button',{name:'PT-BR'}).click();
   await expect(page.getByRole('heading',{name:'Compromissos da aquisição'})).toBeVisible();
+  await expect(page.getByText('Atual',{exact:true})).toBeVisible();
 });
