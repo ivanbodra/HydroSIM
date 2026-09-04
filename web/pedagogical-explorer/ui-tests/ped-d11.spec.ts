@@ -10,10 +10,15 @@ test('PED-D11 sends configured vessel geometry and renders canonical sensor/refe
   await page.goto('/#vessel-configuration-lab');
   await expect(page.getByRole('heading',{name:'Vessel & Sensor Configuration'})).toBeVisible();
   await expect(page.getByText('2.00 m').first()).toBeVisible();
-  await expect(page.getByText('5.00 m')).toBeVisible();
+  await expect(page.getByText('5.00 m',{exact:true})).toBeVisible();
 
   const txX=page.locator('.d11-lever').first().locator('label').filter({hasText:'X · Forward'}).locator('input');
-  await txX.evaluate((el:HTMLInputElement)=>{el.value='6';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
+  await txX.evaluate((el:HTMLInputElement)=>{
+    const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;
+    setter?.call(el,'6');
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  });
   await expect.poll(()=>((requests.at(-1)?.transducer_lever_arm_m as Record<string,unknown>)?.x)).toBe(6);
 
   await page.getByRole('button',{name:'PT-BR'}).click();
