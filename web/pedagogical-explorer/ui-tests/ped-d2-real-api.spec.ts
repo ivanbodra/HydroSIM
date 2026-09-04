@@ -15,11 +15,12 @@ test('PED-D2 runs end to end against the real Python pedagogical API', async ({ 
   await expect.poll(() => signalResponses.length).toBeGreaterThan(0);
   expect(signalResponses.at(-1)).toBe(200);
 
-  await expect(page.getByText('Acoustic waveform', { exact: true })).toBeVisible();
-  await expect(page.getByText('Instantaneous frequency', { exact: true })).toBeVisible();
-  await expect(page.getByText('Matched-filter response', { exact: true })).toBeVisible();
-  await expect(page.getByText('Time (ms)', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('Lag (µs)', { exact: true })).toBeVisible();
+  const cards = page.locator('.chain-card');
+  await expect(cards.getByText('Acoustic waveform', { exact: true })).toBeVisible();
+  await expect(cards.getByText('Instantaneous frequency', { exact: true })).toBeVisible();
+  await expect(cards.getByText('Matched-filter response', { exact: true })).toBeVisible();
+  await expect(cards.getByText('Time (ms)', { exact: true }).first()).toBeVisible();
+  await expect(cards.getByText('Lag (µs)', { exact: true })).toBeVisible();
 
   const duration = page.locator('label').filter({ hasText: 'Pulse duration' }).locator('input[type="range"]');
   await duration.focus();
