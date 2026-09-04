@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+async function setRangeValue(locator: import('@playwright/test').Locator, value: string) {
+  await locator.evaluate((el: HTMLInputElement, nextValue) => {
+    const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;
+    setter?.call(el,nextValue);
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  }, value);
+}
+
 test('PED-D17 links learner controls to canonical D8 and D10 outputs', async ({ page }) => {
   const echoRequests: Array<Record<string, unknown>> = [];
   const multiRequests: Array<Record<string, unknown>> = [];
@@ -19,11 +28,11 @@ test('PED-D17 links learner controls to canonical D8 and D10 outputs', async ({ 
   await expect(page.getByText('5.00 mm')).toBeVisible();
 
   const depth=page.locator('label').filter({hasText:'Depth'}).locator('input');
-  await depth.evaluate((el:HTMLInputElement)=>{el.value='200';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
+  await setRangeValue(depth,'200');
   await expect.poll(()=>echoRequests.at(-1)?.vertical_separation_m).toBe(200);
 
   const frequency=page.locator('label').filter({hasText:'Sector frequency'}).locator('input');
-  await frequency.evaluate((el:HTMLInputElement)=>{el.value='400';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
+  await setRangeValue(frequency,'400');
   await expect.poll(()=>((multiRequests.at(-1)?.sectors as Array<Record<string,unknown>>)?.[1]?.frequency_khz)).toBe(400);
 
   await page.getByRole('button',{name:'PT-BR'}).click();
