@@ -2,19 +2,20 @@
 
 Status: authoritative pedagogical-generation contract  
 Experience: `PED-D6`  
-Scope: first production learner vertical slice
+Scope: production learner vertical slice
 
 ## Learning question
 
-PED-D6 teaches how physical element size, element spacing, element count/aperture, acoustic frequency and wavelength shape the normalized directivity of an ideal transducer array.
+PED-D6 teaches how physical element size, element spacing, element count/aperture, acoustic frequency/wavelength, array layout, and deterministic aperture weighting shape the normalized directivity of an ideal transducer array. It may also show Mills Cross as a **construction geometry** made from orthogonal TX/RX linear apertures; two-way TX/RX response and electronic steering remain separate concepts.
 
-The first slice is intentionally limited to the already-authoritative HydroSIM far-field narrowband models. It must not introduce vendor-specific geometry, calibrated source/receive gain, near-field focusing, mutual coupling, or an independent frontend beam equation.
+The slice is limited to HydroSIM's authoritative far-field narrowband models. It must not introduce vendor-specific geometry, calibrated source/receive gain, near-field focusing, mutual coupling, or an independent frontend beam equation.
 
 ## Canonical Core ownership
 
 The Scientific Core is the sole owner of the physics:
 
-- `src/hydrosim/geometry/arrays.py` — regular centred 1-D/rectangular array geometry, element count, spacing, element dimensions and physical aperture;
+- `src/hydrosim/geometry/arrays.py` — regular centred 1-D/rectangular array geometry, element count, spacing, element dimensions, orientation and physical aperture;
+- `src/hydrosim/geometry/mills_cross.py` — validated Mills-Cross construction from orthogonal TX/RX linear arrays;
 - `src/hydrosim/acquisition/element_factor.py` — ideal rectangular-element one-way far-field directivity;
 - `src/hydrosim/acquisition/array_factor.py` — ideal coherent one-way narrowband array factor, steering direction and complex element weights;
 - `src/hydrosim/acquisition/beam_pattern.py` — physical one-way element-factor × array-factor composition and across-track scan with local half-power (-3 dB) beamwidth;
@@ -26,69 +27,80 @@ The application/API and React layers may serialize, localize and visualize these
 
 ### Configured
 
-Minimum learner controls for the first slice:
+Learner controls scientifically belonging to PED-D6 are:
 
 - acoustic frequency `f` [Hz], `f > 0`;
 - sound speed `c` [m/s], `c > 0`;
 - element count on the active axis `N >= 1`;
 - inter-element centre spacing `d` [m], with `d > 0` for `N > 1`;
 - physical element face dimension on the active axis `a` [m], `a > 0`;
-- steering angle may be fixed at broadside for the PED-D6 baseline; interactive steering belongs primarily to PED-D7.
+- array geometry: regular linear baseline, with rectangular 2-D geometry permitted through canonical `TransducerArray` parameters;
+- deterministic aperture weighting selector, initially `uniform` or `hann`;
+- Mills-Cross construction selector when the experience is showing array architecture rather than two-way response.
 
-A simple 1-D regular array is the required baseline because it isolates the relationships PED-D6 is intended to teach. The existing rectangular 2-D `TransducerArray` remains canonical and may be exposed later without changing the science.
+Steering may remain fixed at broadside in PED-D6; interactive steering belongs primarily to PED-D7.
 
 ### Derived
 
-The Core-derived learner outputs are:
+Core-derived learner outputs include:
 
 - wavelength `lambda = c / f` [m];
 - element-centre positions [m];
-- physical aperture [m], using the canonical `TransducerArray.aperture_*` property;
+- physical aperture [m], using canonical `TransducerArray.aperture_*` properties;
 - normalized one-way element-factor response;
 - normalized one-way array-factor response;
 - normalized one-way physical beam pattern `element factor × array factor`;
 - normalized power versus angle;
 - peak angle and peak normalized power;
 - local half-power (-3 dB) beamwidth when both crossings lie inside the sampled angular interval;
-- visible side-lobe / grating-lobe structure present in the computed normalized pattern.
+- visible side-lobe / grating-lobe structure present in the computed normalized pattern;
+- for Mills Cross, TX/RX principal-axis geometry in their common sensor frame.
 
 These quantities are `Derived`. PED-D6 does not create `Observed`, `Estimated`, or environmental `Truth` state.
 
 ## Required cause → effect relationships
 
-The first production experience must make the following effects observable through canonical Core outputs:
-
-1. **Frequency / wavelength** — for fixed physical geometry and sound speed, increasing frequency decreases wavelength and changes the electrical/acoustic aperture (`aperture / wavelength`), generally narrowing the main lobe while changing lobe structure.
+1. **Frequency / wavelength** — for fixed physical geometry and sound speed, increasing frequency decreases wavelength and changes aperture/wavelength, generally narrowing the main lobe while changing lobe structure.
 2. **Element count / aperture** — when spacing and element size are fixed, adding elements increases physical aperture and generally narrows the main lobe.
-3. **Spacing relative to wavelength** — changing `d / lambda` changes the interference pattern. Large spacing can create additional coherent maxima (grating lobes / spatial aliasing); these must be shown as results of the computed pattern, not hidden by the UI.
-4. **Finite element size** — the rectangular element factor forms an angular envelope independent of the array-factor calculation; element size and element spacing therefore remain separate learner concepts.
-5. **Beamwidth** — the authoritative scalar beamwidth for this slice is the local half-power width returned by `scan_across_track_beam_pattern()`. If a crossing falls outside the requested scan interval, beamwidth is unavailable; the application must not extrapolate one.
+3. **Spacing relative to wavelength** — changing `d / lambda` changes the interference pattern. Large spacing can create additional coherent maxima (grating lobes / spatial aliasing); these must be shown as computed results, not hidden by the UI.
+4. **Finite element size** — the rectangular element factor forms an angular envelope independent of the array-factor calculation; element size and spacing remain separate learner concepts.
+5. **Beamwidth** — the authoritative scalar beamwidth is the local half-power width returned by the canonical scan. If a crossing falls outside the scan interval, beamwidth is unavailable; no extrapolation is permitted.
+6. **Aperture weighting** — deterministic non-uniform weighting changes the relative coherent contributions across the aperture. In the normalized pattern this can reduce sidelobes while broadening the main lobe; it is not an absolute acoustic-gain calculation.
 
-Approximate textbook rules such as beamwidth proportional to `lambda / aperture` may be shown only as qualitative intuition or clearly labelled approximations. The configured array's computed Core pattern is authoritative.
+Approximate textbook rules such as beamwidth proportional to `lambda / aperture` may be shown only as qualitative intuition or clearly labelled approximations. The configured Core pattern is authoritative.
 
 ## Side lobes, grating lobes and gain language
 
 The present outputs are normalized pressure/amplitude-like and normalized-power responses. They are not calibrated acoustic gain, source level, receive sensitivity, directivity index, or a two-way sonar response.
 
-Accordingly:
+Learner-facing text may discuss relative main-lobe width, side lobes and grating lobes. A dB display is permissible only relative to the normalized pattern peak (`dB re peak`). Do not label normalized pattern values as absolute `gain [dB]`.
 
-- learner-facing text may discuss relative main-lobe width, side lobes and grating lobes;
-- the UI must not label normalized pattern values as absolute `gain [dB]` unless a later calibrated scientific contract explicitly introduces that quantity;
-- a dB display of normalized power is permissible if it is explicitly relative to the pattern peak (for example `dB re peak`) and zero/near-zero handling is numerically bounded by the application layer without altering the Core physics.
+## Aperture weighting / apodization
 
-## Shading / apodization boundary
+`array_factor()` already accepts arbitrary complex element weights, so no new array-factor physics is required. PED-D6 needs only a canonical deterministic generator for the named learner selector.
 
-`array_factor()` already accepts arbitrary complex element weights, so the Core can represent deterministic weighting without changing the array-factor equation. However, HydroSIM currently has no canonical scientific model that generates named learner-facing taper families or defines their parameterization.
+Minimum production selector:
 
-Therefore the PED-D6 first slice uses **uniform unit weights**. Named shading/apodization controls (Hann, Hamming, Taylor, etc.) are deferred until a canonical weight-generation contract exists. PED-D7 may later consume the existing complex-weight capability when steering/apodization is explicitly specified.
+- `uniform`: `w_n = 1`;
+- `hann`: for a one-dimensional aperture with `N > 1`, `w_n = 0.5 * [1 - cos(2*pi*n/(N-1))]`, `n = 0 ... N-1`.
 
-This prevents the frontend or application adapter from inventing taper equations.
+For `N = 1`, both selectors reduce to the single unit weight `w_0 = 1` so normalization remains defined. Weights are real, non-negative and applied in deterministic element order. For a rectangular 2-D array, a future separable 2-D taper may be added explicitly; the minimum PED-D6 production requirement is the active 1-D aperture.
 
-## Mills Cross / eccentricity boundary
+Because `array_factor()` normalizes by `sum(abs(w_n))`, these weights alter normalized directivity but do **not** define absolute gain loss. Any learner-visible `gain loss` in the old atom wording must therefore be interpreted as a **relative normalized-pattern consequence**, or deferred until a calibrated gain/power contract exists.
 
-The repository contains validated Mills-Cross/two-way infrastructure, but it is not required for the first PED-D6 slice. PED-D6 first establishes one-array construction and one-way directivity.
+## Mills Cross boundary
 
-Detailed TX/RX orthogonal-array composition, Mills Cross architecture, eccentricity or installation-specific geometry must be introduced only under a dedicated scientific/learning contract where their role is explicit (principally PED-D7/PED-D8 and later integrated sonar geometry). They must not block PED-D6 production delivery.
+`MillsCrossConfiguration` is already authoritative Core capability. PED-D6 may expose Mills Cross strictly as a construction/geometry comparison: two orthogonal linear TX/RX apertures, each retaining its own local frame and role. This satisfies the array-construction learning objective without introducing new physics.
+
+PED-D6 must not use Mills Cross to imply that all MBES systems use this geometry, nor calculate a two-way TX×RX response as part of this atom. Two-way composition and electronic steering remain PED-D7/PED-D8/integrated-sonar concerns.
+
+## Eccentricity disposition
+
+The current product atom inventory lists `eccentricity` as a PED-D6 input, but neither the pedagogical plan nor the Scientific Core defines a physical quantity, unit, frame, or causal model with that name for transducer-array construction. It is therefore **not a scientifically actionable PED-D6 control** and must not be invented by Engineering or UX.
+
+Authoritative recommendation: remove this atom from PED-D6 unless Technical Lead can identify a specific intended physical quantity. If the intended concept is a sensor/transducer installation offset relative to a vessel/reference point, it belongs to PED-D11/A2 installation/lever-arm geometry, where source→target offsets and frames are explicit. If it means element-position perturbation or array manufacturing tolerance, that would require a separate future fidelity contract and is outside the present PED-D6 learning objective.
+
+This is a roadmap/inventory correction, not a request to shrink implemented science silently; the denominator must be changed only by Technical Lead/coordination authority.
 
 ## Coordinate and angle convention
 
@@ -99,62 +111,52 @@ For the canonical across-track scan:
 - positive across-track angle points Port (`-Y`);
 - negative across-track angle points Starboard (`+Y`).
 
-The application layer may convert radians to degrees for learner presentation but must preserve the sign convention.
+The application may convert radians to degrees but must preserve the sign convention.
 
 ## Validity domain
 
-The first PED-D6 model assumes:
-
-- ideal regular centred array geometry;
-- deterministic element positions and dimensions;
-- far-field plane-wave propagation;
-- one monochromatic/narrowband frequency per evaluation;
-- ideal identical rectangular elements;
-- uniform weights in the first learner slice;
-- no mutual coupling;
-- no element/channel calibration mismatch;
-- no stochastic noise;
-- no finite-bandwidth beam squint;
-- no near-field/dynamic focusing;
-- no calibrated absolute transmit/receive gain;
-- no vendor-specific beamformer behavior.
-
-These are model limits, not UI caveats to be silently corrected by another layer.
+The PED-D6 model assumes ideal regular centred geometry, deterministic element positions/dimensions, far-field plane-wave propagation, one monochromatic/narrowband frequency per evaluation, ideal identical rectangular elements, deterministic weights, no mutual coupling, no channel-calibration mismatch, no stochastic noise, no finite-bandwidth beam squint, no near-field/dynamic focusing, no calibrated absolute transmit/receive gain, and no vendor-specific beamformer behavior.
 
 ## Minimum scientific acceptance anchors
 
-Engineering/tests for the adapter should preserve at least these properties:
+Engineering/tests should preserve at least:
 
 - broadside uniform-array response peaks at normalized amplitude/power approximately 1;
 - changing only overall complex weight scale cannot change normalized array-factor magnitude;
-- for the existing analytical two-element case with `d = lambda/2`, broadside steering and a 30-degree source direction, normalized array-factor magnitude is `sqrt(2)/2` and normalized power is `0.5`;
-- with broadside steering and `d = lambda`, the canonical model exhibits a grating-lobe/spatial-alias response at the endfire anchor documented in `docs/science/array_factor.md`;
-- increasing element count at fixed spacing must update physical aperture through `TransducerArray`, not through a duplicated adapter formula;
-- half-power beamwidth is reported only when the Core scan finds both threshold crossings.
+- two-element `d=lambda/2`, broadside steering, 30-degree source: normalized array-factor magnitude `sqrt(2)/2`, power `0.5`;
+- broadside `d=lambda` exhibits the documented grating-lobe/spatial-alias anchor;
+- increasing element count at fixed spacing updates aperture through `TransducerArray`, not an adapter formula;
+- half-power beamwidth is reported only when both Core crossings exist;
+- Hann weights are symmetric (`w_n = w_(N-1-n)`) and non-negative; for `N>2`, endpoints are zero;
+- Mills-Cross geometry is accepted only when TX/RX principal axes are orthogonal under the existing Core tolerance.
+
+## Remaining PED-D6 atom disposition
+
+For completion of Technical Lead handoff #198:
+
+| Inventory atom | Scientific disposition |
+| --- | --- |
+| `array geometry` | **Existing canonical capability.** Use `TransducerArray` regular linear/rectangular geometry; no new equation. |
+| `Mills Cross` | **Existing canonical capability.** Use `MillsCrossConfiguration` as construction geometry only; no new two-way model. |
+| `shading/apodization` | **Minimal missing capability.** Add a small canonical weight generator for `uniform` and `hann`, feeding existing `array_factor(weights=...)`; no array-factor change. |
+| `eccentricity` | **Inventory reallocation/removal recommended.** Undefined in current D6 science; do not invent. Installation offset, if intended, belongs to PED-D11/A2. |
 
 ## First production payload boundary
 
-A minimal PED-D6 application adapter is scientifically sufficient if it accepts the Configured controls above and returns, from canonical Core calls:
+The PED-D6 adapter may return configuration metadata/units, wavelength/aperture, element positions/count, sampled normalized amplitude/power pattern, peak, half-power beamwidth or unavailable state, factor decomposition when shown, selected deterministic weights, and Mills-Cross TX/RX construction geometry when selected.
 
-- configuration metadata and units;
-- wavelength and physical aperture;
-- element positions/count;
-- sampled across-track normalized amplitude/power pattern;
-- peak angle/power;
-- half-power beamwidth or explicit unavailable state;
-- enough metadata to distinguish element factor, array factor and their combined physical one-way beam pattern if the learner visualization exposes those curves.
-
-No new equation is required for this adapter.
+No new beam equation is required.
 
 ## References / traceability
 
-Primary HydroSIM scientific sources for this contract:
+Primary HydroSIM scientific sources:
 
 - `docs/science/array_factor.md`;
 - `docs/science/beam_pattern.md`;
 - `src/hydrosim/geometry/arrays.py`;
+- `src/hydrosim/geometry/mills_cross.py`;
 - `src/hydrosim/acquisition/element_factor.py`;
 - `src/hydrosim/acquisition/array_factor.py`;
 - `src/hydrosim/acquisition/beam_pattern.py`.
 
-PED-D6 deliberately reuses those implemented reference models rather than defining a parallel pedagogical formulation.
+PED-D6 reuses those implemented reference models rather than defining a parallel pedagogical formulation. The Hann weighting definition is the standard raised-cosine Hann window applied here only as deterministic aperture weights; it does not alter the canonical coherent-sum equation.
