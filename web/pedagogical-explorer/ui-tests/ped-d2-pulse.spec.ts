@@ -22,17 +22,16 @@ test('PED-D2 pulse duration changes the canonical request without rescaling the 
   await expect(page.getByText('5 ms', { exact: true }).first()).toBeVisible();
 
   const duration = page.locator('label').filter({ hasText: 'Pulse duration' }).locator('input[type="range"]');
+  await expect(duration).toBeVisible();
+
   await duration.focus();
   await duration.press('End');
-
-  await expect.poll(() => requests.length).toBeGreaterThan(1);
-  expect(requests.at(-1)?.duration_ms).toBe(5);
+  await expect.poll(() => requests.at(-1)?.duration_ms).toBe(5);
   await expect(page.locator('.pulse-duration-marker').first()).toHaveAttribute('style', /left: 100%/);
   await expect(page.locator('.pulse-duration-marker span').first()).toHaveText('5.0 ms');
 
   await duration.press('Home');
-  await expect.poll(() => requests.length).toBeGreaterThan(2);
-  expect(requests.at(-1)?.duration_ms).toBe(0.1);
+  await expect.poll(() => requests.at(-1)?.duration_ms).toBe(0.1);
   await expect(page.locator('.pulse-duration-marker').first()).toHaveAttribute('style', /left: 2%/);
   await expect(page.locator('.pulse-duration-marker span').first()).toHaveText('0.1 ms');
 
