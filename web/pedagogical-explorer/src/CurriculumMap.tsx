@@ -1,32 +1,26 @@
 import { motion } from 'motion/react';
-import { ArrowRight, Eye, FlaskConical, GraduationCap, Radar, Route, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, FlaskConical, GraduationCap, Layers3, LockKeyhole, Radar, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { pedagogicalTracks, type Experience, type TrackKey } from './pedagogical-plan';
 
-const trackIcon: Record<TrackKey, typeof GraduationCap> = { didactic: GraduationCap, patch: FlaskConical, acquisition: Radar };
+type Family='acoustics'|'propagation'|'arrays'|'acquisition'|'platform'|'integration';
+const trackIcon:Record<TrackKey,typeof GraduationCap>={didactic:GraduationCap,patch:FlaskConical,acquisition:Radar};
+const productionRoutes:Record<string,string>={D1:'#wave-lab',D2:'#signal-lab/pulse',D3:'#sonar-equation-lab',D4:'#refraction-lab',D6:'#array-directivity-lab',D7:'#beamforming-lab',D8:'#echosounder-lab',D9:'#bottom-detection-lab'};
+const familyById:Record<string,Family>={D1:'acoustics',D2:'acoustics',D3:'propagation',D4:'propagation',D5:'acquisition',D6:'arrays',D7:'arrays',D8:'acquisition',D9:'acquisition',D10:'arrays',D11:'platform',D12:'platform',D13:'integration',D14:'integration',D15:'integration',D16:'integration',D17:'integration',D18:'integration'};
+const familyMeta:Record<Family,{title:string;kicker:string}>={acoustics:{title:'Signal & Wave',kicker:'FROM OSCILLATION TO PULSE'},propagation:{title:'Propagation',kicker:'THROUGH THE WATER COLUMN'},arrays:{title:'Arrays & Beams',kicker:'FROM APERTURE TO DIRECTION'},acquisition:{title:'Detection & Echosounders',kicker:'FROM RETURN TO MEASUREMENT'},platform:{title:'Vessel & Motion',kicker:'THE MOVING REFERENCE FRAME'},integration:{title:'Integrated Survey',kicker:'BRING THE SYSTEM TOGETHER'}};
+const didacticFamilies:Family[]=['acoustics','propagation','arrays','acquisition','platform','integration'];
 
-export default function CurriculumMap({ onOpenLegacy }: { onOpenLegacy: () => void }) {
-  const [track, setTrack] = useState<TrackKey>('didactic');
-  const [selected, setSelected] = useState<Experience>(pedagogicalTracks[0].experiences[0]);
-  const current = useMemo(() => pedagogicalTracks.find((item) => item.key === track)!, [track]);
-  const chooseTrack = (key: TrackKey) => { setTrack(key); setSelected(pedagogicalTracks.find((item) => item.key === key)!.experiences[0]); };
-  const productionRoute = (experience: Experience) => {
-    if (experience.id === 'D1') return '#wave-lab';
-    if (experience.id === 'D2') return '#signal-lab/pulse';
-    if (experience.id === 'D3') return '#sonar-equation-lab';
-    if (experience.id === 'D4') return '#refraction-lab';
-    if (experience.id === 'D6') return '#array-directivity-lab';
-    if (experience.id === 'D7') return '#beamforming-lab';
-    if (experience.id === 'D8') return '#echosounder-lab';
-    if (experience.id === 'D9') return '#bottom-detection-lab';
-    return experience.route;
-  };
-  const open = (experience: Experience) => { setSelected(experience); const route = productionRoute(experience); if (route) window.location.hash = route; };
-  return <div className={`curriculum-map track-${track}`}>
-    <header className="curriculum-head"><div><span>HYDROSIM · PEDAGOGICAL CONCEPT MAP</span><h1>Learn through the acquisition chain.</h1><p>The canonical pedagogical plan drives the learner structure while production experiences connect their visible scientific outputs to the Python Scientific Core.</p></div><button onClick={onOpenLegacy}><Eye size={16}/> Original visual labs</button></header>
-    <nav className="track-switcher">{pedagogicalTracks.map((item)=>{const Icon=trackIcon[item.key];return <button key={item.key} className={track===item.key?'active':''} onClick={()=>chooseTrack(item.key)}><Icon size={20}/><span><strong>{item.title}</strong><small>{item.experiences.length} experiences · {item.subtitle}</small></span></button>})}</nav>
-    <div className="curriculum-workspace"><section className="experience-list"><div className="track-title"><span>{current.key.toUpperCase()}</span><strong>{current.title}</strong><small>{current.subtitle}</small></div><div className="experience-grid">{current.experiences.map((experience)=><motion.button key={experience.id} className={selected.id===experience.id?'selected':''} onClick={()=>setSelected(experience)} whileHover={{y:-2}}><span>{experience.id}</span><strong>{experience.title}</strong><small>{experience.outputs[0]}</small><ArrowRight size={14}/></motion.button>)}</div></section>
-      <aside className="experience-inspector"><div className="experience-id"><span>{selected.id}</span><Sparkles size={16}/></div><h2>{selected.title}</h2><p className="design-cue">{selected.designCue}</p><div className="io-flow"><div><small>INPUTS</small><div className="io-pills">{selected.inputs.map((input)=><span key={input}>{input}</span>)}</div></div><Route size={20}/><div><small>LEARNING OUTPUTS / VISUALIZATIONS</small><div className="io-pills output">{selected.outputs.map((output)=><span key={output}>{output}</span>)}</div></div></div><div className="concept-loop"><small>CONCEPTUAL INTERACTION LOOP</small><div><span>INPUT</span><i>→</i><strong>MANIPULATE</strong><i>→</i><span>SEE CONSEQUENCE</span></div></div>{productionRoute(selected)?<button className="launch-experience" onClick={()=>open(selected)}><FlaskConical size={16}/> Open current visual foundation</button>:<button className="launch-experience future" disabled><FlaskConical size={16}/> Dedicated concept workspace next</button>}<p className="scope-note">Production scientific values are authoritative only where an experience is connected to a canonical Python API; unfinished visual foundations remain conceptual.</p></aside>
-    </div>
-  </div>;
+export default function CurriculumMap({onOpenLegacy:_onOpenLegacy}:{onOpenLegacy:()=>void}){
+ const[track,setTrack]=useState<TrackKey>('didactic');
+ const current=useMemo(()=>pedagogicalTracks.find(item=>item.key===track)!,[track]);
+ const available=current.experiences.filter(e=>productionRoutes[e.id]).length;
+ const open=(e:Experience)=>{const route=productionRoutes[e.id];if(route)location.hash=route};
+ return <div className={`curriculum-map-v2 track-${track}`}>
+  <header className="map2-topbar"><div className="map2-brand"><span className="map2-mark" aria-hidden="true">H</span><div><strong>HydroSIM</strong><small>Pedagogical Explorer</small></div></div><div className="map2-actions" aria-label="HydroSIM learning map"><span>{available} available</span></div></header>
+  <main className="map2-main">
+   <section className="map2-hero"><div className="map2-hero-copy"><span>LEARNING MAP · HYDROGRAPHIC ACQUISITION</span><h1>See where you are.<br/><em>Choose what to explore next.</em></h1><p>Each lesson is part of one continuous acquisition story. Colors identify subject families; available learning slices open directly into the simulator.</p><div className="map2-status"><div><strong>{available}</strong><span>available lessons</span></div><i/><div><strong>{current.experiences.length}</strong><span>{track==='didactic'?'didactic lessons':'experiences in this module'}</span></div></div></div><div className="map2-orbit" aria-hidden="true"><div className="orbit-core"><Sparkles size={21}/><strong>INPUT</strong><span>→</span><strong>EXPLORE</strong><span>→</span><strong>UNDERSTAND</strong></div><div className="orbit-ring ring-a"/><div className="orbit-ring ring-b"/></div></section>
+   <nav className="map2-track-switcher" aria-label="HydroSIM modules">{pedagogicalTracks.map(item=>{const Icon=trackIcon[item.key];const active=track===item.key;return <button key={item.key} type="button" aria-pressed={active} className={active?'active':''} onClick={()=>setTrack(item.key)}><Icon size={19}/><div><small>{item.key==='didactic'?'01':item.key==='patch'?'02':'03'}</small><strong>{item.title}</strong><span>{item.subtitle}</span></div><ArrowRight size={15}/></button>})}</nav>
+   {track==='didactic'?<section className="map2-journey"><header><div><span>DIDACTIC EXPLORER</span><h2>Acquisition, one idea at a time.</h2></div><div className="map2-key" aria-label="Lesson availability legend"><span><i className="available-dot"/>Available now</span><span><i className="planned-dot"/>Planned</span></div></header><div className="family-stack">{didacticFamilies.map(family=>{const lessons=current.experiences.filter(e=>familyById[e.id]===family);if(!lessons.length)return null;const meta=familyMeta[family];return <section key={family} className={`family-lane family-${family}`}><div className="family-label"><small>{meta.kicker}</small><strong>{meta.title}</strong><span>{lessons.length} {lessons.length===1?'lesson':'lessons'}</span></div><div className="family-path">{lessons.map((e,index)=>{const ready=Boolean(productionRoutes[e.id]);return <motion.button key={e.id} type="button" aria-disabled={!ready} className={`lesson-node ${ready?'ready':'planned'}`} onClick={()=>ready&&open(e)} whileHover={ready?{y:-3}:undefined}><div className="lesson-node-head"><span>{e.id}</span>{ready?<i className="ready-badge"><Check size={11}/>LIVE</i>:<i className="planned-badge"><LockKeyhole size={10}/>PLANNED</i>}</div><strong>{e.title}</strong><small>{e.outputs[0]}</small>{ready&&<div className="lesson-open">OPEN LESSON <ArrowRight size={12}/></div>}{index<lessons.length-1&&<span className="node-connector" aria-hidden="true"/>}</motion.button>})}</div></section>})}</div></section>:<section className="map2-chapter"><div className="chapter-intro"><span>{track==='patch'?'CALIBRATION WORKSPACE':'SURVEY WORKSPACE'}</span><h2>{current.title}</h2><p>{current.subtitle}</p><div className="chapter-state"><Layers3 size={17}/><span>Structure defined · dedicated experiences will appear here as they become available.</span></div></div><div className="chapter-grid">{current.experiences.map((e,index)=><motion.article key={e.id} whileHover={{y:-2}}><div><span>{String(index+1).padStart(2,'0')}</span><strong>{e.id}</strong></div><h3>{e.title}</h3><p>{e.designCue}</p><small>PLANNED EXPERIENCE</small></motion.article>)}</div></section>}
+  </main>
+ </div>
 }
