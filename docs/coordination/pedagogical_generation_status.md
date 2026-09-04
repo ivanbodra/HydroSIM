@@ -10,7 +10,7 @@ The active roadmap contains 31 learner-facing submodules:
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-**Submodule indicator: 6/31 ready submodules (19.4%).**
+**Submodule indicator: 7/31 ready submodules (22.6%).**
 
 Ready submodules:
 
@@ -20,9 +20,10 @@ Ready submodules:
 - `PED-D4` — Sound Speed & Refraction. Runnable bilingual production React experience on `main` via PR #165, focused learner-facing tests, canonical Python refraction bridge/Core, and narrow independent QA PASS in Issue #170.
 - `PED-D7` — Beamforming & Electronic Steering. Production learner experience integrated under `web/pedagogical-explorer/` through PR #193 / merge `5e5788cef23599247d158d687997ff1599df3607`, consuming the canonical Python beamforming API and preserving the Concept baseline. The previously identified Port/Starboard identity defect was corrected on `main`, and narrow independent confirmation #107 is complete.
 - `PED-D8` — Echosounders — SBES vs MBES. Production bilingual learner experience integrated under `web/pedagogical-explorer/` through PR #192 / merge `176d4331ff5e560cbdf498a6540b9269d88de397`, consuming the canonical echosounders API and preserving the Concept baseline.
+- `PED-D10` — Multisector MBES. Complete inventoried learner-facing slice is integrated bilingually on `main` through PR #221, consuming the canonical Python multisector capability with focused production validation; all 10 inventoried learner atoms are ready.
 
-**Atom indicator: 55/243 ready learner atoms (22.6%).**  
-Canonical denominator and counting rules: `docs/coordination/product_atom_inventory.md`.
+**Atom indicator: 100/243 ready learner atoms (41.2%).**  
+Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
 
 The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Enabling work is never counted as product atoms.
 
@@ -45,8 +46,9 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 
 ## Current pipeline
 
-- `PED-D7` and `PED-D8` are complete and no longer pipeline work.
-- `PED-D6` is now the nearest incomplete didactic target; resume/complete only the existing near-term work needed to deliver its learner-facing production slice.
+- `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D7`, `PED-D8` and `PED-D10` are complete and no longer pipeline work.
+- `PED-D6` is one atom short of its inventory; `I06 eccentricity` remains unresolved and is routed to the Scientific Lead in Issue #232.
+- `PED-D9`, `PED-D11`, `PED-D12` and `PED-D17` have partial learner-facing production readiness recorded atom-by-atom in `product_atom_inventory.md`; their remaining behavior must not be inferred from backend or documentation alone.
 - Keep the next independent specialist slice in parallel when a concrete unblocked dependency exists; do not create speculative horizontal inventory.
 
 ## Design / implementation boundary
