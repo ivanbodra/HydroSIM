@@ -38,8 +38,9 @@ test('PED-D10 posts canonical sector controls and renders timing/coverage conseq
   expect(initialSectors[0]).not.toHaveProperty('sector_tx_delay_ms');
 
   const centreDelay = page.locator('.d10-sector-controls').nth(1).getByLabel('TX delay');
-  await centreDelay.fill('1');
-  await expect.poll(() => ((requests.at(-1)?.sectors as Array<Record<string, unknown>>)?.[1]?.tx_delay_ms)).toBe(1);
+  await centreDelay.focus();
+  await centreDelay.press('ArrowRight');
+  await expect.poll(() => ((requests.at(-1)?.sectors as Array<Record<string, unknown>>)?.[1]?.tx_delay_ms)).toBe(0.4);
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
   await expect(page.getByRole('heading', { name: 'MBES Multissetorial' })).toBeVisible();
