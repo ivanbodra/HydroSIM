@@ -13,6 +13,7 @@ const lessons:Lesson[]=[
 {id:'D8',title:'SBES × MBES',route:'#echosounder-lab',family:'acquisition'},
 {id:'D9',title:'Bottom Detection',route:'#bottom-detection-lab',family:'acquisition'},
 {id:'D10',title:'Multisector MBES',route:'#multisector-lab',family:'arrays'},
+{id:'D11',title:'Vessel & Sensor Configuration',route:'#vessel-configuration-lab',family:'platform'},
 {id:'D12',title:'Vessel Motion',route:'#vessel-motion-lab',family:'platform'},
 {id:'D17',title:'Survey Coverage & Acquisition Trade-offs',route:'#tradeoff-lab',family:'integration'},
 ];
