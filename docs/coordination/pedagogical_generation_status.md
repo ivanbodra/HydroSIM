@@ -10,7 +10,7 @@ The active roadmap contains 31 learner-facing submodules:
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-**Submodule indicator: 4/31 ready submodules (12.9%).**
+**Submodule indicator: 6/31 ready submodules (19.4%).**
 
 Ready submodules:
 
@@ -18,11 +18,13 @@ Ready submodules:
 - `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
 - `PED-D3` — Sonar Equation & Propagation Loss. Runnable bilingual production React experience on `main`, focused learner-facing validation, canonical Python sonar-equation API, and risk-proportionate independent QA closure in Issue #155.
 - `PED-D4` — Sound Speed & Refraction. Runnable bilingual production React experience on `main` via PR #165, focused learner-facing tests, canonical Python refraction bridge/Core, and narrow independent QA PASS in Issue #170.
+- `PED-D7` — Beamforming & Electronic Steering. Production learner experience integrated under `web/pedagogical-explorer/` through PR #193 / merge `5e5788cef23599247d158d687997ff1599df3607`, consuming the canonical Python beamforming API and preserving the Concept baseline. The previously identified Port/Starboard identity defect was corrected on `main`, and narrow independent confirmation #107 is complete.
+- `PED-D8` — Echosounders — SBES vs MBES. Production bilingual learner experience integrated under `web/pedagogical-explorer/` through PR #192 / merge `176d4331ff5e560cbdf498a6540b9269d88de397`, consuming the canonical echosounders API and preserving the Concept baseline.
 
-**Atom indicator: 34/243 ready learner atoms (14.0%).**  
+**Atom indicator: 55/243 ready learner atoms (22.6%).**  
 Canonical denominator and counting rules: `docs/coordination/product_atom_inventory.md`.
 
-The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Readiness is conservative: partial atoms are counted only with production-path evidence on `main`; enabling work is never counted as product atoms.
+The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Enabling work is never counted as product atoms.
 
 ## Completion rule
 
@@ -43,9 +45,9 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 
 ## Current pipeline
 
-- `PED-D7` — nearest completion target. The Port/Starboard TX-sector correction is on `main` through PR #185. The obsolete concept-sandbox production attempt PR #186 is closed without merge. UX rebuilt the learner slice in the correct production location under `web/pedagogical-explorer/` as PR #193, based on the corrected mainline. Integrate #193 after its focused production frontend gates are green. Issue #107 remains only the already-defined narrow post-fix scientific confirmation; do not broaden it.
-- `PED-D8` — canonical application/API bridge integrated through PR #190 / squash `8192ac0f0f54cc795868f6a0d2e0201e39708bca`. Production UX delivery is active in Issue #191 under `web/pedagogical-explorer/`, preserving the Concept sandbox.
-- `PED-D6` — retain only already-active near-term work; do not expand WIP while D7/D8 are the shortest completion paths.
+- `PED-D7` and `PED-D8` are complete and no longer pipeline work.
+- `PED-D6` is now the nearest incomplete didactic target; resume/complete only the existing near-term work needed to deliver its learner-facing production slice.
+- Keep the next independent specialist slice in parallel when a concrete unblocked dependency exists; do not create speculative horizontal inventory.
 
 ## Design / implementation boundary
 
