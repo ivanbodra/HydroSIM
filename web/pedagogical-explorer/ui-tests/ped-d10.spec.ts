@@ -46,6 +46,6 @@ test('PED-D10 posts canonical sector controls and renders timing/coverage conseq
   await expect(page.getByText('CADEIA DE AQUISIÇÃO')).toBeVisible();
   await expect(page.getByText('BOMBORDO + / BORESTE −')).toBeVisible();
   await expect(page.getByText('UM PING · MÚLTIPLOS EVENTOS TX')).toBeVisible();
-  await expect(page.getByText('Bombordo')).toBeVisible();
-  await expect(page.getByText('Boreste')).toBeVisible();
+  await expect(page.getByText('Bombordo', { exact: true })).toBeVisible();
+  await expect(page.getByText('Boreste', { exact: true })).toBeVisible();
 });
