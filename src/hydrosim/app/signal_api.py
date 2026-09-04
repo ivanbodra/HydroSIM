@@ -61,6 +61,11 @@ from hydrosim.app.uncertainty_api import (
     D18UncertaintyResponse,
     prepare_d18_uncertainty_response,
 )
+from hydrosim.app.uncertainty_scalar_api import (
+    D18ScalarUncertaintyRequest,
+    D18ScalarUncertaintyResponse,
+    prepare_d18_scalar_uncertainty_response,
+)
 from hydrosim.app.vessel_api import (
     D11VesselRequest,
     D11VesselResponse,
@@ -372,6 +377,15 @@ def create_fastapi_app():
             return prepare_d18_uncertainty_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post(
+        "/api/v1/pedagogical/uncertainty/scalar",
+        response_model=D18ScalarUncertaintyResponse,
+    )
+    def scalar_uncertainty(
+        request: D18ScalarUncertaintyRequest,
+    ) -> D18ScalarUncertaintyResponse:
+        return prepare_d18_scalar_uncertainty_response(request)
 
     return app
 
