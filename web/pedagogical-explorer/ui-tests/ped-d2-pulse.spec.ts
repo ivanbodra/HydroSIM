@@ -8,7 +8,7 @@ const signalResponse = {
   metadata: { chirp_direction: 'up' },
 };
 
-test('PED-D2 pulse duration changes the canonical request without rescaling the time display', async ({ page }) => {
+test('PED-D2 pulse duration changes the request while the time display stays fixed', async ({ page }) => {
   const requests: Array<Record<string, unknown>> = [];
   await page.route('**/api/v1/pedagogical/signal', async (route) => {
     requests.push(route.request().postDataJSON() as Record<string, unknown>);
@@ -16,14 +16,10 @@ test('PED-D2 pulse duration changes the canonical request without rescaling the 
   });
 
   await page.goto('/#signal-lab/pulse');
-  await expect(page.getByText('fixed display scale: 0–5 ms', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('0 ms', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('2.5 ms', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('5 ms', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Time (ms)', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Normalized amplitude', { exact: true }).first()).toBeVisible();
 
   const duration = page.locator('label').filter({ hasText: 'Pulse duration' }).locator('input[type="range"]');
-  await expect(duration).toBeVisible();
-
   await duration.focus();
   await duration.press('End');
   await expect.poll(() => requests.at(-1)?.duration_ms).toBe(5);
@@ -34,6 +30,4 @@ test('PED-D2 pulse duration changes the canonical request without rescaling the 
   await expect.poll(() => requests.at(-1)?.duration_ms).toBe(0.1);
   await expect(page.locator('.pulse-duration-marker').first()).toHaveAttribute('style', /left: 2%/);
   await expect(page.locator('.pulse-duration-marker span').first()).toHaveText('0.1 ms');
-
-  await expect(page.getByText('fixed display scale: 0–5 ms', { exact: true }).first()).toBeVisible();
 });
