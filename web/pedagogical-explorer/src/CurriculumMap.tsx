@@ -12,6 +12,7 @@ export default function CurriculumMap({ onOpenLegacy }: { onOpenLegacy: () => vo
   const chooseTrack = (key: TrackKey) => { setTrack(key); setSelected(pedagogicalTracks.find((item) => item.key === key)!.experiences[0]); };
   const productionRoute = (experience: Experience) => {
     if (experience.id === 'D1') return '#wave-lab';
+    if (experience.id === 'D2') return '#signal-lab/pulse';
     if (experience.id === 'D3') return '#sonar-equation-lab';
     if (experience.id === 'D4') return '#refraction-lab';
     if (experience.id === 'D6') return '#array-directivity-lab';
