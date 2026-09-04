@@ -1,4 +1,4 @@
-"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10/PED-D11/PED-D12/PED-D14 lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10/PED-D11/PED-D12/PED-D14/PED-D18 lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
 frontend remains presentation-only and must not reimplement scientific equations.
@@ -50,6 +50,11 @@ from hydrosim.app.timing_api import (
     D14TimingRequest,
     D14TimingResponse,
     prepare_d14_timing_response,
+)
+from hydrosim.app.uncertainty_api import (
+    D18UncertaintyRequest,
+    D18UncertaintyResponse,
+    prepare_d18_uncertainty_response,
 )
 from hydrosim.app.vessel_api import (
     D11VesselRequest,
@@ -347,6 +352,13 @@ def create_fastapi_app():
     def timing(request: D14TimingRequest) -> D14TimingResponse:
         try:
             return prepare_d14_timing_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/v1/pedagogical/uncertainty", response_model=D18UncertaintyResponse)
+    def uncertainty(request: D18UncertaintyRequest) -> D18UncertaintyResponse:
+        try:
+            return prepare_d18_uncertainty_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
