@@ -1,7 +1,8 @@
 import { ArrowLeft, ArrowRight, Grid3X3, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
-type Lesson={id:string;title:string;route:string;family:'acoustics'|'propagation'|'arrays'|'acquisition'};
+type Family='acoustics'|'propagation'|'arrays'|'acquisition'|'platform'|'integration';
+type Lesson={id:string;title:string;route:string;family:Family};
 const lessons:Lesson[]=[
 {id:'D1',title:'Acoustic Wave & Frequency',route:'#wave-lab',family:'acoustics'},
 {id:'D2',title:'Pulse & Signal Processing',route:'#signal-lab/pulse',family:'acoustics'},
@@ -11,6 +12,10 @@ const lessons:Lesson[]=[
 {id:'D7',title:'Beamforming',route:'#beamforming-lab',family:'arrays'},
 {id:'D8',title:'SBES × MBES',route:'#echosounder-lab',family:'acquisition'},
 {id:'D9',title:'Bottom Detection',route:'#bottom-detection-lab',family:'acquisition'},
+{id:'D10',title:'Multisector MBES',route:'#multisector-lab',family:'arrays'},
+{id:'D11',title:'Vessel & Sensor Configuration',route:'#vessel-configuration-lab',family:'platform'},
+{id:'D12',title:'Vessel Motion',route:'#vessel-motion-lab',family:'platform'},
+{id:'D17',title:'Survey Coverage & Acquisition Trade-offs',route:'#tradeoff-lab',family:'integration'},
 ];
 export default function LessonNavigator({currentId}:{currentId:string}){
  const[open,setOpen]=useState(false);const index=lessons.findIndex(l=>l.id===currentId);const current=lessons[index];if(!current)return null;
@@ -20,9 +25,9 @@ export default function LessonNavigator({currentId}:{currentId:string}){
   <div className="lesson-location"><small>LESSON</small><strong><span>{current.id}</span>{current.title}</strong></div>
   <div className="lesson-spacer"/>
   <button className="lesson-step" disabled={index===0} onClick={()=>go(lessons[index-1])}><ArrowLeft size={15}/><span>Previous</span></button>
-  <button className="lesson-menu-button" onClick={()=>setOpen(v=>!v)}><Menu size={16}/><span>Lessons</span></button>
+  <button className="lesson-menu-button" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-label="Lessons"><Menu size={16}/><span>Lessons</span></button>
   <button className="lesson-step next" disabled={index===lessons.length-1} onClick={()=>go(lessons[index+1])}><span>Next</span><ArrowRight size={15}/></button>
  </div>
- {open&&<div className="lesson-drawer-backdrop" onClick={()=>setOpen(false)}><aside className="lesson-drawer" onClick={e=>e.stopPropagation()}><header><div><small>DIDACTIC EXPLORER</small><strong>Lessons</strong></div><button onClick={()=>setOpen(false)}><X size={18}/></button></header><div className="lesson-drawer-list">{lessons.map(l=><button key={l.id} className={`family-${l.family} ${l.id===current.id?'active':''}`} onClick={()=>go(l)}><span>{l.id}</span><div><strong>{l.title}</strong><small>{l.id===current.id?'Current lesson':'Open lesson'}</small></div><ArrowRight size={14}/></button>)}</div></aside></div>}
+ {open&&<div className="lesson-drawer-backdrop" onClick={()=>setOpen(false)}><aside className="lesson-drawer" aria-label="Available lessons" onClick={e=>e.stopPropagation()}><header><div><small>DIDACTIC EXPLORER</small><strong>Lessons</strong></div><button onClick={()=>setOpen(false)} aria-label="Close lessons"><X size={18}/></button></header><div className="lesson-drawer-list">{lessons.map(l=><button key={l.id} className={`family-${l.family} ${l.id===current.id?'active':''}`} onClick={()=>go(l)}><span>{l.id}</span><div><strong>{l.title}</strong><small>{l.id===current.id?'Current lesson':'Open lesson'}</small></div><ArrowRight size={14}/></button>)}</div></aside></div>}
  </>
 }
