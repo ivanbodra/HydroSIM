@@ -7,7 +7,7 @@ beamwidth equations.
 
 from __future__ import annotations
 
-from math import degrees, radians
+from math import degrees, hypot, radians
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -46,6 +46,9 @@ class D6ArrayRequest(BaseModel):
     longitudinal_element_spacing_m: float = Field(default=0.0, ge=0.0)
     weighting: Literal["uniform", "hann"] = "uniform"
     mills_cross: D6MillsCrossRequest | None = None
+    tx_reference_position_m: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    rx_reference_position_m: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    reference_frame: str = Field(default="B", min_length=1)
     scan_min_deg: float = Field(default=-80.0, ge=-89.0, lt=0.0)
     scan_max_deg: float = Field(default=80.0, gt=0.0, le=89.0)
     sample_count: int = Field(default=321, ge=33, le=1441)
@@ -62,6 +65,8 @@ class D6ArrayRequest(BaseModel):
             raise ValueError("hann weighting is defined only for the active 1-D PED-D6 aperture")
         if self.scan_max_deg <= self.scan_min_deg:
             raise ValueError("scan_max_deg must exceed scan_min_deg")
+        if not self.reference_frame.strip():
+            raise ValueError("reference_frame must not be blank")
         return self
 
 
@@ -102,6 +107,11 @@ class D6ArrayResponse(BaseModel):
     peak_normalized_power: float
     half_power_beamwidth_deg: float | None
     mills_cross: D6MillsCrossGeometry | None
+    tx_reference_position_m: tuple[float, float, float]
+    rx_reference_position_m: tuple[float, float, float]
+    eccentricity_vector_m: tuple[float, float, float]
+    eccentricity_magnitude_m: float
+    reference_frame: str
     metadata: dict[str, str | float | int]
 
 
@@ -151,6 +161,26 @@ def _mills_cross_geometry(request: D6MillsCrossRequest | None) -> D6MillsCrossGe
     )
 
 
+def _eccentricity_geometry(
+    request: D6ArrayRequest,
+) -> tuple[Vector3, Vector3, Vector3, float]:
+    """Return configured TX/RX points and canonical TX->RX separation."""
+
+    tx = Vector3(
+        x=request.tx_reference_position_m[0],
+        y=request.tx_reference_position_m[1],
+        z=request.tx_reference_position_m[2],
+    )
+    rx = Vector3(
+        x=request.rx_reference_position_m[0],
+        y=request.rx_reference_position_m[1],
+        z=request.rx_reference_position_m[2],
+    )
+    eccentricity = Vector3(x=rx.x - tx.x, y=rx.y - tx.y, z=rx.z - tx.z)
+    magnitude_m = hypot(eccentricity.x, eccentricity.y, eccentricity.z)
+    return tx, rx, eccentricity, magnitude_m
+
+
 def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
     """Evaluate the PED-D6 learner controls through canonical Core models."""
 
@@ -194,6 +224,7 @@ def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
         else degrees(float(scan.half_power_beamwidth_rad))
     )
     elements = array.elements()
+    tx, rx, eccentricity, eccentricity_magnitude_m = _eccentricity_geometry(request)
 
     return D6ArrayResponse(
         wavelength_m=wavelength_m,
@@ -210,10 +241,17 @@ def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
         peak_normalized_power=float(scan.peak_power),
         half_power_beamwidth_deg=beamwidth,
         mills_cross=_mills_cross_geometry(request.mills_cross),
+        tx_reference_position_m=_xyz(tx),
+        rx_reference_position_m=_xyz(rx),
+        eccentricity_vector_m=_xyz(eccentricity),
+        eccentricity_magnitude_m=float(eccentricity_magnitude_m),
+        reference_frame=request.reference_frame.strip(),
         metadata={
             "frequency_unit": "kHz",
             "sound_speed_unit": "m/s",
             "distance_unit": "m",
+            "eccentricity_unit": "m",
+            "eccentricity_frame": request.reference_frame.strip(),
             "angle_unit": "deg",
             "pattern_quantity": "normalized one-way power re peak",
             "array_axis": "across-track Y",
