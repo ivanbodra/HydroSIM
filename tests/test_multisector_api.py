@@ -38,7 +38,9 @@ def test_d10_contract_preserves_timing_order_and_wavelength_anchor() -> None:
     assert response.sectors[0].wavelength_m == pytest.approx(0.015)
     assert response.sectors[1].wavelength_m == pytest.approx(0.0075)
     assert response.sectors[2].wavelength_m == pytest.approx(0.00375)
-    assert response.coverage_supports_deg == pytest.approx(((-60, -20), (-20, 20), (20, 60)))
+    expected_supports = ((-60, -20), (-20, 20), (20, 60))
+    for actual, expected in zip(response.coverage_supports_deg, expected_supports, strict=True):
+        assert actual == pytest.approx(expected)
 
 
 def test_d10_equal_delays_are_simultaneous_not_artificially_sequenced() -> None:
