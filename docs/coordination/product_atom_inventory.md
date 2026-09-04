@@ -19,9 +19,9 @@ This file defines the denominator for HydroSIM's granular product-progress indic
 ## Product indicator
 
 **243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 34/243 ready (14.0%).**
+**Current atom indicator: 55/243 ready (22.6%).**
 
-Readiness is conservative: only atoms belonging to submodules already declared fully ready in `pedagogical_generation_status.md` are marked ready until partial production evidence is explicitly reconciled here.
+Readiness counts learner-facing production behavior on `main`. PED-D7 and PED-D8 are now integrated in the production React path; their complete inventoried learner atoms are therefore ready.
 
 | Submodule | Inputs | Outputs | Total | Ready |
 |---|---:|---:|---:|---:|
@@ -31,8 +31,8 @@ Readiness is conservative: only atoms belonging to submodules already declared f
 | PED-D4 | 3 | 1 | 4 | 4 |
 | PED-D5 | 3 | 2 | 5 | 0 |
 | PED-D6 | 8 | 4 | 12 | 0 |
-| PED-D7 | 6 | 4 | 10 | 0 |
-| PED-D8 | 6 | 5 | 11 | 0 |
+| PED-D7 | 6 | 4 | 10 | 10 |
+| PED-D8 | 6 | 5 | 11 | 11 |
 | PED-D9 | 6 | 5 | 11 | 0 |
 | PED-D10 | 6 | 4 | 10 | 0 |
 | PED-D11 | 7 | 4 | 11 | 0 |
@@ -56,7 +56,7 @@ Readiness is conservative: only atoms belonging to submodules already declared f
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **34** |
+| **TOTAL** | **144** | **99** | **243** | **55** |
 
 ## Atom definitions
 
