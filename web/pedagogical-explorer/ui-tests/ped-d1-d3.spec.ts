@@ -70,24 +70,26 @@ test('PED-D1 keeps canonical API data flow, interaction and bilingual state visi
   await expect(page.getByText('DERIVADO', { exact: true }).first()).toBeVisible();
 });
 
-test('PED-D2 renders canonical signal outputs and stays bilingual', async ({ page }) => {
+test('PED-D2 renders signal outputs with clean fixed-scale plots and stays bilingual', async ({ page }) => {
   await page.route('**/api/v1/pedagogical/signal', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(signalResponse) });
   });
 
   await page.goto('/#signal-lab');
-  await expect(page.getByRole('heading', { name: 'Change the transmitted pulse and watch the same scientific state reshape every visual.' })).toBeVisible();
-  await expect(page.getByText('Configured', { exact: true })).toBeVisible();
-  await expect(page.getByText('Derived', { exact: true })).toBeVisible();
-  await expect(page.getByText('Acoustic passband waveform', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Change the transmitted pulse and observe the signal response.' })).toBeVisible();
+  await expect(page.getByText('Acoustic waveform', { exact: true })).toBeVisible();
   await expect(page.getByText('Instantaneous frequency', { exact: true })).toBeVisible();
-  await expect(page.getByText('Matched-filter / autocorrelation response', { exact: true })).toBeVisible();
-  await expect(page.getByText(/fixed display scale: 0–5 ms/).first()).toBeVisible();
+  await expect(page.getByText('Matched-filter response', { exact: true })).toBeVisible();
+  await expect(page.getByText('Time (ms)', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Frequency (kHz)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Lag (µs)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Normalized amplitude', { exact: true }).first()).toBeVisible();
 
   await page.getByRole('button', { name: 'PT-BR' }).click();
-  await expect(page.getByRole('heading', { name: 'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.' })).toBeVisible();
-  await expect(page.getByText('Entrada configurada')).toBeVisible();
-  await expect(page.getByText('Resposta visual derivada').first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Altere o pulso transmitido e observe a resposta do sinal.' })).toBeVisible();
+  await expect(page.getByText('Tempo (ms)', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Frequência (kHz)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Atraso (µs)', { exact: true })).toBeVisible();
 });
 
 test('PED-D3 posts configured controls and renders canonical derived outputs bilingually', async ({ page }) => {
