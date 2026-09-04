@@ -1,5 +1,4 @@
-import { motion } from 'motion/react';
-import { Activity, RotateCcw, SlidersHorizontal, Sparkles, Waves } from 'lucide-react';
+import { RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 type PulseType='cw'|'lfm';
@@ -20,8 +19,8 @@ const MATCHED_LAG_DOMAIN:Domain={min:-5000,max:5000};
 const MATCHED_DOMAIN:Domain={min:-1.05,max:1.05};
 
 const text={
- en:{back:'← System map',lab:'Signal laboratory',signal:'Signal',focusPulse:'Pulse',focusFrequency:'Frequency',focusCompression:'Compression',focusWaveform:'Waveform',kicker:'PED-D2 · PULSE & SIGNAL PROCESSING',title:'Change the transmitted pulse and watch the same scientific state reshape every visual.',subtitle:'The traces below come from HydroSIM’s canonical Python signal model. React owns interaction and presentation only.',controls:'Signal controls',waveform:'Waveform',frequency:'Centre frequency',duration:'Pulse duration',bandwidth:'LFM bandwidth',direction:'Sweep direction',envelope:'Envelope',up:'Up',down:'Down',rectangular:'Rectangular',tukey:'Tukey',reset:'Reset',transmit:'01 · TRANSMIT',frequencyLens:'02 · FREQUENCY LENS',process:'03 · PROCESS',flowTransmit:'TRANSMIT',flowFrequency:'FREQUENCY',flowProcess:'PROCESS',processingLens:'processing lens',passband:'Acoustic passband waveform',instant:'Instantaneous frequency',matched:'Matched-filter / autocorrelation response',loading:'Updating Python scientific model…',offline:'Scientific API unavailable',retry:'Retry',ready:'Python scientific core',mode:'Mode',cause:'Configured input',effect:'Derived visual response',configured:'Configured',derived:'Derived',intuition:'Physical intuition',inputResponse:'INPUT → RESPONSE',causeBody:'Pulse type, frequency, duration and bandwidth',effectBody:'Waveform, instantaneous frequency and matched-filter response',intuitionBody:'One configuration propagates through every view.',pulseWindow:'configured pulse duration',fixedScale:'fixed display scale'},
- 'pt-BR':{back:'← Mapa do sistema',lab:'Laboratório de sinais',signal:'Sinal',focusPulse:'Pulso',focusFrequency:'Frequência',focusCompression:'Compressão',focusWaveform:'Forma de onda',kicker:'PED-D2 · PULSO E PROCESSAMENTO DE SINAL',title:'Altere o pulso transmitido e veja o mesmo estado científico transformar todas as visualizações.',subtitle:'As curvas abaixo vêm do modelo canônico de sinais em Python do HydroSIM. O React cuida apenas da interação e apresentação.',controls:'Controles do sinal',waveform:'Forma de onda',frequency:'Frequência central',duration:'Duração do pulso',bandwidth:'Largura de banda LFM',direction:'Direção da varredura',envelope:'Envoltória',up:'Ascendente',down:'Descendente',rectangular:'Retangular',tukey:'Tukey',reset:'Restaurar',transmit:'01 · TRANSMISSÃO',frequencyLens:'02 · VISÃO DE FREQUÊNCIA',process:'03 · PROCESSAMENTO',flowTransmit:'TRANSMISSÃO',flowFrequency:'FREQUÊNCIA',flowProcess:'PROCESSAMENTO',processingLens:'visão de processamento',passband:'Forma de onda acústica em banda passante',instant:'Frequência instantânea',matched:'Resposta de filtro casado / autocorrelação',loading:'Atualizando o modelo científico em Python…',offline:'API científica indisponível',retry:'Tentar novamente',ready:'Scientific Core em Python',mode:'Modo',cause:'Entrada configurada',effect:'Resposta visual derivada',configured:'Configurado',derived:'Derivado',intuition:'Intuição física',inputResponse:'ENTRADA → RESPOSTA',causeBody:'Tipo de pulso, frequência, duração e largura de banda',effectBody:'Forma de onda, frequência instantânea e resposta do filtro casado',intuitionBody:'Uma configuração se propaga por todas as visualizações.',pulseWindow:'duração configurada do pulso',fixedScale:'escala de exibição fixa'}
+ en:{back:'← System map',signal:'Signal',focusPulse:'Pulse',focusFrequency:'Frequency',focusCompression:'Compression',focusWaveform:'Waveform',kicker:'PED-D2 · PULSE & SIGNAL PROCESSING',title:'Change the transmitted pulse and observe the signal response.',controls:'Signal controls',waveform:'Waveform',frequency:'Centre frequency',duration:'Pulse duration',bandwidth:'LFM bandwidth',direction:'Sweep direction',envelope:'Envelope',up:'Up',down:'Down',rectangular:'Rectangular',tukey:'Tukey',reset:'Reset',passband:'Acoustic waveform',instant:'Instantaneous frequency',matched:'Matched-filter response',loading:'Updating…',offline:'Signal response unavailable',retry:'Retry',mode:'Mode',timeAxis:'Time (ms)',amplitudeAxis:'Normalized amplitude',frequencyAxis:'Frequency (kHz)',lagAxis:'Lag (µs)'},
+ 'pt-BR':{back:'← Mapa do sistema',signal:'Sinal',focusPulse:'Pulso',focusFrequency:'Frequência',focusCompression:'Compressão',focusWaveform:'Forma de onda',kicker:'PED-D2 · PULSO E PROCESSAMENTO DE SINAL',title:'Altere o pulso transmitido e observe a resposta do sinal.',controls:'Controles do sinal',waveform:'Forma de onda',frequency:'Frequência central',duration:'Duração do pulso',bandwidth:'Largura de banda LFM',direction:'Direção da varredura',envelope:'Envoltória',up:'Ascendente',down:'Descendente',rectangular:'Retangular',tukey:'Tukey',reset:'Restaurar',passband:'Forma de onda acústica',instant:'Frequência instantânea',matched:'Resposta do filtro casado',loading:'Atualizando…',offline:'Resposta do sinal indisponível',retry:'Tentar novamente',mode:'Modo',timeAxis:'Tempo (ms)',amplitudeAxis:'Amplitude normalizada',frequencyAxis:'Frequência (kHz)',lagAxis:'Atraso (µs)'}
 } as const;
 
 function tracePath(trace:Trace|undefined,xDomain:Domain,yDomain:Domain,width=760,height=180){
@@ -34,17 +33,20 @@ function tracePath(trace:Trace|undefined,xDomain:Domain,yDomain:Domain,width=760
  }).join(' ');
 }
 
-function ScientificTrace({trace,xDomain,yDomain,className='wave-path',pulseEnd,labelLeft,labelMid,labelRight}:{trace?:Trace;xDomain:Domain;yDomain:Domain;className?:string;pulseEnd?:number;labelLeft:string;labelMid:string;labelRight:string}){
+function Plot({trace,xDomain,yDomain,xTicks,yTicks,xLabel,yLabel,className='wave-path',pulseEnd}:{trace?:Trace;xDomain:Domain;yDomain:Domain;xTicks:string[];yTicks:string[];xLabel:string;yLabel:string;className?:string;pulseEnd?:number}){
  const d=useMemo(()=>tracePath(trace,xDomain,yDomain),[trace,xDomain.min,xDomain.max,yDomain.min,yDomain.max]);
  const pulsePosition=pulseEnd===undefined?null:Math.max(0,Math.min(100,((pulseEnd-xDomain.min)/(xDomain.max-xDomain.min))*100));
- return <div className="scientific-plot">
+ return <div className="scientific-plot clean-plot">
+  <div className="plot-y-label">{yLabel}</div>
+  <div className="plot-y-ticks"><span>{yTicks[0]}</span><span>{yTicks[1]}</span><span>{yTicks[2]}</span></div>
   <svg viewBox="0 0 760 180" preserveAspectRatio="none" aria-hidden="true">
    <path className="plot-grid" d="M0 45H760 M0 90H760 M0 135H760 M190 0V180 M380 0V180 M570 0V180"/>
    <path className="gridline" d="M0 90H760"/>
-   <motion.path className={className} d={d} initial={{opacity:.45}} animate={{opacity:1}} transition={{duration:.22}}/>
+   <path className={className} d={d}/>
   </svg>
-  {pulsePosition!==null&&<div className="pulse-duration-marker" style={{left:`${pulsePosition}%`}}><i/><span>{pulseEnd?.toFixed(1)} ms</span></div>}
-  <div className="fixed-axis"><span>{labelLeft}</span><span>{labelMid}</span><span>{labelRight}</span></div>
+  {pulsePosition!==null&&pulseEnd!==undefined&&pulseEnd<=xDomain.max&&<div className="pulse-duration-marker" style={{left:`${pulsePosition}%`}}><i/><span>{pulseEnd.toFixed(1)} ms</span></div>}
+  <div className="fixed-axis">{xTicks.map(v=><span key={v}>{v}</span>)}</div>
+  <div className="plot-x-label">{xLabel}</div>
  </div>;
 }
 
@@ -56,28 +58,21 @@ export default function SignalLab({onBack,focus}:{onBack:()=>void;focus?:string}
  const[error,setError]=useState<string|null>(null);
  const[requestVersion,setRequestVersion]=useState(0);
  const t=text[locale];
-
  useEffect(()=>{
   const controller=new AbortController();
   const timer=window.setTimeout(async()=>{
    setLoading(true);setError(null);
-   try{
-    const response=await fetch(`${API_BASE}/api/v1/pedagogical/signal`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(config),signal:controller.signal});
-    if(!response.ok)throw new Error(`HTTP ${response.status}`);
-    setData(await response.json() as SignalResponse);
-   }catch(err){if(!controller.signal.aborted)setError(err instanceof Error?err.message:String(err));}
-   finally{if(!controller.signal.aborted)setLoading(false);}
+   try{const response=await fetch(`${API_BASE}/api/v1/pedagogical/signal`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(config),signal:controller.signal});if(!response.ok)throw new Error(`HTTP ${response.status}`);setData(await response.json() as SignalResponse)}
+   catch(err){if(!controller.signal.aborted)setError(err instanceof Error?err.message:String(err))}
+   finally{if(!controller.signal.aborted)setLoading(false)}
   },90);
-  return()=>{window.clearTimeout(timer);controller.abort();};
+  return()=>{window.clearTimeout(timer);controller.abort()};
  },[config,requestVersion]);
-
  const patch=(next:Partial<SignalConfig>)=>setConfig(current=>({...current,...next}));
  const focusTitle=focus==='pulse'?t.focusPulse:focus==='spectrum'?t.focusFrequency:focus==='compression'?t.focusCompression:t.focusWaveform;
- const metadata=data?.metadata;
-
  return <div className={`signal-lab signal-focus-${focus??'waveform'}`}>
-  <div className="lab-toolbar"><button className="back-button" onClick={onBack}>{t.back}</button><div className="lab-breadcrumb"><Activity size={17}/><span>{t.signal}</span><b>/</b><strong>{focusTitle}</strong></div><div className="lab-toolbar-actions"><span className="concept-chip"><Sparkles size={13}/> {t.ready}</span><button onClick={()=>setLocale(value=>value==='en'?'pt-BR':'en')}>{locale==='en'?'PT-BR':'EN'}</button></div></div>
-  <div className="lab-question"><span>{t.kicker}</span><h1>{t.title}</h1><p>{t.subtitle}</p></div>
+  <div className="lab-toolbar"><button className="back-button" onClick={onBack}>{t.back}</button><div className="lab-breadcrumb"><span>{t.signal}</span><b>/</b><strong>{focusTitle}</strong></div><div className="lab-toolbar-actions"><button onClick={()=>setLocale(value=>value==='en'?'pt-BR':'en')}>{locale==='en'?'PT-BR':'EN'}</button></div></div>
+  <div className="lab-question"><span>{t.kicker}</span><h1>{t.title}</h1></div>
   <div className="lab-layout"><aside className="control-surface"><div className="control-title"><SlidersHorizontal size={17}/><strong>{t.controls}</strong></div>
    <label>{t.waveform}<div className="segmented"><button className={config.pulse_type==='cw'?'on':''} onClick={()=>patch({pulse_type:'cw'})}>CW</button><button className={config.pulse_type==='lfm'?'on':''} onClick={()=>patch({pulse_type:'lfm'})}>LFM / Chirp</button></div></label>
    <label>{t.frequency} <output>{config.center_frequency_khz.toFixed(0)} kHz</output><input type="range" min="50" max="700" step="10" value={config.center_frequency_khz} onChange={e=>patch({center_frequency_khz:+e.target.value})}/></label>
@@ -87,15 +82,12 @@ export default function SignalLab({onBack,focus}:{onBack:()=>void;focus?:string}
    <label>{t.envelope}<div className="segmented"><button className={config.envelope_model==='rectangular'?'on':''} onClick={()=>patch({envelope_model:'rectangular'})}>{t.rectangular}</button><button className={config.envelope_model==='tukey'?'on':''} onClick={()=>patch({envelope_model:'tukey'})}>{t.tukey}</button></div></label>
    <div className="control-readouts"><div><small>{t.mode}</small><strong>{config.pulse_type==='lfm'?'LFM':'CW'}</strong></div><div><small>f₀</small><strong>{config.center_frequency_khz.toFixed(0)} kHz</strong></div><div><small>τ</small><strong>{config.duration_ms.toFixed(1)} ms</strong></div><div><small>B</small><strong>{config.pulse_type==='lfm'?`${config.bandwidth_khz.toFixed(0)} kHz`:'—'}</strong></div></div>
    <button className="reset" onClick={()=>setConfig(initial)}><RotateCcw size={15}/> {t.reset}</button>
-   {loading&&<div className="scientific-status">{t.loading}</div>}{error&&<div className="scientific-error"><strong>{t.offline}</strong><span>{error}</span><button onClick={()=>setRequestVersion(v=>v+1)}>{t.retry}</button></div>}
+   {loading&&<div className="scientific-status">{t.loading}</div>}{error&&<div className="scientific-error"><strong>{t.offline}</strong><button onClick={()=>setRequestVersion(v=>v+1)}>{t.retry}</button></div>}
   </aside>
-  <section className="visual-chain signal-continuous"><div className="signal-flow-label"><span>{t.flowTransmit}</span><i/><span>{t.flowFrequency}</span><i/><span>{t.flowProcess}</span></div>
-   <div className="chain-card transmit"><header><div><small>{t.transmit}</small><strong>{t.passband}</strong></div><span>{config.pulse_type==='lfm'?'LFM':'CW'}</span></header><div className="plot-note"><span>{t.pulseWindow}</span><b>{t.fixedScale}: 0–5 ms</b></div><ScientificTrace trace={data?.waveform} xDomain={TIME_DOMAIN} yDomain={WAVE_DOMAIN} pulseEnd={config.duration_ms} labelLeft="0 ms" labelMid="2.5 ms" labelRight="5 ms"/><div className="trace-units"><span>{data?.waveform.x_unit??'ms'}</span><span>{data?.waveform.y_unit??''}</span></div></div>
-   <div className="chain-arrow"><span>{t.effect}</span><i>→</i></div>
-   <div className="chain-card receive"><header><div><small>{t.frequencyLens}</small><strong>{t.instant}</strong></div><span>{metadata?.chirp_direction??'—'}</span></header><div className="plot-note"><span>{config.pulse_type==='lfm'?`${config.bandwidth_khz.toFixed(0)} kHz · ${config.chirp_direction}`:'CW'}</span><b>{t.fixedScale}: 0–850 kHz</b></div><ScientificTrace trace={data?.instantaneous_frequency} xDomain={TIME_DOMAIN} yDomain={FREQUENCY_DOMAIN} className="echo-path" pulseEnd={config.duration_ms} labelLeft="0 ms" labelMid="2.5 ms" labelRight="5 ms"/><div className="trace-units"><span>{data?.instantaneous_frequency.x_unit??'ms'}</span><span>{data?.instantaneous_frequency.y_unit??'kHz'}</span></div></div>
-   <div className="chain-arrow"><span>{t.processingLens}</span><i>→</i></div>
-   <div className="chain-card compression"><header><div><small>{t.process}</small><strong>{t.matched}</strong></div><span>{t.derived.toUpperCase()}</span></header><div className="plot-note"><span>{config.envelope_model}</span><b>{t.fixedScale}: ±5000 µs</b></div><ScientificTrace trace={data?.matched_filter} xDomain={MATCHED_LAG_DOMAIN} yDomain={MATCHED_DOMAIN} labelLeft="−5000 µs" labelMid="0" labelRight="+5000 µs"/><div className="trace-units"><span>{data?.matched_filter.x_unit??'us'}</span><span>{data?.matched_filter.y_unit??''}</span></div><div className="insight"><Waves size={18}/><span>{t.intuitionBody}</span></div></div>
+  <section className="visual-chain signal-continuous clean-signal-plots">
+   <div className="chain-card transmit"><header><div><strong>{t.passband}</strong></div><span>{config.pulse_type==='lfm'?'LFM':'CW'}</span></header><Plot trace={data?.waveform} xDomain={TIME_DOMAIN} yDomain={WAVE_DOMAIN} pulseEnd={config.duration_ms} xTicks={['0','2.5','5']} yTicks={['+1','0','−1']} xLabel={t.timeAxis} yLabel={t.amplitudeAxis}/></div>
+   <div className="chain-card receive"><header><div><strong>{t.instant}</strong></div><span>{config.pulse_type==='lfm'?config.chirp_direction.toUpperCase():'CW'}</span></header><Plot trace={data?.instantaneous_frequency} xDomain={TIME_DOMAIN} yDomain={FREQUENCY_DOMAIN} pulseEnd={config.duration_ms} className="echo-path" xTicks={['0','2.5','5']} yTicks={['850','425','0']} xLabel={t.timeAxis} yLabel={t.frequencyAxis}/></div>
+   <div className="chain-card compression"><header><div><strong>{t.matched}</strong></div></header><Plot trace={data?.matched_filter} xDomain={MATCHED_LAG_DOMAIN} yDomain={MATCHED_DOMAIN} xTicks={['−5000','0','+5000']} yTicks={['+1','0','−1']} xLabel={t.lagAxis} yLabel={t.amplitudeAxis}/></div>
   </section></div>
-  <div className="causal-strip signal-causal"><div><small>{t.cause}</small><strong>{t.configured}</strong><span>{t.causeBody}</span></div><div><small>{t.effect}</small><strong>{t.derived}</strong><span>{t.effectBody}</span></div><div><small>{t.intuition}</small><strong>{t.inputResponse}</strong><span>{t.intuitionBody}</span></div></div>
  </div>;
 }
