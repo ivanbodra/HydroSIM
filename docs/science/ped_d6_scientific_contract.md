@@ -6,7 +6,7 @@ Scope: production learner vertical slice
 
 ## Learning question
 
-PED-D6 teaches how physical element size, element spacing, element count/aperture, acoustic frequency/wavelength, array layout, and deterministic aperture weighting shape the normalized directivity of an ideal transducer array. It may also show Mills Cross as a **construction geometry** made from orthogonal TX/RX linear apertures; two-way TX/RX response and electronic steering remain separate concepts.
+PED-D6 teaches how physical element size, element spacing, element count/aperture, acoustic frequency/wavelength, array layout, deterministic aperture weighting, and the relative position of TX and RX apertures shape the construction of an ideal transducer system. It may also show Mills Cross as a **construction geometry** made from orthogonal TX/RX linear apertures; two-way TX/RX response and electronic steering remain separate concepts.
 
 The slice is limited to HydroSIM's authoritative far-field narrowband models. It must not introduce vendor-specific geometry, calibrated source/receive gain, near-field focusing, mutual coupling, or an independent frontend beam equation.
 
@@ -36,7 +36,8 @@ Learner controls scientifically belonging to PED-D6 are:
 - physical element face dimension on the active axis `a` [m], `a > 0`;
 - array geometry: regular linear baseline, with rectangular 2-D geometry permitted through canonical `TransducerArray` parameters;
 - deterministic aperture weighting selector, initially `uniform` or `hann`;
-- Mills-Cross construction selector when the experience is showing array architecture rather than two-way response.
+- Mills-Cross construction selector when the experience is showing array architecture rather than two-way response;
+- TX and RX reference positions in a common sensor/body frame, from which TX-RX eccentricity is derived.
 
 Steering may remain fixed at broadside in PED-D6; interactive steering belongs primarily to PED-D7.
 
@@ -54,7 +55,8 @@ Core-derived learner outputs include:
 - peak angle and peak normalized power;
 - local half-power (-3 dB) beamwidth when both crossings lie inside the sampled angular interval;
 - visible side-lobe / grating-lobe structure present in the computed normalized pattern;
-- for Mills Cross, TX/RX principal-axis geometry in their common sensor frame.
+- for Mills Cross, TX/RX principal-axis geometry in their common sensor frame;
+- TX-RX eccentricity vector and magnitude.
 
 These quantities are `Derived`. PED-D6 does not create `Observed`, `Estimated`, or environmental `Truth` state.
 
@@ -66,6 +68,7 @@ These quantities are `Derived`. PED-D6 does not create `Observed`, `Estimated`, 
 4. **Finite element size** — the rectangular element factor forms an angular envelope independent of the array-factor calculation; element size and spacing remain separate learner concepts.
 5. **Beamwidth** — the authoritative scalar beamwidth is the local half-power width returned by the canonical scan. If a crossing falls outside the scan interval, beamwidth is unavailable; no extrapolation is permitted.
 6. **Aperture weighting** — deterministic non-uniform weighting changes the relative coherent contributions across the aperture. In the normalized pattern this can reduce sidelobes while broadening the main lobe; it is not an absolute acoustic-gain calculation.
+7. **TX-RX eccentricity** — translating the TX and RX reference positions relative to each other changes the physical bistatic geometry of the system. The first PED-D6 slice treats eccentricity as a geometric construction quantity, not as a new beam-pattern equation. Its propagation consequences belong to the two-way/integrated geometry model and must not be approximated by modifying one-way normalized directivity.
 
 Approximate textbook rules such as beamwidth proportional to `lambda / aperture` may be shown only as qualitative intuition or clearly labelled approximations. The configured Core pattern is authoritative.
 
@@ -94,13 +97,40 @@ Because `array_factor()` normalizes by `sum(abs(w_n))`, these weights alter norm
 
 PED-D6 must not use Mills Cross to imply that all MBES systems use this geometry, nor calculate a two-way TX×RX response as part of this atom. Two-way composition and electronic steering remain PED-D7/PED-D8/integrated-sonar concerns.
 
-## Eccentricity disposition
+## TX-RX eccentricity
 
-The current product atom inventory lists `eccentricity` as a PED-D6 input, but neither the pedagogical plan nor the Scientific Core defines a physical quantity, unit, frame, or causal model with that name for transducer-array construction. It is therefore **not a scientifically actionable PED-D6 control** and must not be invented by Engineering or UX.
+For PED-D6, **eccentricity** is the spatial separation between the TX and RX aperture reference positions (normally their defined array centres / phase-reference points) expressed in one common frame.
 
-Authoritative recommendation: remove this atom from PED-D6 unless Technical Lead can identify a specific intended physical quantity. If the intended concept is a sensor/transducer installation offset relative to a vessel/reference point, it belongs to PED-D11/A2 installation/lever-arm geometry, where source→target offsets and frames are explicit. If it means element-position perturbation or array manufacturing tolerance, that would require a separate future fidelity contract and is outside the present PED-D6 learning objective.
+Let
 
-This is a roadmap/inventory correction, not a request to shrink implemented science silently; the denominator must be changed only by Technical Lead/coordination authority.
+`r_TX` = position vector of the TX aperture reference point [m]  
+`r_RX` = position vector of the RX aperture reference point [m]
+
+in the same declared frame. The canonical eccentricity vector is
+
+`e_TX_to_RX = r_RX - r_TX` [m].
+
+Its scalar magnitude is
+
+`eccentricity = ||e_TX_to_RX||` [m].
+
+The direction must not be discarded when geometry is used computationally. The scalar magnitude is suitable only as a learner-facing summary. In HydroSIM's body convention, a body-frame vector follows Forward-Starboard-Down (`+X` Forward, `+Y` Starboard, `+Z` Down) unless an explicit sensor-local frame is declared.
+
+State semantics:
+
+- `r_TX`, `r_RX`: `Configured` installation/construction geometry for the pedagogical slice;
+- `e_TX_to_RX`, `||e_TX_to_RX||`: `Derived`;
+- zero eccentricity means coincident TX/RX reference positions;
+- non-zero eccentricity means a bistatic spatial baseline exists between transmission and reception reference points.
+
+Scientific effect boundary:
+
+- eccentricity does **not** alter the intrinsic one-way TX or RX normalized array factor merely by translation of the whole aperture;
+- it does alter the geometry of a true two-way/bistatic path because transmit and receive ranges/directions are referenced to different positions;
+- therefore a future/integrated two-way model must use the actual TX and RX positions (for example through separate transmit and receive path geometry), rather than converting eccentricity into an ad-hoc gain or beamwidth correction;
+- PED-D6 may visualize the relative TX/RX location and report the vector/magnitude without yet solving the full bistatic propagation problem.
+
+This definition is distinct from vessel-level lever arms to GNSS/IMU/VRP. A system may simultaneously have TX-RX eccentricity and external sensor lever arms.
 
 ## Coordinate and angle convention
 
@@ -115,7 +145,7 @@ The application may convert radians to degrees but must preserve the sign conven
 
 ## Validity domain
 
-The PED-D6 model assumes ideal regular centred geometry, deterministic element positions/dimensions, far-field plane-wave propagation, one monochromatic/narrowband frequency per evaluation, ideal identical rectangular elements, deterministic weights, no mutual coupling, no channel-calibration mismatch, no stochastic noise, no finite-bandwidth beam squint, no near-field/dynamic focusing, no calibrated absolute transmit/receive gain, and no vendor-specific beamformer behavior.
+The PED-D6 model assumes ideal regular centred geometry, deterministic element positions/dimensions, far-field plane-wave propagation, one monochromatic/narrowband frequency per evaluation, ideal identical rectangular elements, deterministic weights, no mutual coupling, no channel-calibration mismatch, no stochastic noise, no finite-bandwidth beam squint, no near-field/dynamic focusing, no calibrated absolute transmit/receive gain, and no vendor-specific beamformer behavior. TX-RX eccentricity is represented geometrically; its complete two-way propagation effect is outside this first slice.
 
 ## Minimum scientific acceptance anchors
 
@@ -128,22 +158,23 @@ Engineering/tests should preserve at least:
 - increasing element count at fixed spacing updates aperture through `TransducerArray`, not an adapter formula;
 - half-power beamwidth is reported only when both Core crossings exist;
 - Hann weights are symmetric (`w_n = w_(N-1-n)`) and non-negative; for `N>2`, endpoints are zero;
-- Mills-Cross geometry is accepted only when TX/RX principal axes are orthogonal under the existing Core tolerance.
+- Mills-Cross geometry is accepted only when TX/RX principal axes are orthogonal under the existing Core tolerance;
+- if `r_TX == r_RX`, `e_TX_to_RX == [0,0,0]` and scalar eccentricity is zero;
+- for `r_TX=[0,0,0] m` and `r_RX=[1,2,2] m`, `e_TX_to_RX=[1,2,2] m` and scalar eccentricity is `3 m` in the same frame;
+- translating both TX and RX by the same vector leaves `e_TX_to_RX` unchanged.
 
 ## Remaining PED-D6 atom disposition
-
-For completion of Technical Lead handoff #198:
 
 | Inventory atom | Scientific disposition |
 | --- | --- |
 | `array geometry` | **Existing canonical capability.** Use `TransducerArray` regular linear/rectangular geometry; no new equation. |
 | `Mills Cross` | **Existing canonical capability.** Use `MillsCrossConfiguration` as construction geometry only; no new two-way model. |
 | `shading/apodization` | **Minimal missing capability.** Add a small canonical weight generator for `uniform` and `hann`, feeding existing `array_factor(weights=...)`; no array-factor change. |
-| `eccentricity` | **Inventory reallocation/removal recommended.** Undefined in current D6 science; do not invent. Installation offset, if intended, belongs to PED-D11/A2. |
+| `eccentricity` | **Defined canonical geometry.** TX→RX separation vector `e_TX_to_RX = r_RX - r_TX`; scalar norm may be displayed, but downstream physics must retain the vector and common frame. |
 
 ## First production payload boundary
 
-The PED-D6 adapter may return configuration metadata/units, wavelength/aperture, element positions/count, sampled normalized amplitude/power pattern, peak, half-power beamwidth or unavailable state, factor decomposition when shown, selected deterministic weights, and Mills-Cross TX/RX construction geometry when selected.
+The PED-D6 adapter may return configuration metadata/units, wavelength/aperture, element positions/count, sampled normalized amplitude/power pattern, peak, half-power beamwidth or unavailable state, factor decomposition when shown, selected deterministic weights, Mills-Cross TX/RX construction geometry, and TX/RX reference positions plus eccentricity vector/magnitude.
 
 No new beam equation is required.
 
@@ -160,3 +191,5 @@ Primary HydroSIM scientific sources:
 - `src/hydrosim/acquisition/beam_pattern.py`.
 
 PED-D6 reuses those implemented reference models rather than defining a parallel pedagogical formulation. The Hann weighting definition is the standard raised-cosine Hann window applied here only as deterministic aperture weights; it does not alter the canonical coherent-sum equation.
+
+The eccentricity definition is a geometric vector difference between two declared aperture reference positions. Its full acoustic consequence is governed by bistatic/two-way geometry, not by a new HydroSIM directivity equation.
