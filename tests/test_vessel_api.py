@@ -1,5 +1,6 @@
 import pytest
 
+from hydrosim.app.signal_api import create_fastapi_app
 from hydrosim.app.vessel_api import D11VesselRequest, prepare_d11_vessel_response
 from hydrosim.geometry.models import Vector3
 
@@ -34,3 +35,8 @@ def test_d11_vessel_bridge_rejects_negative_static_draft() -> None:
                 water_level_m_relative_to_datum=0.0,
             )
         )
+
+
+def test_d11_vessel_route_is_registered() -> None:
+    app = create_fastapi_app()
+    assert "/api/v1/pedagogical/vessel" in {route.path for route in app.routes}
