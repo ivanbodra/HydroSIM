@@ -1,4 +1,4 @@
-"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10 lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10/PED-D12 lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
 frontend remains presentation-only and must not reimplement scientific equations.
@@ -45,6 +45,11 @@ from hydrosim.app.sonar_equation_api import (
     D3SonarEquationRequest,
     D3SonarEquationResponse,
     prepare_d3_sonar_equation_response,
+)
+from hydrosim.app.vessel_motion_api import (
+    D12VesselMotionRequest,
+    D12VesselMotionResponse,
+    prepare_d12_vessel_motion_response,
 )
 from hydrosim.visualization import (
     prepare_signal_explorer_display_trace,
@@ -319,6 +324,10 @@ def create_fastapi_app():
             return prepare_d10_multisector_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/v1/pedagogical/vessel-motion", response_model=D12VesselMotionResponse)
+    def vessel_motion(request: D12VesselMotionRequest) -> D12VesselMotionResponse:
+        return prepare_d12_vessel_motion_response(request)
 
     return app
 
