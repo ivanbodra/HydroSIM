@@ -18,7 +18,7 @@ from hydrosim.acquisition.beam_pattern import (
     one_way_beam_pattern,
     scan_across_track_beam_pattern,
 )
-from hydrosim.geometry import TransducerArray, make_reference_mills_cross
+from hydrosim.geometry import TransducerArray, Vector3, make_reference_mills_cross
 
 
 class D6MillsCrossRequest(BaseModel):
@@ -119,8 +119,8 @@ def _build_array(request: D6ArrayRequest) -> TransducerArray:
     )
 
 
-def _xyz(vector: object) -> tuple[float, float, float]:
-    return (float(vector.x), float(vector.y), float(vector.z))  # type: ignore[attr-defined]
+def _xyz(vector: Vector3) -> tuple[float, float, float]:
+    return (float(vector.x), float(vector.y), float(vector.z))
 
 
 def _mills_cross_geometry(request: D6MillsCrossRequest | None) -> D6MillsCrossGeometry | None:
