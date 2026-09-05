@@ -15,7 +15,10 @@ const lessons:Lesson[]=[
 {id:'D10',displayId:'D9',title:'Multisector MBES',route:'#multisector-lab',family:'arrays'},
 {id:'D11',displayId:'D10',title:'Vessel & Sensor Configuration',route:'#vessel-configuration-lab',family:'platform'},
 {id:'D12',displayId:'D11',title:'Vessel Motion',route:'#vessel-motion-lab',family:'platform'},
+{id:'D14',displayId:'D13',title:'Timing & Latency',route:'#timing-lab',family:'platform'},
+{id:'D15',displayId:'D14',title:'Sounding Formation',route:'#sounding-formation-lab',family:'platform'},
 {id:'D17',displayId:'D16',title:'Survey Coverage & Acquisition Trade-offs',route:'#tradeoff-lab',family:'integration'},
+{id:'D18',displayId:'D17',title:'Uncertainty & Error Sources',route:'#uncertainty-lab',family:'integration'},
 ];
 export default function LessonNavigator({currentId}:{currentId:string}){
  const[open,setOpen]=useState(false);const index=lessons.findIndex(l=>l.id===currentId);const current=lessons[index];if(!current)return null;

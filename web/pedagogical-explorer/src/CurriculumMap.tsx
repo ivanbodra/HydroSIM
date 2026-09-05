@@ -5,7 +5,7 @@ import { pedagogicalTracks, type Experience, type TrackKey } from './pedagogical
 
 type Family='acoustics'|'propagation'|'arrays'|'platform'|'integration';
 const trackIcon:Record<TrackKey,typeof GraduationCap>={didactic:GraduationCap,patch:FlaskConical,acquisition:Radar};
-const productionRoutes:Record<string,string>={D1:'#wave-lab',D2:'#signal-lab/pulse',D3:'#sonar-equation-lab',D4:'#refraction-lab',D6:'#array-directivity-lab',D7:'#beamforming-lab',D8:'#echosounder-lab',D9:'#bottom-detection-lab',D10:'#multisector-lab',D11:'#vessel-configuration-lab',D12:'#vessel-motion-lab',D15:'#sounding-formation-lab',D17:'#tradeoff-lab',D18:'#uncertainty-lab'};
+const productionRoutes:Record<string,string>={D1:'#wave-lab',D2:'#signal-lab/pulse',D3:'#sonar-equation-lab',D4:'#refraction-lab',D6:'#array-directivity-lab',D7:'#beamforming-lab',D8:'#echosounder-lab',D9:'#bottom-detection-lab',D10:'#multisector-lab',D11:'#vessel-configuration-lab',D12:'#vessel-motion-lab',D14:'#timing-lab',D15:'#sounding-formation-lab',D17:'#tradeoff-lab',D18:'#uncertainty-lab'};
 const displayId:Record<string,string>={D1:'D1',D2:'D2',D3:'D3',D4:'D4',D6:'D5',D7:'D6',D8:'D7',D9:'D8',D10:'D9',D11:'D10',D12:'D11',D13:'D12',D14:'D13',D15:'D14',D16:'D15',D17:'D16',D18:'D17'};
 const familyById:Record<string,Family>={D1:'acoustics',D2:'acoustics',D3:'propagation',D4:'propagation',D6:'arrays',D7:'arrays',D8:'arrays',D9:'arrays',D10:'arrays',D11:'platform',D12:'platform',D13:'platform',D14:'platform',D15:'platform',D16:'integration',D17:'integration',D18:'integration'};
 const familyMeta:Record<Family,{title:string;kicker:string}>={
