@@ -1,14 +1,137 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Languages, RadioTower, Waves } from 'lucide-react';
+import { ArrowLeft, Languages, RadioTower, RotateCcw, Waves } from 'lucide-react';
 
-type Language='en'|'pt';
-type Sector={sector_id:string;centre_across_track_deg:number;across_track_min_deg:number;across_track_max_deg:number;frequency_khz:number;pulse_duration_ms:number;tx_delay_ms:number;relative_power:number};
-type ResponseSector=Sector&{sector_index:number;tx_time_s:number;tx_end_time_s:number;wavelength_m:number};
-type Response={sectors:ResponseSector[];coverage_supports_deg:[number,number][];transmit_groups:string[][];metadata:Record<string,string|number>};
-
-const copy={
- en:{title:'Multisector MBES',intro:'Shape multiple transmit sectors and see how geometry, frequency, pulse duration, relative power and timing combine into one ping.',back:'System Map',lang:'PT-BR',chain:'Acquisition chain',sound:'Sound speed',sector:'Sector',centre:'Centre',width:'Sector width',frequency:'Frequency',duration:'Pulse duration',delay:'TX delay',power:'Relative power',coverage:'Transmit geometry',signLegend:'Port + / Starboard −',timing:'Transmit sequence',timingLegend:'One ping · multiple TX events',wavelength:'Wavelength',group:'Group',port:'Port',starboard:'Starboard',simultaneous:'Simultaneous',intuition:'Physical intuition',insight:'A multisector ping is not one uniform transmission. Each sector can occupy a different angular support, frequency, pulse duration, configured relative power and transmit time while remaining part of the same ping.'},
- pt:{title:'MBES Multissetorial',intro:'Configure múltiplos setores de transmissão e observe como geometria, frequência, duração do pulso, potência relativa e temporização se combinam em um único ping.',back:'Mapa do Sistema',lang:'EN',chain:'Cadeia de aquisição',sound:'Velocidade do som',sector:'Setor',centre:'Centro',width:'Largura do setor',frequency:'Frequência',duration:'Duração do pulso',delay:'Atraso de TX',power:'Potência relativa',coverage:'Geometria de transmissão',signLegend:'Bombordo + / Boreste −',timing:'Sequência de transmissão',timingLegend:'Um ping · múltiplos eventos TX',wavelength:'Comprimento de onda',group:'Grupo',port:'Bombordo',starboard:'Boreste',simultaneous:'Simultâneo',intuition:'Intuição física',insight:'Um ping multissetorial não é uma única transmissão uniforme. Cada setor pode ocupar um suporte angular, frequência, duração de pulso, potência relativa configurada e instante de transmissão diferentes, ainda pertencendo ao mesmo ping.'}
+type Language = 'en' | 'pt';
+type Sector = {
+  sector_id: string;
+  centre_across_track_deg: number;
+  across_track_min_deg: number;
+  across_track_max_deg: number;
+  frequency_khz: number;
+  pulse_duration_ms: number;
+  tx_delay_ms: number;
+  relative_power: number;
 };
-const defaultSectors:Sector[]=[{sector_id:'port',centre_across_track_deg:35,across_track_min_deg:15,across_track_max_deg:55,frequency_khz:200,pulse_duration_ms:0.8,tx_delay_ms:0,relative_power:0.8},{sector_id:'centre',centre_across_track_deg:0,across_track_min_deg:-15,across_track_max_deg:15,frequency_khz:300,pulse_duration_ms:0.5,tx_delay_ms:0.35,relative_power:1},{sector_id:'starboard',centre_across_track_deg:-35,across_track_min_deg:-55,across_track_max_deg:-15,frequency_khz:200,pulse_duration_ms:0.8,tx_delay_ms:0,relative_power:0.8}];
-export default function MultisectorLab({onBack}:{onBack:()=>void}){const[language,setLanguage]=useState<Language>('en');const[soundSpeed,setSoundSpeed]=useState(1500);const[sectors,setSectors]=useState(defaultSectors);const[data,setData]=useState<Response|null>(null);const[error,setError]=useState('');const t=copy[language];useEffect(()=>{const controller=new AbortController();setError('');fetch('/api/v1/pedagogical/multisector',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({tx_time_s:10,sound_speed_mps:soundSpeed,sectors})}).then(async r=>{if(!r.ok)throw new Error(await r.text());return r.json() as Promise<Response>}).then(setData).catch(e=>{if(e.name!=='AbortError')setError(String(e))});return()=>controller.abort()},[soundSpeed,sectors]);const update=(index:number,patch:Partial<Sector>)=>setSectors(current=>current.map((sector,i)=>i===index?{...sector,...patch}:sector));const maxDelay=useMemo(()=>Math.max(...(data?.sectors.map(s=>s.tx_delay_ms+s.pulse_duration_ms)??[1]),1),[data]);const groupFor=(sectorId:string)=>Math.max(0,data?.transmit_groups.findIndex(group=>group.includes(sectorId))??0);return <div className="d10-lab"><header className="d10-head"><button onClick={onBack}><ArrowLeft size={16}/>{t.back}</button><div><span>PED-D10 · {t.chain.toUpperCase()}</span><h1>{t.title}</h1><p>{t.intro}</p></div><button onClick={()=>setLanguage(language==='en'?'pt':'en')}><Languages size={16}/>{t.lang}</button></header><main className="d10-layout"><aside className="d10-controls"><label>{t.sound}<strong>{soundSpeed.toFixed(0)} m/s</strong><input type="range" min="1400" max="1600" step="5" value={soundSpeed} onChange={e=>setSoundSpeed(Number(e.target.value))}/></label>{sectors.map((sector,index)=><section key={sector.sector_id} className="d10-sector-controls"><h3>{t.sector} {index+1}</h3><label>{t.centre}<strong>{sector.centre_across_track_deg.toFixed(0)}°</strong><input type="range" min="-60" max="60" step="5" value={sector.centre_across_track_deg} onChange={e=>{const centre=Number(e.target.value);const half=(sector.across_track_max_deg-sector.across_track_min_deg)/2;update(index,{centre_across_track_deg:centre,across_track_min_deg:centre-half,across_track_max_deg:centre+half})}}/></label><label>{t.width}<strong>{(sector.across_track_max_deg-sector.across_track_min_deg).toFixed(0)}°</strong><input type="range" min="10" max="50" step="5" value={sector.across_track_max_deg-sector.across_track_min_deg} onChange={e=>{const half=Number(e.target.value)/2;update(index,{across_track_min_deg:sector.centre_across_track_deg-half,across_track_max_deg:sector.centre_across_track_deg+half})}}/></label><label>{t.frequency}<strong>{sector.frequency_khz.toFixed(0)} kHz</strong><input type="range" min="100" max="500" step="25" value={sector.frequency_khz} onChange={e=>update(index,{frequency_khz:Number(e.target.value)})}/></label><label>{t.duration}<strong>{sector.pulse_duration_ms.toFixed(2)} ms</strong><input type="range" min="0.1" max="2" step="0.05" value={sector.pulse_duration_ms} onChange={e=>update(index,{pulse_duration_ms:Number(e.target.value)})}/></label><label>{t.delay}<strong>{sector.tx_delay_ms.toFixed(2)} ms</strong><input type="range" min="0" max="1.5" step="0.05" value={sector.tx_delay_ms} onChange={e=>update(index,{tx_delay_ms:Number(e.target.value)})}/></label><label>{t.power}<strong>{Math.round(sector.relative_power*100)}%</strong><input type="range" min="0.1" max="1" step="0.05" value={sector.relative_power} onChange={e=>update(index,{relative_power:Number(e.target.value)})}/></label></section>)}</aside><section className="d10-stage">{error?<div className="d10-message">{error}</div>:<><div className="d10-panel"><div className="d10-panel-title"><RadioTower size={18}/><div><small>{t.coverage}</small><strong>{t.signLegend.toUpperCase()}</strong></div></div><div className="d10-coverage"><div className="d10-centreline"/><span className="d10-side port">{t.port}</span><span className="d10-side starboard">{t.starboard}</span>{data?.coverage_supports_deg.map(([minDeg,maxDeg],index)=>{const sector=data.sectors[index];if(!sector)return null;const left=50-maxDeg/1.4;const width=(maxDeg-minDeg)/1.4;const power=sector.relative_power??1;return <div key={sector.sector_id} className={`d10-sector-band band-${index}`} style={{left:`${left}%`,width:`${width}%`,opacity:0.35+0.65*power}}><strong>{sector.sector_id}</strong><span>{minDeg.toFixed(0)}° → {maxDeg.toFixed(0)}° · {Math.round(power*100)}%</span></div>})}</div><div className="d10-readouts">{data?.sectors.map(s=>{const power=s.relative_power??1;return <div key={s.sector_id}><small>{s.sector_id}</small><strong>{s.frequency_khz.toFixed(0)} kHz · {Math.round(power*100)}%</strong><span><Waves size={13}/>{(s.wavelength_m*1000).toFixed(2)} mm {t.wavelength.toLowerCase()} · {s.pulse_duration_ms.toFixed(2)} ms</span></div>})}</div></div><div className="d10-panel"><div className="d10-panel-title"><Waves size={18}/><div><small>{t.timing}</small><strong>{t.timingLegend.toUpperCase()}</strong></div></div><div className="d10-timeline">{data?.sectors.map(s=>{const power=s.relative_power??1;return <div className="d10-timeline-row" key={s.sector_id}><span>{s.sector_id}</span><div><i style={{marginLeft:`${(s.tx_delay_ms/maxDelay)*72}%`,width:`${Math.max((s.pulse_duration_ms/maxDelay)*72,4)}%`,opacity:0.35+0.65*power}}/><small>{s.tx_delay_ms.toFixed(2)} → {(s.tx_delay_ms+s.pulse_duration_ms).toFixed(2)} ms</small></div><strong>{t.group} {groupFor(s.sector_id)+1}</strong></div>})}</div><div className="d10-groups">{data?.transmit_groups.map((group,index)=><span key={index}><strong>{t.group} {index+1}</strong>{group.join(' + ')}{group.length>1?` · ${t.simultaneous}`:''}</span>)}</div></div><div className="d10-intuition"><small>{t.intuition}</small><p>{t.insight}</p></div></>}</section></main></div>}
+type ResponseSector = Sector & {
+  sector_index: number;
+  tx_time_s: number;
+  tx_end_time_s: number;
+  wavelength_m: number;
+};
+type Response = {
+  sectors: ResponseSector[];
+  coverage_supports_deg: [number, number][];
+  transmit_groups: string[][];
+  metadata: Record<string, string | number>;
+};
+
+const copy = {
+  en: {
+    title: 'Multisector MBES',
+    intro: 'Shape multiple transmit sectors and see how geometry, frequency, pulse duration, relative power and timing combine into one ping.',
+    back: 'System Map', lang: 'PT-BR', chain: 'Acquisition chain', sound: 'Sound speed', sector: 'Sector', centre: 'Centre', width: 'Sector width',
+    frequency: 'Frequency', duration: 'Pulse duration', delay: 'TX delay', power: 'Relative power', coverage: 'Transmit geometry',
+    signLegend: 'Port + / Starboard −', timing: 'Transmit sequence', timingLegend: 'One ping · multiple TX events', wavelength: 'Wavelength',
+    group: 'Group', port: 'Port', starboard: 'Starboard', simultaneous: 'Simultaneous', intuition: 'Physical intuition', reset: 'Reset',
+    insight: 'A multisector ping is not one uniform transmission. Each sector can occupy a different angular support, frequency, pulse duration, relative power and transmit time while remaining part of the same ping.'
+  },
+  pt: {
+    title: 'MBES Multissetorial',
+    intro: 'Configure múltiplos setores de transmissão e observe como geometria, frequência, duração do pulso, potência relativa e temporização se combinam em um único ping.',
+    back: 'Mapa do Sistema', lang: 'EN', chain: 'Cadeia de aquisição', sound: 'Velocidade do som', sector: 'Setor', centre: 'Centro', width: 'Largura do setor',
+    frequency: 'Frequência', duration: 'Duração do pulso', delay: 'Atraso de TX', power: 'Potência relativa', coverage: 'Geometria de transmissão',
+    signLegend: 'Bombordo + / Boreste −', timing: 'Sequência de transmissão', timingLegend: 'Um ping · múltiplos eventos TX', wavelength: 'Comprimento de onda',
+    group: 'Grupo', port: 'Bombordo', starboard: 'Boreste', simultaneous: 'Simultâneo', intuition: 'Intuição física', reset: 'Redefinir',
+    insight: 'Um ping multissetorial não é uma única transmissão uniforme. Cada setor pode ocupar um suporte angular, frequência, duração de pulso, potência relativa e instante de transmissão diferentes, ainda pertencendo ao mesmo ping.'
+  }
+};
+
+const defaultSectors: Sector[] = [
+  { sector_id: 'port', centre_across_track_deg: 35, across_track_min_deg: 15, across_track_max_deg: 55, frequency_khz: 200, pulse_duration_ms: 0.8, tx_delay_ms: 0, relative_power: 0.8 },
+  { sector_id: 'centre', centre_across_track_deg: 0, across_track_min_deg: -15, across_track_max_deg: 15, frequency_khz: 300, pulse_duration_ms: 0.5, tx_delay_ms: 0.35, relative_power: 1 },
+  { sector_id: 'starboard', centre_across_track_deg: -35, across_track_min_deg: -55, across_track_max_deg: -15, frequency_khz: 200, pulse_duration_ms: 0.8, tx_delay_ms: 0, relative_power: 0.8 }
+];
+
+export default function MultisectorLab({ onBack }: { onBack: () => void }) {
+  const [language, setLanguage] = useState<Language>('en');
+  const [soundSpeed, setSoundSpeed] = useState(1500);
+  const [sectors, setSectors] = useState<Sector[]>(() => defaultSectors.map(sector => ({ ...sector })));
+  const [data, setData] = useState<Response | null>(null);
+  const [error, setError] = useState('');
+  const t = copy[language];
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setError('');
+    fetch('/api/v1/pedagogical/multisector', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({ tx_time_s: 10, sound_speed_mps: soundSpeed, sectors })
+    })
+      .then(async response => {
+        if (!response.ok) throw new Error(await response.text());
+        return response.json() as Promise<Response>;
+      })
+      .then(setData)
+      .catch(reason => {
+        if (reason.name !== 'AbortError') setError(String(reason));
+      });
+    return () => controller.abort();
+  }, [soundSpeed, sectors]);
+
+  const update = (index: number, patch: Partial<Sector>) =>
+    setSectors(current => current.map((sector, i) => i === index ? { ...sector, ...patch } : sector));
+
+  const reset = () => {
+    setSoundSpeed(1500);
+    setSectors(defaultSectors.map(sector => ({ ...sector })));
+  };
+
+  const maxDelay = useMemo(
+    () => Math.max(...(data?.sectors.map(sector => sector.tx_delay_ms + sector.pulse_duration_ms) ?? [1]), 1),
+    [data]
+  );
+  const groupFor = (sectorId: string) => Math.max(0, data?.transmit_groups.findIndex(group => group.includes(sectorId)) ?? 0);
+
+  return <div className="d10-lab">
+    <header className="d10-head">
+      <button onClick={onBack}><ArrowLeft size={16} />{t.back}</button>
+      <div><span>PED-D10 · {t.chain.toUpperCase()}</span><h1>{t.title}</h1><p>{t.intro}</p></div>
+      <button onClick={() => setLanguage(language === 'en' ? 'pt' : 'en')}><Languages size={16} />{t.lang}</button>
+    </header>
+    <main className="d10-layout">
+      <aside className="d10-controls">
+        <label>{t.sound}<strong>{soundSpeed.toFixed(0)} m/s</strong><input type="range" min="1400" max="1600" step="5" value={soundSpeed} onChange={event => setSoundSpeed(Number(event.target.value))} /></label>
+        {sectors.map((sector, index) => <section key={sector.sector_id} className="d10-sector-controls">
+          <h3>{t.sector} {index + 1}</h3>
+          <label>{t.centre}<strong>{sector.centre_across_track_deg.toFixed(0)}°</strong><input type="range" min="-60" max="60" step="5" value={sector.centre_across_track_deg} onChange={event => { const centre = Number(event.target.value); const half = (sector.across_track_max_deg - sector.across_track_min_deg) / 2; update(index, { centre_across_track_deg: centre, across_track_min_deg: centre - half, across_track_max_deg: centre + half }); }} /></label>
+          <label>{t.width}<strong>{(sector.across_track_max_deg - sector.across_track_min_deg).toFixed(0)}°</strong><input type="range" min="10" max="50" step="5" value={sector.across_track_max_deg - sector.across_track_min_deg} onChange={event => { const half = Number(event.target.value) / 2; update(index, { across_track_min_deg: sector.centre_across_track_deg - half, across_track_max_deg: sector.centre_across_track_deg + half }); }} /></label>
+          <label>{t.frequency}<strong>{sector.frequency_khz.toFixed(0)} kHz</strong><input type="range" min="100" max="500" step="25" value={sector.frequency_khz} onChange={event => update(index, { frequency_khz: Number(event.target.value) })} /></label>
+          <label>{t.duration}<strong>{sector.pulse_duration_ms.toFixed(2)} ms</strong><input type="range" min="0.1" max="2" step="0.05" value={sector.pulse_duration_ms} onChange={event => update(index, { pulse_duration_ms: Number(event.target.value) })} /></label>
+          <label>{t.delay}<strong>{sector.tx_delay_ms.toFixed(2)} ms</strong><input type="range" min="0" max="1.5" step="0.05" value={sector.tx_delay_ms} onChange={event => update(index, { tx_delay_ms: Number(event.target.value) })} /></label>
+          <label>{t.power}<strong>{Math.round(sector.relative_power * 100)}%</strong><input type="range" min="0.1" max="1" step="0.05" value={sector.relative_power} onChange={event => update(index, { relative_power: Number(event.target.value) })} /></label>
+        </section>)}
+        <button type="button" className="d10-reset" onClick={reset}><RotateCcw size={15} />{t.reset}</button>
+      </aside>
+      <section className="d10-stage">
+        {error ? <div className="d10-message">{error}</div> : <>
+          <div className="d10-panel">
+            <div className="d10-panel-title"><RadioTower size={18} /><div><small>{t.coverage}</small><strong>{t.signLegend.toUpperCase()}</strong></div></div>
+            <div className="d10-coverage">
+              <div className="d10-centreline" /><span className="d10-side port">{t.port}</span><span className="d10-side starboard">{t.starboard}</span>
+              {data?.coverage_supports_deg.map(([minDeg, maxDeg], index) => { const sector = data.sectors[index]; if (!sector) return null; const left = 50 - maxDeg / 1.4; const width = (maxDeg - minDeg) / 1.4; const power = sector.relative_power ?? 1; return <div key={sector.sector_id} className={`d10-sector-band band-${index}`} style={{ left: `${left}%`, width: `${width}%`, opacity: 0.35 + 0.65 * power }}><strong>{sector.sector_id}</strong><span>{minDeg.toFixed(0)}° → {maxDeg.toFixed(0)}° · {Math.round(power * 100)}%</span></div>; })}
+            </div>
+            <div className="d10-readouts">{data?.sectors.map(sector => { const power = sector.relative_power ?? 1; return <div key={sector.sector_id}><small>{sector.sector_id}</small><strong>{sector.frequency_khz.toFixed(0)} kHz · {Math.round(power * 100)}%</strong><span><Waves size={13} />{(sector.wavelength_m * 1000).toFixed(2)} mm {t.wavelength.toLowerCase()} · {sector.pulse_duration_ms.toFixed(2)} ms</span></div>; })}</div>
+          </div>
+          <div className="d10-panel">
+            <div className="d10-panel-title"><Waves size={18} /><div><small>{t.timing}</small><strong>{t.timingLegend.toUpperCase()}</strong></div></div>
+            <div className="d10-timeline">{data?.sectors.map(sector => { const power = sector.relative_power ?? 1; return <div className="d10-timeline-row" key={sector.sector_id}><span>{sector.sector_id}</span><div><i style={{ marginLeft: `${(sector.tx_delay_ms / maxDelay) * 72}%`, width: `${Math.max((sector.pulse_duration_ms / maxDelay) * 72, 4)}%`, opacity: 0.35 + 0.65 * power }} /><small>{sector.tx_delay_ms.toFixed(2)} → {(sector.tx_delay_ms + sector.pulse_duration_ms).toFixed(2)} ms</small></div><strong>{t.group} {groupFor(sector.sector_id) + 1}</strong></div>; })}</div>
+            <div className="d10-groups">{data?.transmit_groups.map((group, index) => <span key={index}><strong>{t.group} {index + 1}</strong>{group.join(' + ')}{group.length > 1 ? ` · ${t.simultaneous}` : ''}</span>)}</div>
+          </div>
+          <div className="d10-intuition"><small>{t.intuition}</small><p>{t.insight}</p></div>
+        </>}
+      </section>
+    </main>
+  </div>;
+}
