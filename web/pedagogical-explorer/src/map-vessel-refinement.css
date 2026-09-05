@@ -1,0 +1,23 @@
+.map2-vessel-refined{width:330px;height:238px;filter:drop-shadow(0 20px 34px #0008)}
+.map2-vessel-refined .map2-vessel{left:0;right:0;top:18px}
+.map2-vessel-refined .map2-vessel svg{width:100%;height:auto;overflow:visible}
+.map-vessel-shadow{fill:#02080c;opacity:.36;filter:blur(3px)}
+.map-vessel-hull{stroke:color-mix(in srgb,var(--accent) 72%,#c7e9f3);stroke-width:1.6;stroke-linejoin:round}
+.map-vessel-keel{fill:none;stroke:#071a23;stroke-width:3;stroke-linecap:round;opacity:.92}
+.map-vessel-deck{stroke:#c8dfe7;stroke-width:1.1;stroke-linejoin:round}
+.map-vessel-foredeck{fill:#abc3cc55;stroke:#c7dce3;stroke-width:.9}
+.map-vessel-cabin,.map-vessel-bridge,.map-vessel-aft{fill:#102a37;stroke:#b9d2dc;stroke-width:1.1;stroke-linejoin:round}
+.map-vessel-window{stroke:#d7f8ff;stroke-width:.65}
+.map-vessel-rail,.map-vessel-mast,.map-vessel-boom,.map-vessel-transducer,.map-vessel-wake{fill:none;stroke:#a8c6d1;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.map-vessel-boom{stroke:#86a8b5}.map-vessel-wake{stroke:color-mix(in srgb,var(--accent) 38%,transparent);stroke-width:1.2;opacity:.65}
+.map-vessel-radar{fill:#d3e7ed;stroke:#173643;stroke-width:1}.map-vessel-sensor{fill:var(--accent);filter:drop-shadow(0 0 5px var(--accent))}
+.map2-cross-track-swath{position:absolute;left:21px;right:21px;top:103px;height:106px;z-index:2;pointer-events:none;transform:rotate(-4deg);transform-origin:center 0;background:linear-gradient(90deg,transparent 1%,color-mix(in srgb,var(--accent) 12%,transparent) 18%,color-mix(in srgb,var(--accent) 30%,transparent) 50%,color-mix(in srgb,var(--accent) 12%,transparent) 82%,transparent 99%);clip-path:polygon(49.1% 0,50.9% 0,100% 100%,0 100%)}
+.map2-cross-track-swath:after{content:"";position:absolute;left:3%;right:3%;bottom:1px;height:1px;background:linear-gradient(90deg,transparent,var(--accent) 14%,var(--accent) 86%,transparent);box-shadow:0 0 11px color-mix(in srgb,var(--accent) 50%,transparent)}
+.map2-cross-track-swath i{position:absolute;top:0;left:50%;width:1px;height:100%;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 54%,transparent),color-mix(in srgb,var(--accent) 8%,transparent));transform-origin:top}
+.map2-cross-track-swath i:nth-child(1){transform:rotate(-41deg)}.map2-cross-track-swath i:nth-child(2){transform:rotate(-28deg)}.map2-cross-track-swath i:nth-child(3){transform:rotate(-14deg)}.map2-cross-track-swath i:nth-child(4){transform:rotate(0deg)}.map2-cross-track-swath i:nth-child(5){transform:rotate(14deg)}.map2-cross-track-swath i:nth-child(6){transform:rotate(28deg)}.map2-cross-track-swath i:nth-child(7){transform:rotate(41deg)}
+.map2-cross-track-label{position:absolute;right:10px;bottom:21px;z-index:4;color:#638692;font-size:6px;letter-spacing:.15em;text-transform:uppercase;opacity:.74}
+.map2-seafloor-refined{left:14px;right:14px;bottom:10px;height:30px;opacity:.84;z-index:1}
+.map2-seafloor-refined span{border-top-color:color-mix(in srgb,var(--accent) 31%,transparent)}
+.map2-vessel-refined:before{content:"";position:absolute;left:42px;right:37px;top:105px;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 42%,transparent),transparent);transform:rotate(-4deg);opacity:.55;z-index:3}
+@media(max-width:1180px){.map2-vessel-refined{width:300px;transform:scale(.95)}}
+@media(prefers-reduced-motion:reduce){.map2-vessel-refined .map2-vessel,.map2-cross-track-swath{transform:none!important}}
