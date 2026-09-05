@@ -13,11 +13,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from hydrosim.acquisition.aperture_weights import deterministic_aperture_weights
-from hydrosim.acquisition.beam_pattern import (
-    across_track_direction,
-    one_way_beam_pattern,
-    scan_across_track_beam_pattern,
-)
+from hydrosim.acquisition.beam_pattern import scan_across_track_beam_pattern
 from hydrosim.geometry import TransducerArray, Vector3, make_reference_mills_cross
 
 
@@ -186,38 +182,21 @@ def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
 
     array = _build_array(request)
     weights = deterministic_aperture_weights(array.element_count, request.weighting)
-    start = radians(request.scan_min_deg)
-    end = radians(request.scan_max_deg)
     scan = scan_across_track_beam_pattern(
         array=array,
         steering_angle_rad=0.0,
-        start_angle_rad=start,
-        end_angle_rad=end,
+        start_angle_rad=radians(request.scan_min_deg),
+        end_angle_rad=radians(request.scan_max_deg),
         sample_count=request.sample_count,
         frequency_hz=request.frequency_khz * 1e3,
         sound_speed_mps=request.sound_speed_mps,
         weights=weights,
     )
 
-    angles = tuple(float(sample.angle_rad) for sample in scan.samples)
-    responses = tuple(
-        one_way_beam_pattern(
-            array=array,
-            source_direction_array_frame=across_track_direction(angle),
-            steering_direction_array_frame=across_track_direction(0.0),
-            frequency_hz=request.frequency_khz * 1e3,
-            sound_speed_mps=request.sound_speed_mps,
-            weights=weights,
-        )
-        for angle in angles
-    )
-    angle_deg = tuple(degrees(angle) for angle in angles)
-    element_power = tuple(float(response.element_factor.power) for response in responses)
-    array_power = tuple(float(response.array_factor.normalized_power) for response in responses)
+    angle_deg = tuple(degrees(float(sample.angle_rad)) for sample in scan.samples)
+    element_power = tuple(float(sample.element_factor_power) for sample in scan.samples)
+    array_power = tuple(float(sample.array_factor_power) for sample in scan.samples)
     combined_power = tuple(float(sample.normalized_power) for sample in scan.samples)
-
-    # Wavelength is read from the canonical array-factor response, not recomputed here.
-    wavelength_m = float(responses[0].array_factor.wavelength_m)
     beamwidth = (
         None
         if scan.half_power_beamwidth_rad is None
@@ -227,7 +206,7 @@ def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
     tx, rx, eccentricity, eccentricity_magnitude_m = _eccentricity_geometry(request)
 
     return D6ArrayResponse(
-        wavelength_m=wavelength_m,
+        wavelength_m=float(scan.wavelength_m),
         physical_aperture_m=float(array.aperture_transverse),
         physical_aperture_longitudinal_m=float(array.aperture_longitudinal),
         physical_aperture_transverse_m=float(array.aperture_transverse),
