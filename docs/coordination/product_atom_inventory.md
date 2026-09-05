@@ -19,7 +19,7 @@ This file defines the denominator for HydroSIM's granular product-progress indic
 ## Product indicator
 
 **243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 101/243 ready (41.6%).**
+**Current atom indicator: 111/243 ready (45.7%).**
 
 Readiness counts learner-facing production behavior on `main`. The current conservative reconciliation includes only atom IDs explicitly evidenced by merged production work; unsupported or inferred behavior remains unready.
 
@@ -42,7 +42,7 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | PED-D15 | 7 | 3 | 10 | 0 |
 | PED-D16 | 7 | 4 | 11 | 0 |
 | PED-D17 | 9 | 5 | 14 | 6 |
-| PED-D18 | 7 | 4 | 11 | 0 |
+| PED-D18 | 7 | 4 | 11 | 10 |
 | P1 | 4 | 2 | 6 | 0 |
 | P2 | 4 | 2 | 6 | 0 |
 | P3 | 2 | 2 | 4 | 0 |
@@ -56,7 +56,7 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **101** |
+| **TOTAL** | **144** | **99** | **243** | **111** |
 
 ### Ready atom evidence for partially/newly reconciled submodules
 
@@ -66,6 +66,7 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 - **PED-D11 — 8/11:** `I03`, `I04`, `I05`, `I06`, `I07`, `O01`, `O02`, `O03`.
 - **PED-D12 — 5/8:** `I01`–`I04`, `O01`.
 - **PED-D17 — 6/14:** `I01`, `I05`, `I06`, `I09`, `O01`, `O02`.
+- **PED-D18 — 10/11:** `I01`–`I07`, `O01`–`O03`, integrated learner-facing on `main` through PR #252. `O04` remains unready.
 
 Existing complete ready baselines remain PED-D1, PED-D2, PED-D3, PED-D4, PED-D7 and PED-D8 (55 atoms total).
 
