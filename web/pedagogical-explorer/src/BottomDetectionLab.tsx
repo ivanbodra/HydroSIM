@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Languages, LocateFixed } from 'lucide-react';
+import { ArrowLeft, Languages, LocateFixed, RotateCcw } from 'lucide-react';
 
 type Language = 'en' | 'pt';
 type Method = 'amplitude_peak' | 'phase_zero_crossing';
@@ -21,8 +21,8 @@ type Response = {
 };
 
 const copy = {
-  en: { title:'Bottom Detection', intro:'Change the detector inputs and watch the selected echo move on the matched-filter trace.', back:'System Map', lang:'PT-BR', scenario:'Echo scenario', clean:'Single clear echo', late:'Later echo', double:'Competing echoes', delay:'TX delay', steering:'Steering angle', method:'Detection method', amp:'Amplitude peak', phase:'Phase zero crossing', trace:'Matched-filter magnitude', selected:'Selected detection', twtt:'TWTT', arrival:'Arrival offset', angle:'Detected angle', unsupported:'Not available in the canonical detector yet', intuition:'Physical intuition', insight:'The detector does not create a sounding; it selects a candidate echo and converts its lag into timing information.' },
-  pt: { title:'Detecção do Fundo', intro:'Altere as entradas do detector e observe o eco selecionado se deslocar no traço do filtro casado.', back:'Mapa do Sistema', lang:'EN', scenario:'Cenário de eco', clean:'Um eco nítido', late:'Eco mais tardio', double:'Ecos concorrentes', delay:'Atraso de TX', steering:'Ângulo de steering', method:'Método de detecção', amp:'Pico de amplitude', phase:'Cruzamento de fase por zero', trace:'Magnitude do filtro casado', selected:'Detecção selecionada', twtt:'TWTT', arrival:'Offset de chegada', angle:'Ângulo detectado', unsupported:'Ainda não disponível no detector canônico', intuition:'Intuição física', insight:'O detector não cria uma sondagem; ele seleciona um eco candidato e converte seu atraso em informação temporal.' }
+  en: { title:'Bottom Detection', intro:'Change the detector inputs and watch the selected echo move on the matched-filter trace.', back:'System Map', lang:'PT-BR', scenario:'Echo scenario', clean:'Single clear echo', late:'Later echo', double:'Competing echoes', delay:'TX delay', steering:'Steering angle', method:'Detection method', amp:'Amplitude peak', phase:'Phase zero crossing', trace:'Matched-filter magnitude', selected:'Selected detection', twtt:'TWTT', arrival:'Arrival offset', angle:'Detected angle', unsupported:'Not available in the canonical detector yet', intuition:'Physical intuition', insight:'The detector does not create a sounding; it selects a candidate echo and converts its lag into timing information.', reset:'Reset' },
+  pt: { title:'Detecção do Fundo', intro:'Altere as entradas do detector e observe o eco selecionado se deslocar no traço do filtro casado.', back:'Mapa do Sistema', lang:'EN', scenario:'Cenário de eco', clean:'Um eco nítido', late:'Eco mais tardio', double:'Ecos concorrentes', delay:'Atraso de TX', steering:'Ângulo de steering', method:'Método de detecção', amp:'Pico de amplitude', phase:'Cruzamento de fase por zero', trace:'Magnitude do filtro casado', selected:'Detecção selecionada', twtt:'TWTT', arrival:'Offset de chegada', angle:'Ângulo detectado', unsupported:'Ainda não disponível no detector canônico', intuition:'Intuição física', insight:'O detector não cria uma sondagem; ele seleciona um eco candidato e converte seu atraso em informação temporal.', reset:'Redefinir' }
 };
 
 const scenarios = {
@@ -50,6 +50,7 @@ export default function BottomDetectionLab({onBack}:{onBack:()=>void}) {
   },[scenario,txDelay,steering,method]);
   const maxMag=useMemo(()=>Math.max(...(data?.correlation.magnitude??[1]),1e-9),[data]);
   const selectedLag=data?.selected_detection?.peak_index!=null?data.correlation.lag_us[data.selected_detection.peak_index]:null;
+  const reset=()=>{setScenario('clean');setTxDelay(.2);setSteering(0);setMethod('amplitude_peak')};
   return <div className="d9-lab">
     <header className="d9-head"><button onClick={onBack}><ArrowLeft size={16}/>{t.back}</button><div><span>PED-D9 · ACQUISITION CHAIN</span><h1>{t.title}</h1><p>{t.intro}</p></div><button onClick={()=>setLanguage(language==='en'?'pt':'en')}><Languages size={16}/>{t.lang}</button></header>
     <main className="d9-layout">
@@ -58,6 +59,7 @@ export default function BottomDetectionLab({onBack}:{onBack:()=>void}) {
         <label>{t.delay}<strong>{txDelay.toFixed(2)} ms</strong><input type="range" min="0" max="2" step="0.05" value={txDelay} onChange={e=>setTxDelay(Number(e.target.value))}/></label>
         <label>{t.steering}<strong>{steering.toFixed(0)}°</strong><input type="range" min="-60" max="60" step="5" value={steering} onChange={e=>setSteering(Number(e.target.value))}/></label>
         <label>{t.method}<select value={method} onChange={e=>setMethod(e.target.value as Method)}><option value="amplitude_peak">{t.amp}</option><option value="phase_zero_crossing">{t.phase}</option></select></label>
+        <button className="reset" onClick={reset}><RotateCcw size={15}/>{t.reset}</button>
       </aside>
       <section className="d9-stage">
         <div className="d9-stage-title"><div><small>{t.trace}</small><strong>INPUT → DETECTION → TIMING</strong></div>{data?.selected_detection&&<div className="d9-selected"><LocateFixed size={16}/>{t.selected}</div>}</div>
