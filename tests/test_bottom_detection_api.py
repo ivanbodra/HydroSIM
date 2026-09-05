@@ -35,6 +35,49 @@ def test_d9_adapter_delegates_peak_detection_and_converts_units() -> None:
     assert response.correlation.lag_us == pytest.approx((-1000.0, 0.0, 1000.0, 2000.0, 3000.0, 4000.0))
 
 
+def test_d9_detection_window_restricts_peak_search_without_changing_trace() -> None:
+    response = prepare_d9_bottom_detection_response(
+        D9BottomDetectionRequest(
+            correlation_real=(0.0, 0.1, 0.9, 0.2, 0.7, 0.1),
+            reference_sample_count=1,
+            sample_rate_hz=1000.0,
+            detection_window_start_ms=3.0,
+            detection_window_end_ms=5.0,
+        )
+    )
+
+    detection = response.selected_detection
+    assert detection is not None
+    assert detection.peak_index == 4
+    assert detection.peak_lag_samples == 4
+    assert detection.arrival_offset_ms == pytest.approx(4.0)
+    assert response.correlation.magnitude == pytest.approx((0.0, 0.1, 0.9, 0.2, 0.7, 0.1))
+    assert response.metadata["detection_window_start_ms"] == pytest.approx(3.0)
+    assert response.metadata["detection_window_end_ms"] == pytest.approx(5.0)
+
+
+def test_d9_detection_window_rejects_invalid_or_empty_range() -> None:
+    with pytest.raises(ValueError, match="greater than or equal"):
+        D9BottomDetectionRequest(
+            correlation_real=(0.0, 1.0),
+            reference_sample_count=1,
+            sample_rate_hz=1000.0,
+            detection_window_start_ms=2.0,
+            detection_window_end_ms=1.0,
+        )
+
+    with pytest.raises(ValueError, match="does not include any"):
+        prepare_d9_bottom_detection_response(
+            D9BottomDetectionRequest(
+                correlation_real=(0.0, 1.0),
+                reference_sample_count=1,
+                sample_rate_hz=1000.0,
+                detection_window_start_ms=10.0,
+                detection_window_end_ms=20.0,
+            )
+        )
+
+
 def test_d9_adapter_reports_phase_detector_as_explicitly_unsupported() -> None:
     response = prepare_d9_bottom_detection_response(
         D9BottomDetectionRequest(
