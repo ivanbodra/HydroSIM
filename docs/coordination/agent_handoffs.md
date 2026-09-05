@@ -12,14 +12,40 @@ This mechanism is for concrete cross-agent needs only. It must not become a seco
 
 Use these identifiers in handoff issues:
 
-- `technical-lead` — project-level technical integration, sequencing across specialist outputs, integration readiness, dependency resolution, and deciding when work is ready to advance to the next vertical slice. The Technical Lead does not replace specialist ownership of scientific models, software implementation, independent validation, or interface/UX decisions.
+- `technical-lead` — project-level technical integration, sequencing across specialist outputs, integration readiness, dependency resolution, and deciding when work is ready to advance to the next vertical slice. The Technical Lead does not replace specialist ownership of scientific models, software implementation, independent validation, interface/UX decisions, or visual design.
 - `scientific-lead` — scientific model ownership, equations, assumptions, fidelity, references and scientific choices.
 - `software-engineering` — implementation architecture, code quality, APIs, numerical/computational robustness, testing, packaging, CI and performance.
 - `qa-scientific-validation` — independent scientific and computational validation, invariants, units, signs, frames, limits and reference-vs-implementation checks.
-- `interface-ux` — Didactic Explorer / Survey Simulator interaction design, information architecture, visualization behaviour and bilingual user-facing interface. Legacy or accidental `ux-ui` handoffs should be treated as addressed to `interface-ux` and normalized when touched.
+- `interface-ux` — production learner experience, interaction implementation, information architecture, visualization behaviour and bilingual user-facing interface. Legacy or accidental `ux-ui` handoffs should be treated as addressed to `interface-ux` and normalized when touched.
+- `concept-designer` — visual-design authority and upstream visual exploration for HydroSIM. Owns visual identity, composition, hierarchy, spatial presentation, visual effects and design-language improvements, while not changing scientific behaviour, canonical pedagogy, learner atom definitions or production API contracts.
 - `coordination-secretary` — cross-agent routing, queue hygiene and detection of unaddressed dependencies.
 
 New specialist agents may be added later, but their identifier must be documented here before use.
+
+## Design integration model
+
+Visual design is an explicit specialist stream rather than an informal UX side activity.
+
+- `concept-designer` may receive handoffs from `technical-lead`, `interface-ux` or another specialist when a concrete visual-design problem or opportunity exists.
+- The Technical Lead should preferentially route completed or functionally stable learner submodules to `concept-designer` for visual refinement when this can improve the product without competing with active functional implementation.
+- `concept-designer` is also free to identify and initiate worthwhile visual improvements without waiting for a handoff. It may create its own focused design branch/PR or send a handoff when integration or another specialist action is required.
+- Self-initiated design work should favor substantial learner-visible improvement over marginal polish and should normally start from recent `main` state.
+- Visual work on completed/stable submodules should be preferred when it reduces interference with active UX/software work. Shared shell, navigation and global styling remain valid design areas but require tighter reconciliation because they affect concurrently changing product surfaces.
+- Large long-lived production branches should be avoided. Prefer focused visual deltas that can be reconciled against current `main` without carrying stale science, pedagogy, routing or application state.
+- `concepts/pedagogical-simulator/` remains the preserved concept/design exploration baseline. Production-ready visual deltas may target `web/pedagogical-explorer/` when their scope is presentation/design only and current production behaviour is preserved.
+- `interface-ux` remains responsible for the complete production learner experience. It may accept, adapt or integrate Designer output as needed for production compatibility, but should not silently discard an approved visual direction merely because implementation is inconvenient.
+- Scientific values, equations, frames, units and physical behaviour remain owned by the Scientific Core/Scientific Lead. Learning objectives, required learner inputs/outputs and pedagogical sequence remain governed by the canonical pedagogical plan. Design must not redefine either layer.
+- Technical difficulty is not authorization for redesign. If a visual direction creates a concrete implementation blocker, route that blocker to the responsible specialist or Technical Lead rather than changing science or pedagogy to fit the design.
+
+The intended parallel flow is:
+
+```text
+science / engineering / UX functional delivery -> stable learner submodule
+                                                -> concept-designer visual refinement
+                                                -> focused production integration
+```
+
+This is not a release gate: functional development of later submodules continues while the Designer improves stable ones.
 
 ## Transport
 
@@ -91,6 +117,12 @@ Before finishing meaningful HydroSIM work, each agent should ask:
 
 If yes, create a handoff issue immediately.
 
+For visual opportunities, agents may also ask:
+
+> Is this learner surface functionally stable enough that a focused Concept Designer pass could materially improve comprehension, spatial intuition or HydroSIM visual identity without reopening science or pedagogy?
+
+If yes, a `TO:concept-designer` handoff is appropriate. Do not create one for routine cosmetic polish or when equivalent design work is already active.
+
 Do not create handoffs for:
 
 - routine status updates;
@@ -137,9 +169,9 @@ The coordination secretary should search all open handoff issues and identify st
 
 ## Polling policy
 
-- Each specialist agent performs a handoff check every 2 hours when an automation slot is allocated to that specialist.
-- Specialists without a dedicated automation slot, such as QA when automation capacity is constrained, are activated manually by the project owner when a concrete handoff requires their attention.
-- The coordination secretary performs an independent queue-health check every 4 hours. When a concrete open handoff to a manually activated specialist appears, the Secretary must report that specific handoff to the project owner with enough context to forward it. The Secretary must not attempt the specialist work itself.
+- Each specialist agent performs a handoff check when its own automation or active work cycle runs. Automation schedules remain local to each agent conversation and are not coordinated through other agents' automations.
+- Specialists without a dedicated automation slot are activated manually by the project owner when a concrete handoff requires their attention.
+- The coordination secretary performs an independent queue-health check on its configured cadence. When a concrete open handoff to a manually activated specialist appears, the Secretary must report that specific handoff to the project owner with enough context to forward it. The Secretary must not attempt the specialist work itself.
 - Polling is a safety net. Agents should create and answer handoffs immediately when they are already active and the dependency is known.
 
 ## Coordination secretary responsibilities
@@ -147,15 +179,15 @@ The coordination secretary should search all open handoff issues and identify st
 The coordination secretary does not replace specialist ownership. Its periodic review should:
 
 1. list open handoff issues;
-2. verify that `FROM` and `TO` are valid and explicit;
+2. verify that `FROM` and `TO` are valid and explicit, including `concept-designer`;
 3. detect unanswered or apparently abandoned handoffs;
 4. detect requests sent to the wrong specialist when this is clear from project governance;
 5. flag blockers that require a new handoff;
 6. surface pending handoffs for specialists without an active polling automation to the project owner for manual forwarding;
 7. avoid duplicating issues that already exist;
-8. leave scientific, engineering, validation and interface decisions to the responsible specialist.
+8. leave scientific, engineering, validation, interface and visual-design decisions to the responsible specialist.
 
-A handoff addressed to `coordination-secretary` is actionable work for the Secretary, not merely an item to observe. When the requested action is within coordination scope, the Secretary should perform it promptly, reply with evidence in the Issue, and close it when its completion condition is satisfied. When it requires a specialist decision, the Secretary routes or escalates it instead of deciding it.
+A handoff addressed to `coordination-secretary` is actionable work for the Secretary, not merely an item to observe. When the requested action is within coordination scope, the Secretary should perform it promptly, reply with evidence in the Issue, and close it when the completion condition is satisfied. When it requires a specialist decision, the Secretary routes or escalates it instead of deciding it.
 
 ### Closure-effect verification
 
@@ -183,4 +215,5 @@ This protocol inherits HydroSIM governance:
 - User-facing software supports English and Portuguese.
 - Scientific decisions remain traceable to references and validation.
 - Agents must respect specialist boundaries and avoid parallel specifications.
+- Design is a first-class specialist stream, but does not override scientific or pedagogical authority.
 - Coordination work must reduce a concrete project risk or enable progress; coordination for its own sake is not a project objective.
