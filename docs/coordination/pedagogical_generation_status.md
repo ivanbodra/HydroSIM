@@ -23,7 +23,7 @@ Ready submodules:
 - `PED-D8` — Echosounders — SBES vs MBES. Production bilingual learner experience integrated under `web/pedagogical-explorer/` through PR #192 / merge `176d4331ff5e560cbdf498a6540b9269d88de397`, consuming the canonical echosounders API and preserving the Concept baseline.
 - `PED-D10` — Multisector MBES. Complete inventoried learner-facing slice is integrated bilingually on `main` through PR #221, consuming the canonical Python multisector capability with focused production validation; all 10 inventoried learner atoms are ready.
 
-**Atom indicator: 101/243 ready learner atoms (41.6%).**  
+**Atom indicator: 111/243 ready learner atoms (45.7%).**  
 Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
 
 The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Enabling work is never counted as product atoms.
@@ -49,7 +49,7 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 
 - `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8` and `PED-D10` are complete and no longer pipeline work.
 - `PED-D9`, `PED-D11`, `PED-D12` and `PED-D17` have partial learner-facing production readiness recorded atom-by-atom in `product_atom_inventory.md`; their remaining behavior must not be inferred from backend or documentation alone.
-- `PED-D18` has a canonical API bridge in active integration work; it does not count until learner-facing production behavior reaches `main`.
+- `PED-D18` has 10/11 learner atoms ready on `main` through PR #252 (`I01`–`I07`, `O01`–`O03`). `O04` remains unready, so D18 is partial learner-facing production work and does not count as a complete submodule.
 - Keep the next independent specialist slice in parallel when a concrete unblocked dependency exists; do not create speculative horizontal inventory.
 
 ## Design / implementation boundary
