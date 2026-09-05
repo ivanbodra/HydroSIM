@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Check, FlaskConical, GraduationCap, Layers3, LockKeyhole, Radar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { pedagogicalTracks, type Experience, type TrackKey } from './pedagogical-plan';
+import './map-vessel-refinement.css';
 
 type Family='acoustics'|'propagation'|'arrays'|'platform'|'integration';
 const trackIcon:Record<TrackKey,typeof GraduationCap>={didactic:GraduationCap,patch:FlaskConical,acquisition:Radar};
@@ -18,7 +19,40 @@ const familyMeta:Record<Family,{title:string;kicker:string}>={
 const didacticFamilies:Family[]=['acoustics','propagation','arrays','platform','integration'];
 const visibleDidactic=(experiences:Experience[])=>experiences.filter(e=>e.id!=='D5');
 
-function SurveyVessel(){return <div className="map2-vessel-scene"><motion.div className="map2-vessel" animate={{y:[0,-4,0],rotate:[0,.35,0]}} transition={{duration:5,repeat:Infinity,ease:'easeInOut'}}><svg viewBox="0 0 280 120" role="presentation"><path className="vessel-hull" d="M28 72h225l-24 27H61L28 72Z"/><path className="vessel-deck" d="M83 72V48h91l22 24H83Z"/><path className="vessel-bridge" d="M118 48V28h48l15 20h-63Z"/><path className="vessel-window" d="M128 34h15v9h-15zm21 0h13l7 9h-20z"/><path className="vessel-mast" d="M143 28V10m-12 9h24M143 10l8 9h-16l8-9Z"/><path className="vessel-rail" d="M71 66h135M93 57h-18m136 9h18"/><circle className="vessel-sensor" cx="143" cy="8" r="3"/></svg></motion.div><div className="map2-waterline"/><motion.div className="map2-sonar-beam" animate={{opacity:[.42,.78,.42],scaleX:[.94,1.04,.94]}} transition={{duration:3.4,repeat:Infinity,ease:'easeInOut'}}/><div className="map2-seafloor"><span/><span/><span/><span/><span/><span/></div></div>}
+function SurveyVessel(){
+ return <div className="map2-vessel-scene map2-vessel-refined">
+  <motion.div className="map2-vessel map2-vessel-platform" animate={{y:[0,-3,0],rotate:[-.28,.28,-.28]}} transition={{duration:6.2,repeat:Infinity,ease:'easeInOut'}}>
+   <svg viewBox="0 0 340 190" role="presentation">
+    <defs>
+     <linearGradient id="mapHull" x1="0" x2="1"><stop offset="0" stopColor="#173645"/><stop offset=".52" stopColor="#244d5e"/><stop offset="1" stopColor="#102b38"/></linearGradient>
+     <linearGradient id="mapDeck" x1="0" x2="1"><stop offset="0" stopColor="#d8e7ec" stopOpacity=".76"/><stop offset="1" stopColor="#7da4b2" stopOpacity=".42"/></linearGradient>
+     <linearGradient id="mapGlass" x1="0" x2="1"><stop offset="0" stopColor="#70dfee" stopOpacity=".35"/><stop offset="1" stopColor="#baf4ff" stopOpacity=".78"/></linearGradient>
+    </defs>
+    <path className="map-vessel-shadow" d="M31 102 C70 88 236 77 310 92 C323 96 326 103 310 108 C227 129 84 132 33 116 C20 112 19 107 31 102Z"/>
+    <path className="map-vessel-hull" fill="url(#mapHull)" d="M35 98 L276 81 L322 99 L279 119 L67 128 L27 112 Z"/>
+    <path className="map-vessel-keel" d="M45 116 C115 127 230 122 286 111"/>
+    <path className="map-vessel-deck" fill="url(#mapDeck)" d="M79 96 L237 85 L281 99 L236 110 L81 116 L49 107 Z"/>
+    <path className="map-vessel-foredeck" d="M239 88 L283 99 L238 108 Z"/>
+    <path className="map-vessel-cabin" d="M124 90 L190 83 L219 92 L196 101 L126 106 L103 99 Z"/>
+    <path className="map-vessel-bridge" d="M145 82 L188 77 L207 85 L193 92 L144 97 L129 90 Z"/>
+    <path className="map-vessel-window" fill="url(#mapGlass)" d="M149 83 L171 81 L171 89 L145 92 Z M176 80 L188 79 L200 85 L177 89 Z"/>
+    <path className="map-vessel-aft" d="M75 96 L107 92 L118 101 L82 108 L57 105 Z"/>
+    <path className="map-vessel-rail" d="M63 98 L235 85 M72 116 L235 108 M244 86 L282 97"/>
+    <path className="map-vessel-mast" d="M171 79 L169 57 M158 66 L181 64 M169 57 L178 51"/>
+    <path className="map-vessel-boom" d="M104 91 L89 75 L72 72 M89 75 L96 91"/>
+    <circle className="map-vessel-radar" cx="181" cy="51" r="4"/>
+    <circle className="map-vessel-sensor" cx="169" cy="56" r="3"/>
+    <path className="map-vessel-transducer" d="M170 116 L171 125 M161 126 L181 124"/>
+    <path className="map-vessel-wake" d="M31 107 C6 107 -2 114 -21 120 M36 115 C9 119 -3 129 -23 139"/>
+   </svg>
+  </motion.div>
+  <motion.div className="map2-cross-track-swath" animate={{opacity:[.28,.66,.28]}} transition={{duration:3.8,repeat:Infinity,ease:'easeInOut'}} aria-hidden="true">
+   <i/><i/><i/><i/><i/><i/><i/>
+  </motion.div>
+  <div className="map2-cross-track-label" aria-hidden="true">cross-track swath</div>
+  <div className="map2-seafloor map2-seafloor-refined"><span/><span/><span/><span/><span/><span/></div>
+ </div>
+}
 
 export default function CurriculumMap({onOpenLegacy:_onOpenLegacy}:{onOpenLegacy:()=>void}){
  const[track,setTrack]=useState<TrackKey>('didactic');
