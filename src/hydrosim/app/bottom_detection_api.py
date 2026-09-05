@@ -11,7 +11,7 @@ import math
 from typing import Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from hydrosim.acquisition import DetectionMethod, detect_bottom_from_matched_filter
 
@@ -29,6 +29,18 @@ class D9BottomDetectionRequest(BaseModel):
     parent_beam_index: int | None = Field(default=None, ge=0)
     steering_across_track_angle_deg: float | None = None
     detection_method: DetectionMethod = "amplitude_peak"
+    detection_window_start_ms: float | None = None
+    detection_window_end_ms: float | None = None
+
+    @model_validator(mode="after")
+    def validate_detection_window(self) -> "D9BottomDetectionRequest":
+        if (
+            self.detection_window_start_ms is not None
+            and self.detection_window_end_ms is not None
+            and self.detection_window_end_ms < self.detection_window_start_ms
+        ):
+            raise ValueError("detection_window_end_ms must be greater than or equal to detection_window_start_ms")
+        return self
 
 
 class D9CorrelationTrace(BaseModel):
@@ -92,6 +104,33 @@ def _trace(
     )
 
 
+def _apply_detection_window(
+    correlation: np.ndarray,
+    *,
+    reference_sample_count: int,
+    sample_rate_hz: float,
+    start_ms: float | None,
+    end_ms: float | None,
+) -> np.ndarray:
+    """Restrict the detector search domain without changing canonical detection math."""
+
+    if start_ms is None and end_ms is None:
+        return correlation
+    lag_ms = (
+        np.arange(correlation.size, dtype=np.float64) - (reference_sample_count - 1)
+    ) * 1e3 / sample_rate_hz
+    mask = np.ones(correlation.size, dtype=bool)
+    if start_ms is not None:
+        mask &= lag_ms >= start_ms
+    if end_ms is not None:
+        mask &= lag_ms <= end_ms
+    if not np.any(mask):
+        raise ValueError("detection window does not include any correlation samples")
+    restricted = np.zeros_like(correlation)
+    restricted[mask] = correlation[mask]
+    return restricted
+
+
 def _candidate_from_detection(detection) -> D9DetectionCandidate:
     angle_deg = None
     if detection.detected_across_track_angle_rad is not None:
@@ -125,6 +164,10 @@ def prepare_d9_bottom_detection_response(
         "sample_rate_hz": request.sample_rate_hz,
         "state_semantics": "Configured input; Derived detection",
     }
+    if request.detection_window_start_ms is not None:
+        metadata["detection_window_start_ms"] = request.detection_window_start_ms
+    if request.detection_window_end_ms is not None:
+        metadata["detection_window_end_ms"] = request.detection_window_end_ms
 
     if request.detection_method != "amplitude_peak":
         return D9BottomDetectionResponse(
@@ -143,8 +186,15 @@ def prepare_d9_bottom_detection_response(
     if request.steering_across_track_angle_deg is not None:
         steering_rad = math.radians(request.steering_across_track_angle_deg)
 
-    detection = detect_bottom_from_matched_filter(
+    detector_correlation = _apply_detection_window(
         correlation,
+        reference_sample_count=request.reference_sample_count,
+        sample_rate_hz=request.sample_rate_hz,
+        start_ms=request.detection_window_start_ms,
+        end_ms=request.detection_window_end_ms,
+    )
+    detection = detect_bottom_from_matched_filter(
+        detector_correlation,
         reference_sample_count=request.reference_sample_count,
         sample_rate_hz=request.sample_rate_hz,
         tx_delay_seconds=request.tx_delay_ms * 1e-3,
