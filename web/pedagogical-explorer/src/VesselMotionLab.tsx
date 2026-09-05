@@ -23,6 +23,7 @@ const copy = {
     heading: 'Heading', speed: 'Speed', duration: 'Duration', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Period',
     trajectory: 'Vessel trajectory', attitude: 'Attitude through time', north: 'North', east: 'East', up: 'Up', current: 'Final sample',
     attitudeScale: 'Shared scale: ±20°', heaveScale: 'Scale: ±3 m',
+    error: 'The motion view could not be updated. Adjust the controls or try again.',
     help: {
       roll: 'Roll is rotation about the vessel longitudinal axis.',
       pitch: 'Pitch is rotation about the vessel transverse axis.',
@@ -35,6 +36,7 @@ const copy = {
     heading: 'Heading', speed: 'Velocidade', duration: 'Duração', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Período',
     trajectory: 'Trajetória da embarcação', attitude: 'Atitude ao longo do tempo', north: 'Norte', east: 'Leste', up: 'Cima', current: 'Amostra final',
     attitudeScale: 'Escala comum: ±20°', heaveScale: 'Escala: ±3 m',
+    error: 'Não foi possível atualizar a visualização do movimento. Ajuste os controles ou tente novamente.',
     help: {
       roll: 'Roll é a rotação em torno do eixo longitudinal da embarcação.',
       pitch: 'Pitch é a rotação em torno do eixo transversal da embarcação.',
@@ -71,12 +73,12 @@ export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
   const [heaveAmp, setHeaveAmp] = useState(DEFAULTS.heaveAmp);
   const [heavePeriod, setHeavePeriod] = useState(DEFAULTS.heavePeriod);
   const [data, setData] = useState<Response | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(false);
   const t = copy[lang];
 
   useEffect(() => {
     const ac = new AbortController();
-    setError('');
+    setError(false);
     fetch('/api/v1/pedagogical/vessel-motion', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ac.signal,
       body: JSON.stringify({
@@ -85,9 +87,9 @@ export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
         heave: { amplitude_m: heaveAmp, period_seconds: heavePeriod, phase_deg: 0 },
       }),
     }).then(async r => {
-      if (!r.ok) throw new Error(await r.text());
+      if (!r.ok) throw new Error('motion request rejected');
       return r.json() as Promise<Response>;
-    }).then(setData).catch(e => { if (e.name !== 'AbortError') setError(String(e)); });
+    }).then(setData).catch(e => { if (e.name !== 'AbortError') setError(true); });
     return () => ac.abort();
   }, [heading, speed, duration, roll, pitch, yaw, heaveAmp, heavePeriod]);
 
@@ -134,7 +136,7 @@ export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
         <button type="button" onClick={reset}><RotateCcw size={16} />{t.reset}</button>
       </aside>
       <section className="d12-stage">
-        {error ? <div className="d12-error">{error}</div> : <>
+        {error ? <div className="d12-error" role="status">{t.error}</div> : <>
           <div className="d12-panels">
             <article>
               <div className="d12-title"><Ship size={17} /><span>{t.trajectory}</span></div>
