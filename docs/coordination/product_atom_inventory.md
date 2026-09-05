@@ -19,7 +19,7 @@ This file defines the denominator for HydroSIM's granular product-progress indic
 ## Product indicator
 
 **243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 112/243 ready (46.1%).**
+**Current atom indicator: 122/243 ready (50.2%).**
 
 Readiness counts learner-facing production behavior on `main`. The current conservative reconciliation includes only atom IDs explicitly evidenced by merged production work; unsupported or inferred behavior remains unready.
 
@@ -35,14 +35,14 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | PED-D8 | 6 | 5 | 11 | 11 |
 | PED-D9 | 6 | 5 | 11 | 5 |
 | PED-D10 | 6 | 4 | 10 | 10 |
-| PED-D11 | 7 | 4 | 11 | 8 |
+| PED-D11 | 7 | 4 | 11 | 9 |
 | PED-D12 | 4 | 4 | 8 | 5 |
 | PED-D13 | 6 | 4 | 10 | 0 |
-| PED-D14 | 5 | 4 | 9 | 0 |
-| PED-D15 | 7 | 3 | 10 | 0 |
+| PED-D14 | 5 | 4 | 9 | 4 |
+| PED-D15 | 7 | 3 | 10 | 3 |
 | PED-D16 | 7 | 4 | 11 | 0 |
-| PED-D17 | 9 | 5 | 14 | 7 |
-| PED-D18 | 7 | 4 | 11 | 10 |
+| PED-D17 | 9 | 5 | 14 | 8 |
+| PED-D18 | 7 | 4 | 11 | 11 |
 | P1 | 4 | 2 | 6 | 0 |
 | P2 | 4 | 2 | 6 | 0 |
 | P3 | 2 | 2 | 4 | 0 |
@@ -56,19 +56,21 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **112** |
+| **TOTAL** | **144** | **99** | **243** | **122** |
 
 ### Ready atom evidence for partially/newly reconciled submodules
 
 - **PED-D6 — 12/12:** `I01`–`I08`, `O01`–`O04`. `I06` eccentricity is learner-operable on `main` through PR #236, with RX X/Y/Z controls and canonical TX→RX vector/magnitude readout.
 - **PED-D9 — 5/11:** `I01`, `I06`, `O01`, `O02`, `O04`.
 - **PED-D10 — 10/10:** `I01`–`I06`, `O01`–`O04`.
-- **PED-D11 — 8/11:** `I03`, `I04`, `I05`, `I06`, `I07`, `O01`, `O02`, `O03`.
+- **PED-D11 — 9/11:** `I03`, `I04`, `I05`, `I06`, `I07`, `O01`, `O02`, `O03`, `O04`. PR #266 integrates the learner-facing configuration readout/file representation.
 - **PED-D12 — 5/8:** `I01`–`I04`, `O01`.
-- **PED-D17 — 7/14:** `I01`, `I05`, `I06`, `I09`, `O01`, `O02`, `O05`. PR #254 adds a learner-operable canonical TX-sequence trade-off to the existing multisector/detection configuration atom and exposes the resulting transmit grouping/event-span comparison; the selector is covered by already-ready `I09`, while the newly evidenced distinct consequence closes `O05`.
-- **PED-D18 — 10/11:** `I01`–`I07`, `O01`–`O03`, integrated learner-facing on `main` through PR #252. `O04` remains unready.
+- **PED-D14 — 4/9:** `I02`, `I03`, `O01`, `O02`. PR #278 integrates learner-operable sample/timestamp and latency controls with linked ping/sensor timeline and synchronization/alignment consequence. Sensor rate, vessel speed, sensor/stream selection, explicit position/attitude-to-ping association, and temporal-to-spatial error remain unready pending the canonical dependency tracked from #277/#284.
+- **PED-D15 — 3/10:** `O01`–`O03`, integrated learner-facing through PR #269.
+- **PED-D17 — 8/14:** current learner-facing readiness includes the established controls/consequences through PR #254 plus the explicit sounding-pattern consequence integrated by PR #273. No additional unsupported survey-product behavior is inferred.
+- **PED-D18 — 11/11:** `I01`–`I07`, `O01`–`O04`, with the final sounding-uncertainty consequence integrated through PR #262.
 
-Existing complete ready baselines remain PED-D1, PED-D2, PED-D3, PED-D4, PED-D7 and PED-D8 (55 atoms total).
+Existing complete ready baselines remain PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D10 and PED-D18.
 
 ## Atom definitions
 
