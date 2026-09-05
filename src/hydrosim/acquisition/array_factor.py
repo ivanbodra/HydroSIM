@@ -81,6 +81,7 @@ def array_factor(
     frequency_hz: float,
     sound_speed_mps: float,
     weights: Sequence[complex] | None = None,
+    include_element_contributions: bool = True,
 ) -> ArrayFactorResponse:
     """Evaluate the ideal far-field narrowband array factor.
 
@@ -92,6 +93,10 @@ def array_factor(
     weights. Therefore a perfectly phase-aligned set of contributions has normalized
     magnitude 1.0 regardless of overall weight scale. This quantity is a normalized
     one-way voltage/pressure-like array response, not absolute acoustic gain.
+
+    Dense angular scans may set ``include_element_contributions=False`` when only
+    the coherent response is needed. This preserves identical physics while avoiding
+    creation of one Pydantic contribution object per element per angular sample.
     """
 
     frequency = float(frequency_hz)
@@ -130,18 +135,19 @@ def array_factor(
         phase = k * _dot(delta, element.position)
         contribution = weight * exp(1j * phase)
         total += contribution
-        contributions.append(
-            ArrayFactorElementContribution(
-                index_x=element.index_x,
-                index_y=element.index_y,
-                position_array_frame=element.position,
-                weight_real=weight.real,
-                weight_imag=weight.imag,
-                residual_phase_rad=phase,
-                contribution_real=contribution.real,
-                contribution_imag=contribution.imag,
+        if include_element_contributions:
+            contributions.append(
+                ArrayFactorElementContribution(
+                    index_x=element.index_x,
+                    index_y=element.index_y,
+                    position_array_frame=element.position,
+                    weight_real=weight.real,
+                    weight_imag=weight.imag,
+                    residual_phase_rad=phase,
+                    contribution_real=contribution.real,
+                    contribution_imag=contribution.imag,
+                )
             )
-        )
 
     magnitude = abs(total) / normalization
     # Protect the Pydantic bound against insignificant floating overshoot at unity.

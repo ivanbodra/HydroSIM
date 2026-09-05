@@ -1,4 +1,4 @@
-from math import isclose, radians, sin, cos, sqrt
+from math import cos, isclose, radians, sin, sqrt
 
 from hydrosim.acquisition import array_factor
 from hydrosim.geometry import TransducerArray, Vector3
@@ -37,9 +37,6 @@ def test_matched_source_and_steering_give_unity_response():
 
 
 def test_two_elements_half_wavelength_match_closed_form_at_thirty_degrees():
-    # lambda = 0.01 m and d=lambda/2. Source +30 deg, steering 0 deg gives
-    # inter-element residual phase magnitude pi/2. For two equal elements the
-    # normalized amplitude is |cos(Delta phi / 2)| = sqrt(2)/2, power = 0.5.
     result = array_factor(
         array=_two_element_array(spacing_m=0.005),
         source_direction_array_frame=_direction(30.0),
@@ -53,8 +50,6 @@ def test_two_elements_half_wavelength_match_closed_form_at_thirty_degrees():
 
 
 def test_opposite_thirty_degree_directions_cancel_for_half_wavelength_pair():
-    # u_y(+30)=-0.5 and u_y(-30)=+0.5, so Delta u_y=-1. With d=lambda/2,
-    # the inter-element residual phase is pi and equal elements cancel.
     result = array_factor(
         array=_two_element_array(spacing_m=0.005),
         source_direction_array_frame=_direction(30.0),
@@ -68,8 +63,6 @@ def test_opposite_thirty_degree_directions_cancel_for_half_wavelength_pair():
 
 
 def test_one_wavelength_spacing_creates_visible_grating_lobe_at_endfire():
-    # With d=lambda and broadside steering, source +90 deg gives an inter-element
-    # phase difference of 2*pi. Both elements therefore add coherently again.
     result = array_factor(
         array=_two_element_array(spacing_m=0.01),
         source_direction_array_frame=_direction(90.0),
@@ -94,3 +87,21 @@ def test_complex_weights_are_normalized_by_sum_of_weight_magnitudes():
 
     assert isclose(result.normalization, 3.0, abs_tol=1e-15)
     assert isclose(result.normalized_magnitude, 1.0, abs_tol=1e-12)
+
+
+def test_array_factor_can_skip_detail_objects_without_changing_response():
+    kwargs = dict(
+        array=_two_element_array(spacing_m=0.005),
+        source_direction_array_frame=_direction(25.0),
+        steering_direction_array_frame=_direction(0.0),
+        frequency_hz=150_000.0,
+        sound_speed_mps=1500.0,
+    )
+    detailed = array_factor(**kwargs)
+    compact = array_factor(**kwargs, include_element_contributions=False)
+
+    assert len(detailed.element_contributions) == 2
+    assert compact.element_contributions == ()
+    assert compact.coherent_real == detailed.coherent_real
+    assert compact.coherent_imag == detailed.coherent_imag
+    assert compact.normalized_power == detailed.normalized_power

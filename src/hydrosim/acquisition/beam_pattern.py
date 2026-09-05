@@ -45,6 +45,8 @@ class AcrossTrackBeamPatternSample(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     angle_rad: FiniteFloat
+    element_factor_power: FiniteFloat = Field(ge=0.0)
+    array_factor_power: FiniteFloat = Field(ge=0.0)
     normalized_amplitude: FiniteFloat = Field(ge=0.0)
     normalized_power: FiniteFloat = Field(ge=0.0)
 
@@ -58,6 +60,7 @@ class AcrossTrackBeamPatternScan(BaseModel):
     steering_angle_rad: FiniteFloat
     frequency_hz: FiniteFloat = Field(gt=0.0)
     sound_speed_mps: FiniteFloat = Field(gt=0.0)
+    wavelength_m: FiniteFloat = Field(gt=0.0)
     samples: tuple[AcrossTrackBeamPatternSample, ...]
     peak_angle_rad: FiniteFloat
     peak_power: FiniteFloat = Field(ge=0.0)
@@ -81,6 +84,7 @@ def one_way_beam_pattern(
     frequency_hz: float,
     sound_speed_mps: float,
     weights: Sequence[complex] | None = None,
+    include_element_contributions: bool = True,
 ) -> OneWayBeamPatternResponse:
     """Combine rectangular element directivity and spatial array factor.
 
@@ -103,6 +107,7 @@ def one_way_beam_pattern(
         frequency_hz=frequency_hz,
         sound_speed_mps=sound_speed_mps,
         weights=weights,
+        include_element_contributions=include_element_contributions,
     )
 
     field = complex(spatial.coherent_real, spatial.coherent_imag) / float(spatial.normalization)
@@ -146,10 +151,10 @@ def scan_across_track_beam_pattern(
 ) -> AcrossTrackBeamPatternScan:
     """Scan a one-way beam pattern and estimate the local -3 dB beamwidth.
 
-    The half-power crossings are found on the first crossings to either side of
-    the sampled peak and linearly interpolated between angular samples. If either
-    crossing lies outside the requested scan interval, the beamwidth is reported
-    as unavailable rather than extrapolated.
+    The scan keeps the element-factor and array-factor powers needed by learner
+    views, while suppressing per-element contribution objects that are not consumed
+    by an angular scan. The underlying coherent sum and physical response are
+    unchanged.
     """
 
     if sample_count < 3:
@@ -162,6 +167,7 @@ def scan_across_track_beam_pattern(
     steering = across_track_direction(steering_angle_rad)
     step = (end - start) / (sample_count - 1)
     samples: list[AcrossTrackBeamPatternSample] = []
+    wavelength_m: float | None = None
     for index in range(sample_count):
         angle = start + index * step
         response = one_way_beam_pattern(
@@ -171,10 +177,15 @@ def scan_across_track_beam_pattern(
             frequency_hz=frequency_hz,
             sound_speed_mps=sound_speed_mps,
             weights=weights,
+            include_element_contributions=False,
         )
+        if wavelength_m is None:
+            wavelength_m = float(response.array_factor.wavelength_m)
         samples.append(
             AcrossTrackBeamPatternSample(
                 angle_rad=angle,
+                element_factor_power=float(response.element_factor.power),
+                array_factor_power=float(response.array_factor.normalized_power),
                 normalized_amplitude=response.normalized_amplitude,
                 normalized_power=response.normalized_power,
             )
@@ -213,6 +224,7 @@ def scan_across_track_beam_pattern(
         steering_angle_rad=steering_angle_rad,
         frequency_hz=frequency_hz,
         sound_speed_mps=sound_speed_mps,
+        wavelength_m=float(wavelength_m),
         samples=tuple(samples),
         peak_angle_rad=peak.angle_rad,
         peak_power=peak.normalized_power,
