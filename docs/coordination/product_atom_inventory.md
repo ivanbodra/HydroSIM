@@ -19,7 +19,7 @@ This file defines the denominator for HydroSIM's granular product-progress indic
 ## Product indicator
 
 **243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 122/243 ready (50.2%).**
+**Current atom indicator: 129/243 ready (53.1%).**
 
 Readiness counts learner-facing production behavior on `main`. The current conservative reconciliation includes only atom IDs explicitly evidenced by merged production work; unsupported or inferred behavior remains unready.
 
@@ -39,7 +39,7 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | PED-D12 | 4 | 4 | 8 | 5 |
 | PED-D13 | 6 | 4 | 10 | 0 |
 | PED-D14 | 5 | 4 | 9 | 4 |
-| PED-D15 | 7 | 3 | 10 | 3 |
+| PED-D15 | 7 | 3 | 10 | 10 |
 | PED-D16 | 7 | 4 | 11 | 0 |
 | PED-D17 | 9 | 5 | 14 | 8 |
 | PED-D18 | 7 | 4 | 11 | 11 |
@@ -56,7 +56,7 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **122** |
+| **TOTAL** | **144** | **99** | **243** | **129** |
 
 ### Ready atom evidence for partially/newly reconciled submodules
 
@@ -66,11 +66,11 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 - **PED-D11 — 9/11:** `I03`, `I04`, `I05`, `I06`, `I07`, `O01`, `O02`, `O03`, `O04`. PR #266 integrates the learner-facing configuration readout/file representation.
 - **PED-D12 — 5/8:** `I01`–`I04`, `O01`.
 - **PED-D14 — 4/9:** `I02`, `I03`, `O01`, `O02`. PR #278 integrates learner-operable sample/timestamp and latency controls with linked ping/sensor timeline and synchronization/alignment consequence. Sensor rate, vessel speed, sensor/stream selection, explicit position/attitude-to-ping association, and temporal-to-spatial error remain unready pending the canonical dependency tracked from #277/#284.
-- **PED-D15 — 3/10:** `O01`–`O03`, integrated learner-facing through PR #269.
+- **PED-D15 — 10/10:** `I01`–`I07`, `O01`–`O03`. PR #269 integrated the three sounding-formation outputs; PR #291 completes the seven learner-operable inputs (TWTT/range scenario, beam angle, position, attitude, lever arms, sound speed/SVP control, and timing/configuration) through the canonical sounding-formation API.
 - **PED-D17 — 8/14:** current learner-facing readiness includes the established controls/consequences through PR #254 plus the explicit sounding-pattern consequence integrated by PR #273. No additional unsupported survey-product behavior is inferred.
 - **PED-D18 — 11/11:** `I01`–`I07`, `O01`–`O04`, with the final sounding-uncertainty consequence integrated through PR #262.
 
-Existing complete ready baselines remain PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D10 and PED-D18.
+Existing complete ready baselines remain PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D10, PED-D15 and PED-D18.
 
 ## Atom definitions
 
