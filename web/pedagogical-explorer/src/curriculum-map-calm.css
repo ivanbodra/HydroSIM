@@ -1,0 +1,38 @@
+/* Presentation-only refinement for the learner map.
+   Keeps curriculum structure and lesson state untouched while reducing persistent visual noise. */
+.curriculum-map-v2 .map2-main{padding-top:26px}
+.curriculum-map-v2 .map2-hero{min-height:250px;background:linear-gradient(135deg,#0a202cd9,#07131bc9);box-shadow:0 24px 70px #0002}
+.curriculum-map-v2 .map2-hero-copy{padding:34px 42px}
+.curriculum-map-v2 .map2-hero h1{font-size:clamp(36px,3.3vw,48px);max-width:760px}
+.curriculum-map-v2 .map2-hero p{max-width:620px;color:#7895a1}
+.curriculum-map-v2 .map2-orbit{min-height:250px;opacity:.92}
+.curriculum-map-v2 .orbit-ring{opacity:.5}
+.curriculum-map-v2 .map2-track-switcher{gap:8px;margin:14px 0}
+.curriculum-map-v2 .map2-track-switcher button{min-height:70px;padding:12px 14px;background:#07131b;border-color:#6d9aaa17}
+.curriculum-map-v2 .map2-track-switcher button:not(.active){opacity:.74}
+.curriculum-map-v2 .map2-track-switcher button:not(.active):hover{opacity:1}
+.curriculum-map-v2 .map2-journey{padding:18px;background:#060f16c9}
+.curriculum-map-v2 .map2-journey>header{padding-bottom:14px}
+.curriculum-map-v2 .map2-journey h2{font-size:22px}
+.curriculum-map-v2 .family-stack{gap:7px}
+.curriculum-map-v2 .family-lane{grid-template-columns:190px 1fr;gap:10px;padding:10px;border-color:color-mix(in srgb,var(--family) 10%,transparent);background:linear-gradient(90deg,color-mix(in srgb,var(--family) 4%,#07131b),#07131b 27%)}
+.curriculum-map-v2 .family-label{border-left-width:2px;padding:7px 10px}
+.curriculum-map-v2 .family-label small{opacity:.7}
+.curriculum-map-v2 .family-label strong{font-size:14px}
+.curriculum-map-v2 .family-label span{opacity:.72}
+.curriculum-map-v2 .family-path{gap:6px}
+.curriculum-map-v2 .lesson-node{min-height:96px;padding:10px;background:#08161e;border-color:#7197a614;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease,transform .18s ease}
+.curriculum-map-v2 .lesson-node.ready{background:linear-gradient(145deg,color-mix(in srgb,var(--family) 5%,#081720),#07151d);border-color:color-mix(in srgb,var(--family) 18%,transparent)}
+.curriculum-map-v2 .lesson-node.ready:hover,.curriculum-map-v2 .lesson-node.ready:focus-visible{background:linear-gradient(145deg,color-mix(in srgb,var(--family) 10%,#081720),#07151d);border-color:color-mix(in srgb,var(--family) 48%,transparent);box-shadow:0 10px 26px #0003}
+.curriculum-map-v2 .lesson-node>strong{font-size:10px;margin-top:8px;color:#c5d5dc}
+.curriculum-map-v2 .lesson-node>small{font-size:7px;margin-top:5px;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.curriculum-map-v2 .lesson-open{opacity:.2;transform:translateY(2px);transition:opacity .18s ease,transform .18s ease}
+.curriculum-map-v2 .lesson-node.ready:hover .lesson-open,.curriculum-map-v2 .lesson-node.ready:focus-visible .lesson-open{opacity:1;transform:none}
+.curriculum-map-v2 .ready-badge{opacity:.72}
+.curriculum-map-v2 .planned-badge{opacity:.58}
+.curriculum-map-v2 .lesson-node.planned{opacity:.43}
+.curriculum-map-v2 .node-connector{opacity:.6}
+@media(max-width:1180px){.curriculum-map-v2 .family-lane{grid-template-columns:165px 1fr}}
+@media(max-width:760px){.curriculum-map-v2 .map2-main{padding-top:16px}.curriculum-map-v2 .map2-hero{min-height:auto}.curriculum-map-v2 .map2-hero-copy{padding:28px 24px}.curriculum-map-v2 .family-lane{grid-template-columns:1fr}.curriculum-map-v2 .family-label{min-height:58px}.curriculum-map-v2 .lesson-node{min-height:104px}.curriculum-map-v2 .lesson-open{opacity:.82}}
+@media(hover:none){.curriculum-map-v2 .lesson-open{opacity:.82;transform:none}.curriculum-map-v2 .lesson-node.ready{min-height:104px}}
+@media(prefers-reduced-motion:reduce){.curriculum-map-v2 .lesson-open{transition:none}.curriculum-map-v2 .lesson-node{transition:none}}
