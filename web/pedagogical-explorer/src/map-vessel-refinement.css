@@ -1,0 +1,4 @@
+.map2-vessel-refined{width:270px;height:276px;filter:drop-shadow(0 16px 26px #0007)}
+.map2-vessel-refined .map2-vessel-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transform-origin:47% 31%;filter:drop-shadow(0 7px 15px #0012194d)}
+@media(max-width:1180px){.map2-vessel-refined{width:248px;height:254px;transform:scale(.96)}}
+@media(prefers-reduced-motion:reduce){.map2-vessel-refined .map2-vessel-art{transform:none!important}}
