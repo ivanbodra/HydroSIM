@@ -1,7 +1,9 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Check, FlaskConical, GraduationCap, Layers3, LockKeyhole, Radar } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import hydroSimVessel from './assets/hydrosim-vessel.svg';
 import { pedagogicalTracks, type Experience, type TrackKey } from './pedagogical-plan';
+import './map-vessel-refinement.css';
 
 type Family='acoustics'|'propagation'|'arrays'|'platform'|'integration';
 const trackIcon:Record<TrackKey,typeof GraduationCap>={didactic:GraduationCap,patch:FlaskConical,acquisition:Radar};
@@ -18,7 +20,18 @@ const familyMeta:Record<Family,{title:string;kicker:string}>={
 const didacticFamilies:Family[]=['acoustics','propagation','arrays','platform','integration'];
 const visibleDidactic=(experiences:Experience[])=>experiences.filter(e=>e.id!=='D5');
 
-function SurveyVessel(){return <div className="map2-vessel-scene"><motion.div className="map2-vessel" animate={{y:[0,-4,0],rotate:[0,.35,0]}} transition={{duration:5,repeat:Infinity,ease:'easeInOut'}}><svg viewBox="0 0 280 120" role="presentation"><path className="vessel-hull" d="M28 72h225l-24 27H61L28 72Z"/><path className="vessel-deck" d="M83 72V48h91l22 24H83Z"/><path className="vessel-bridge" d="M118 48V28h48l15 20h-63Z"/><path className="vessel-window" d="M128 34h15v9h-15zm21 0h13l7 9h-20z"/><path className="vessel-mast" d="M143 28V10m-12 9h24M143 10l8 9h-16l8-9Z"/><path className="vessel-rail" d="M71 66h135M93 57h-18m136 9h18"/><circle className="vessel-sensor" cx="143" cy="8" r="3"/></svg></motion.div><div className="map2-waterline"/><motion.div className="map2-sonar-beam" animate={{opacity:[.42,.78,.42],scaleX:[.94,1.04,.94]}} transition={{duration:3.4,repeat:Infinity,ease:'easeInOut'}}/><div className="map2-seafloor"><span/><span/><span/><span/><span/><span/></div></div>}
+function SurveyVessel(){
+ return <div className="map2-vessel-scene map2-vessel-refined">
+  <motion.img
+   className="map2-vessel-art"
+   src={hydroSimVessel}
+   alt=""
+   aria-hidden="true"
+   animate={{y:[0,-3,0],rotate:[-.28,.28,-.28]}}
+   transition={{duration:6.2,repeat:Infinity,ease:'easeInOut'}}
+  />
+ </div>
+}
 
 export default function CurriculumMap({onOpenLegacy:_onOpenLegacy}:{onOpenLegacy:()=>void}){
  const[track,setTrack]=useState<TrackKey>('didactic');
