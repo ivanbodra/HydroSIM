@@ -10,7 +10,7 @@ The active roadmap contains 31 learner-facing submodules:
 - `P1`–`P6`: Patch Test Module
 - `A1`–`A7`: Acquisition Simulator
 
-**Submodule indicator: 12/31 ready submodules (38.7%).**
+**Submodule indicator: 13/31 ready submodules (41.9%).**
 
 Ready submodules:
 
@@ -22,12 +22,13 @@ Ready submodules:
 - `PED-D7` — Beamforming & Electronic Steering. Production learner experience integrated under `web/pedagogical-explorer/` through PR #193 / merge `5e5788cef23599247d158d687997ff1599df3607`, consuming the canonical Python beamforming API and preserving the Concept baseline. The previously identified Port/Starboard identity defect was corrected on `main`, and narrow independent confirmation #107 is complete.
 - `PED-D8` — Echosounders — SBES vs MBES. Production bilingual learner experience integrated under `web/pedagogical-explorer/` through PR #192 / merge `176d4331ff5e560cbdf498a6540b9269d88de397`, consuming the canonical Python echosounders API and preserving the Concept baseline.
 - `PED-D10` — Multisector MBES. Complete inventoried learner-facing slice is integrated bilingually on `main` through PR #221, consuming the canonical Python multisector capability with focused production validation; all 10 inventoried learner atoms are ready.
+- `PED-D11` — Vessel & Sensor Configuration. Complete 11-atom bilingual learner-facing slice on `main`; PR #316 completes vessel dimensions/model and VRP/reference-point controls through the canonical PED-D11 vessel/reference API, while the sensor pose, waterline, installation/lever-arm and configuration representation behavior was already operational.
 - `PED-D12` — Vessel Motion. Complete 8-atom bilingual learner-facing slice on `main`; the four Roll/Pitch/Yaw/Heave controls and vessel/sensor motion output were already operational, PR #309 supplied canonical beam/swath/sounding motion consequences, and PR #312 exposes the remaining beam displacement, swath and sounding consequences directly from that API.
 - `PED-D14` — Timing & Latency. Complete 9-atom bilingual learner-facing slice on `main`; PR #278 established the timing timeline and synchronization controls/consequences, PR #305 supplied the canonical association/spatial-consequence capability, and PR #308 exposes all remaining learner-operable rates/speed/stream selection plus explicit TX sample association and signed along-track position timing consequence without converting attitude age into metres.
 - `PED-D15` — Sounding Formation. Complete 10-atom learner-facing slice on `main`: PR #269 integrated the ping-to-detection/range, frame/transformation and 3D-sounding outputs; PR #291 completes all seven learner-operable inputs through the canonical sounding-formation API while preserving bilingual production behavior.
 - `PED-D18` — Uncertainty & Error Sources. Complete 11-atom learner-facing slice on `main`; PR #262 closes the final `O04` sounding-uncertainty consequence after the earlier uncertainty controls and THU/TVU/TPU outputs were integrated.
 
-**Atom indicator: 138/243 ready learner atoms (56.8%).**  
+**Atom indicator: 140/243 ready learner atoms (57.6%).**  
 Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
 
 The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Enabling work is never counted as product atoms.
@@ -51,9 +52,9 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 
 ## Current pipeline
 
-- `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D10`, `PED-D12`, `PED-D14`, `PED-D15` and `PED-D18` are complete and no longer pipeline work.
-- `PED-D9`, `PED-D11` and `PED-D17` have partial learner-facing production readiness recorded atom-by-atom in `product_atom_inventory.md`; their remaining behavior must not be inferred from backend or documentation alone.
-- `PED-D11` is 9/11 after PR #266; `PED-D17` is 8/14 after PR #273. PED-D12 is complete after PR #312 and is removed from partial pipeline work.
+- `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D10`, `PED-D11`, `PED-D12`, `PED-D14`, `PED-D15` and `PED-D18` are complete and no longer pipeline work.
+- `PED-D9` and `PED-D17` have partial learner-facing production readiness recorded atom-by-atom in `product_atom_inventory.md`; their remaining behavior must not be inferred from backend or documentation alone.
+- `PED-D9` is 6/11 after PR #313; `PED-D17` is 8/14 after PR #273.
 - Keep the next independent specialist slice in parallel when a concrete unblocked dependency exists; do not create speculative horizontal inventory.
 
 ## Design / implementation boundary
