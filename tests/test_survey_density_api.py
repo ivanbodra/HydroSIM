@@ -95,3 +95,13 @@ def test_d17_coverage_union_does_not_double_count_overlap() -> None:
 def test_d17_rejects_nonpositive_ping_rate() -> None:
     with pytest.raises(ValueError):
         D17SurveyDensityRequest(ping_rate_hz=0.0, vessel_speed_knots=5.0)
+
+
+def test_d17_route_is_registered_when_fastapi_is_available() -> None:
+    fastapi = pytest.importorskip("fastapi")
+    del fastapi
+    from hydrosim.app.signal_api import create_fastapi_app
+
+    app = create_fastapi_app()
+    paths = {route.path for route in app.routes}
+    assert "/api/v1/pedagogical/survey-density" in paths
