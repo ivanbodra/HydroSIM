@@ -29,14 +29,13 @@ Truth != Observed != Configured != Estimated != Derived
 | ID | Submodule | Main content / inputs | Learning outputs / visualizations |
 |---|---|---|---|
 | D1 | Acoustic Wave & Frequency | Acoustic wave, frequency, period, wavelength, amplitude, phase | Propagating-wave visualization; frequency and wavelength comparisons |
-| D2 | Pulse & Signal Processing | CW vs chirp, frequency, bandwidth, pulse length, envelope detection/filtering, matched filtering/pulse compression, phase, zero crossing | Time waveform, envelope, echo, pulse compression, temporal/range resolution |
-| D3 | Sonar Equation & Propagation Loss | Source level, spreading, absorption, frequency, range, noise, SNR, sonar-equation parameters | Intensity/SNR versus range, frequency effects, detection margin |
+| D2 | Pulse & Signal Processing | CW vs chirp, frequency, bandwidth, pulse length, envelope detection/filtering, matched filtering/pulse compression, phase, zero crossing; signal/pulse representation and processing prerequisites for detectability | Time waveform, envelope, echo, pulse compression, temporal/range resolution |
+| D3 | Sonar Equation & Propagation Loss | Source level, spreading, absorption, frequency, range, noise, SNR, sonar-equation parameters, detection threshold/required SNR | Intensity/SNR versus range, frequency effects, signal/noise/SNR detectability and detection margin |
 | D4 | Sound Speed & Refraction | Sound speed, SVP, gradients, depth, launch angle | Ray tracing, refraction, acoustic path, effects of an incorrect profile |
-| D5 | Acoustic Detection Fundamentals | Signal/noise, threshold, SNR, physical detection principles | Relationship between echo quality and detectability. Review possible merge with D9 to avoid redundancy |
 | D6 | Transducer & Array Construction | Elements, frequency, wavelength, spacing, aperture, dimensions, geometry, eccentricity, Mills Cross, shading | Array construction, directivity, beamwidth, side lobes, gains/losses |
 | D7 | Beamforming & Electronic Steering | Relative delays/phases, TX/RX beamforming, steering, receive timing, dynamic focusing/steering, apodization | Electronic beam formation and steering, coherent summation, side lobes, steering losses |
 | D8 | Echosounders — SBES vs MBES | SBES/MBES architectures, TX/RX arrays, beam geometry, footprint, depth, incidence angle, beam spacing | Synchronized SBES/MBES comparison, footprint, swath, equiangular vs equidistant spacing, sounding spacing |
-| D9 | Bottom Detection | Amplitude detection, phase detection, hybrid/transition behavior, detection window, thresholds, multiple detections, High Density | Detection formation, false/missed detections, detection position, signal-to-sounding relationship, High Density |
+| D9 | Bottom Detection | Amplitude detection, phase detection, hybrid/transition behavior, detection window, thresholds, multiple detections, High Density, signal/echo scenario | Detection formation including threshold-driven detected/not-detected state, false/missed detections, detection position, signal-to-sounding relationship, High Density |
 | D10 | Multisector MBES | Number of sectors, sector angles, frequency per sector, transmission timing/sequence, pulse duration, power | Temporal sector sequence, geometry, footprints, swaths, sector-frequency-time relationship |
 | D11 | Vessel & Sensor Configuration | Vessel dimensions, reference point, sensor positions/orientations, lever arms, transducer, antenna, MRU/IMU, waterline/reference heights | Vessel model, sensor layout, frames/offsets, conceptual/realistic vessel file |
 | D12 | Vessel Motion | Roll, pitch, yaw/heading, heave, vessel geometry and sensor locations | Vessel/sensor motion, beam displacement, swath and sounding effects, induced effects where pertinent |
@@ -46,6 +45,16 @@ Truth != Observed != Configured != Estimated != Derived
 | D16 | Survey Planning | Area/DTM, depth, sonar, swath, overlap, line direction, line spacing, vessel speed | Planned lines, predicted coverage, gaps/overlap, line count and length |
 | D17 | Survey Coverage & Acquisition Trade-offs | Frequency, footprint, beam spacing, High Density, swath, depth, ping rate, speed, multisector, detection configuration | Settings -> swath -> footprints -> sounding pattern -> coverage; along/across-track spacing, density, gaps and trade-offs |
 | D18 | Uncertainty / TPU | Position, attitude, range, SV, offset, timing and water-level uncertainties when supplied; detection geometry | Uncertainty components and propagation, THU/TVU/TPU, across-track variation, sounding uncertainty visualization |
+
+### Retired D5 traceability
+
+`D5 — Acoustic Detection Fundamentals` was retired as a standalone submodule by Product Owner decision on 2026-09-06 because its learning question overlapped existing signal, sonar-equation and bottom-detection experiences. No learning objective is discarded:
+
+- signal/pulse representation and processing prerequisites for detectability remain in **D2**;
+- signal level, noise level, SNR, signal/noise/SNR detectability and detection-margin reasoning are assigned to **D3**;
+- threshold-driven detected/not-detected behavior and its bottom-detection/false-missed consequence are assigned to **D9**.
+
+The retired atom IDs and their exact receiving atoms are preserved in `docs/coordination/product_atom_inventory.md`. The historical IDs are not reused and do not remain in the active denominator.
 
 D17 is intentionally a synthesis experience: previously learned controls are reused so the learner can see how acquisition choices interact rather than treating settings independently.
 
@@ -191,10 +200,6 @@ The following are not current HydroSIM teaching modules:
 This does not prohibit necessary inputs from those domains. For example, position and water level may be consumed by an acquisition simulation without HydroSIM becoming a GNSS/geodesy or tide-theory course.
 
 Real-time acquisition processing/QC inspired by operational acquisition systems is a possible future capability, not part of the present pedagogical baseline.
-
-## Open structural item
-
-D5 (Acoustic Detection Fundamentals) and D9 (Bottom Detection) should be reviewed before implementation to determine whether D5 retains a distinct learning question or should be merged/reallocated across D3 and D9.
 
 ## Development rule
 
