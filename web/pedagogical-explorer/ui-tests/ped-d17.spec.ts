@@ -79,5 +79,5 @@ test('PED-D17 links acquisition controls to density and coverage outputs', async
   await page.getByRole('button',{name:'PT-BR'}).click();
   await expect(page.getByRole('heading',{name:'Compromissos da aquisição'})).toBeVisible();
   await expect(page.getByText('Cobertura do levantamento',{exact:true})).toBeVisible();
-  await expect(page.getByText('Espaçamento longitudinal entre pings',{exact:true})).toBeVisible();
+  await expect(page.getByText('Espaçamento longitudinal entre pings',{exact:true}).first()).toBeVisible();
 });
