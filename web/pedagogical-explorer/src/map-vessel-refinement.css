@@ -1,4 +1,10 @@
-.map2-vessel-refined{width:270px;height:276px;filter:drop-shadow(0 16px 26px #0007)}
-.map2-vessel-refined .map2-vessel-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transform-origin:47% 31%;filter:drop-shadow(0 7px 15px #0012194d)}
+.map2-vessel-refined{width:270px;height:276px;filter:drop-shadow(0 16px 26px #0007);isolation:isolate;animation:map-vessel-drift 7.2s ease-in-out infinite}
+.map2-vessel-refined:before{content:'';position:absolute;left:13%;right:13%;top:29%;height:18px;border-top:1px solid #73eaff55;border-radius:50%;opacity:.18;transform:scaleX(.72);filter:blur(.2px);animation:map-vessel-wake 3.2s ease-out infinite;z-index:-1}
+.map2-vessel-refined:after{content:'';position:absolute;left:22%;right:22%;top:31%;height:8px;background:radial-gradient(ellipse at center,#8deeff32 0,transparent 70%);opacity:.28;filter:blur(5px);animation:map-vessel-glint 2.8s ease-in-out infinite;z-index:-1}
+.map2-vessel-refined .map2-vessel-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transform-origin:47% 31%;filter:drop-shadow(0 7px 15px #0012194d);animation:map-vessel-sonar-glow 3.6s ease-in-out infinite}
+@keyframes map-vessel-drift{0%,100%{translate:-5px 1px}50%{translate:5px -2px}}
+@keyframes map-vessel-wake{0%{opacity:0;transform:scaleX(.45)}35%{opacity:.32}100%{opacity:0;transform:scaleX(1.08)}}
+@keyframes map-vessel-glint{0%,100%{opacity:.16;transform:scaleX(.82)}50%{opacity:.4;transform:scaleX(1.08)}}
+@keyframes map-vessel-sonar-glow{0%,100%{filter:drop-shadow(0 7px 15px #0012194d) drop-shadow(0 0 0 #4ce6ff00)}50%{filter:drop-shadow(0 9px 18px #00121966) drop-shadow(0 0 12px #4ce6ff24)}}
 @media(max-width:1180px){.map2-vessel-refined{width:248px;height:254px;transform:scale(.96)}}
-@media(prefers-reduced-motion:reduce){.map2-vessel-refined .map2-vessel-art{transform:none!important}}
+@media(prefers-reduced-motion:reduce){.map2-vessel-refined,.map2-vessel-refined:before,.map2-vessel-refined:after,.map2-vessel-refined .map2-vessel-art{animation:none!important}.map2-vessel-refined .map2-vessel-art{transform:none!important}}
