@@ -24,8 +24,16 @@ test('PED-D17 links learner controls to acquisition and detection outputs', asyn
   await page.route('**/api/v1/pedagogical/bottom-detection', async route => {
     const request=route.request().postDataJSON() as Record<string, unknown>;
     detectionRequests.push(request);
-    const hd=Boolean(request.high_density_enabled);
-    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({retained_candidates:request.multiple_detections_enabled?[{sample_index:3},{sample_index:5}]:[{sample_index:3}],high_density:{enabled:hd,point_count:hd?5:1,density_multiplier:hd?5:1,target_spacing_m:hd?.24:1.2}})});
+    const hdRequest=(request.high_density as Record<string, unknown>) ?? {};
+    const hd=Boolean(hdRequest.high_density_enabled);
+    const multiple=Boolean(request.multiple_detection);
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+      comparison:{retained_detection_count:multiple?2:1},
+      high_density:{
+        status:hd?'available':'disabled',
+        comparison:{ordinary_detection_count:1,high_density_detection_count:hd?5:0,density_multiplier:hd?5:0,target_spacing_m:hd?.24:null}
+      }
+    })});
   });
 
   await page.goto('/#tradeoff-lab');
@@ -45,11 +53,11 @@ test('PED-D17 links learner controls to acquisition and detection outputs', asyn
   await setRangeValue(frequency,'400');
   await expect.poll(()=>((multiRequests.at(-1)?.sectors as Array<Record<string,unknown>>)?.[1]?.frequency_khz)).toBe(400);
 
-  await page.locator('label').filter({hasText:'Detection retention'}).locator('select').selectOption('multiple');
-  await expect.poll(()=>detectionRequests.at(-1)?.multiple_detections_enabled).toBe(true);
+  await page.locator('label').filter({hasText:'Bottom detection'}).locator('select').selectOption('multiple');
+  await expect.poll(()=>detectionRequests.at(-1)?.multiple_detection).toBe(true);
   await expect(page.getByText('2').first()).toBeVisible();
   await page.locator('label').filter({hasText:'High Density'}).locator('select').selectOption('on');
-  await expect.poll(()=>detectionRequests.at(-1)?.high_density_enabled).toBe(true);
+  await expect.poll(()=>((detectionRequests.at(-1)?.high_density as Record<string,unknown>)?.high_density_enabled)).toBe(true);
   await expect(page.getByText('5×').first()).toBeVisible();
 
   await page.getByRole('button',{name:'PT-BR'}).click();
