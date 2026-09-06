@@ -8,7 +8,7 @@ High Density to generic multi-peak amplitude detection.
 
 from __future__ import annotations
 
-from math import cos, pi, sin, sqrt
+from math import pi, sin, cos, sqrt
 from typing import Literal, Sequence
 
 import numpy as np
@@ -64,7 +64,7 @@ def _dot(a: Vector3, b: Vector3) -> float:
     return float(a.x * b.x + a.y * b.y + a.z * b.z)
 
 
-def _phase_for_angle(
+def phase_for_split_aperture_angle(
     angle_rad: float,
     *,
     steering_angle_rad: float,
@@ -72,6 +72,8 @@ def _phase_for_angle(
     frequency_hz: float,
     sound_speed_mps: float,
 ) -> float:
+    """Evaluate the authoritative residual split-aperture phase relation."""
+
     k = 2.0 * pi * float(frequency_hz) / float(sound_speed_mps)
     source = _direction(angle_rad)
     steering = _direction(steering_angle_rad)
@@ -107,7 +109,7 @@ def invert_split_aperture_phase_angle(
     target = float(phase_rad)
 
     def residual(angle: float) -> float:
-        return _phase_for_angle(
+        return phase_for_split_aperture_angle(
             angle,
             steering_angle_rad=steering_angle_rad,
             baseline_m=baseline_m,
@@ -211,7 +213,10 @@ def detect_high_density_from_phase(
             phases,
             sample_times_seconds=times,
             strength=np.where(valid, support, 0.0),
+            search_start_sample=0,
+            search_end_sample=len(times) - 1,
             tx_delay_seconds=tx_delay_seconds,
+            parent_beam_index=parent_beam_index,
             steering_across_track_angle_rad=steering_angle_rad,
         )
     except ValueError:
