@@ -4,7 +4,7 @@ test('PED-D11 sends configured vessel geometry and renders canonical sensor/refe
   const requests: Array<Record<string, unknown>> = [];
   await page.route('**/api/v1/pedagogical/vessel', async route => {
     requests.push(route.request().postDataJSON() as Record<string, unknown>);
-    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({vrp_position_m:{x:0,y:0,z:0},gnss_position_m:{x:-1,y:0,z:-4},imu_position_m:{x:0,y:0,z:-1},transducer_position_m:{x:2,y:0,z:3},waterline_z_from_vrp_m:1,static_draft_m:4,keel_z_from_vrp_m:5,transducer_z_from_vrp_m:3,transducer_depth_below_waterline_m:2,water_level_m_relative_to_datum:0,metadata:{frame:'B: +X Forward, +Y Starboard, +Z Down'}})});
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({vessel_length_m:30,vessel_beam_m:8,vessel_height_m:6,vrp_position_m:{x:0,y:0,z:0},gnss_position_m:{x:-1,y:0,z:-4},imu_position_m:{x:0,y:0,z:-1},transducer_position_m:{x:2,y:0,z:3},gnss_lever_arm_from_selected_vrp_m:{x:-1,y:0,z:-4},imu_lever_arm_from_selected_vrp_m:{x:0,y:0,z:-1},transducer_lever_arm_from_selected_vrp_m:{x:2,y:0,z:3},waterline_z_from_vrp_m:1,static_draft_m:4,keel_z_from_vrp_m:5,transducer_z_from_vrp_m:3,transducer_depth_below_waterline_m:2,water_level_m_relative_to_datum:0,metadata:{frame:'B: +X Forward, +Y Starboard, +Z Down'}})});
   });
 
   await page.goto('/#vessel-configuration-lab');
@@ -12,7 +12,8 @@ test('PED-D11 sends configured vessel geometry and renders canonical sensor/refe
   await expect(page.getByText('2.00 m').first()).toBeVisible();
   await expect(page.getByText('5.00 m',{exact:true})).toBeVisible();
 
-  const txX=page.locator('.d11-lever').first().locator('label').filter({hasText:'X · Forward'}).locator('input');
+  const txSection=page.locator('.d11-lever').filter({has:page.getByRole('heading',{name:'Transducer'})});
+  const txX=txSection.locator('label').filter({hasText:'X · Forward'}).locator('input');
   await txX.evaluate((el:HTMLInputElement)=>{
     const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;
     setter?.call(el,'6');
