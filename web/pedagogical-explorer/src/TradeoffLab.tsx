@@ -48,7 +48,7 @@ export default function TradeoffLab({onBack}:{onBack:()=>void}){
  },[depth,beams,sector,pulse,frequency,beamwidth,spacingMode,txSequence]);
 
  const mbes=echo?.mbes;const current=useMemo(()=>echo&&multi?metrics(echo,multi):null,[echo,multi]);const base=useMemo(()=>baseline?metrics(baseline.echo,baseline.multi):null,[baseline]);
- const extent=Math.max(1,...(mbes?.beams.map(b=>Math.abs(b.endpoint_across_track_m))??[1]));const value=(v:number,unit:string,digits=1)=><strong>{v.toFixed(digits)} {unit}</strong>;
+ const referenceBeams=baseline?.echo.mbes.beams??mbes?.beams??[];const extent=Math.max(1,...referenceBeams.map(b=>Math.abs(b.endpoint_across_track_m)));const value=(v:number,unit:string,digits=1)=><strong>{v.toFixed(digits)} {unit}</strong>;
  const sequenceLabel=(v:TxSequence)=>v==='simultaneous'?t.simultaneous:v==='sequential'?t.sequential:t.centreDelayed;
  const captureBaseline=()=>{if(echo&&multi)setBaseline({echo,multi,settings:{...settings}})};
  const restoreBaseline=()=>{if(baseline)applySettings(baseline.settings)};
