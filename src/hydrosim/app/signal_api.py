@@ -1,4 +1,4 @@
-"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10/PED-D11/PED-D12/PED-D14/PED-D15/PED-D18 lessons.
+"""Application/API bridge for React PED-D1/PED-D2/PED-D3/PED-D4/PED-D6/PED-D7/PED-D8/PED-D9/PED-D10/PED-D11/PED-D12/PED-D13/PED-D14/PED-D15/PED-D18 lessons.
 
 The bridge exposes render-ready values derived from canonical Python models. The
 frontend remains presentation-only and must not reimplement scientific equations.
@@ -35,6 +35,11 @@ from hydrosim.app.multisector_api import (
     D10MultisectorRequest,
     D10MultisectorResponse,
     prepare_d10_multisector_response,
+)
+from hydrosim.app.pu_sensor_api import (
+    D13PuSensorRequest,
+    D13PuSensorResponse,
+    prepare_d13_pu_sensor_response,
 )
 from hydrosim.app.refraction_api import (
     D4RefractionRequest,
@@ -357,6 +362,10 @@ def create_fastapi_app():
     @app.post("/api/v1/pedagogical/vessel-motion", response_model=D12VesselMotionResponse)
     def vessel_motion(request: D12VesselMotionRequest) -> D12VesselMotionResponse:
         return prepare_d12_vessel_motion_response(request)
+
+    @app.post("/api/v1/pedagogical/pu-sensor", response_model=D13PuSensorResponse)
+    def pu_sensor(request: D13PuSensorRequest) -> D13PuSensorResponse:
+        return prepare_d13_pu_sensor_response(request)
 
     @app.post("/api/v1/pedagogical/timing", response_model=D14TimingResponse)
     def timing(request: D14TimingRequest) -> D14TimingResponse:
