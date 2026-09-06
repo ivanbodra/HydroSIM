@@ -58,7 +58,7 @@ test('PED-D17 links learner controls to acquisition and detection outputs', asyn
   await expect(page.getByText('2').first()).toBeVisible();
   await page.locator('label').filter({hasText:'High Density'}).locator('select').selectOption('on');
   await expect.poll(()=>((detectionRequests.at(-1)?.high_density as Record<string,unknown>)?.high_density_enabled)).toBe(true);
-  await expect(page.getByText('5.0 ×').first()).toBeVisible();
+  await expect(page.getByText('5.0×').first()).toBeVisible();
 
   await page.getByRole('button',{name:'PT-BR'}).click();
   await expect(page.getByRole('heading',{name:'Compromissos da aquisição'})).toBeVisible();
