@@ -50,7 +50,7 @@ test('PED-D17 links acquisition controls to density and coverage outputs', async
   await page.goto('/#tradeoff-lab');
   await expect(page.getByRole('heading',{name:'Acquisition trade-offs'})).toBeVisible();
   await expect(page.getByText('High Density points')).toBeVisible();
-  await expect(page.getByText('Survey coverage')).toBeVisible();
+  await expect(page.getByText('Survey coverage',{exact:true})).toBeVisible();
   await expect(page.getByText('0.30 m').first()).toBeVisible();
   await expect(page.getByText('Gapped').first()).toBeVisible();
 
@@ -78,6 +78,6 @@ test('PED-D17 links acquisition controls to density and coverage outputs', async
 
   await page.getByRole('button',{name:'PT-BR'}).click();
   await expect(page.getByRole('heading',{name:'Compromissos da aquisição'})).toBeVisible();
-  await expect(page.getByText('Cobertura do levantamento')).toBeVisible();
-  await expect(page.getByText('Espaçamento longitudinal entre pings')).toBeVisible();
+  await expect(page.getByText('Cobertura do levantamento',{exact:true})).toBeVisible();
+  await expect(page.getByText('Espaçamento longitudinal entre pings',{exact:true})).toBeVisible();
 });
