@@ -15,7 +15,7 @@ The active roadmap contains 31 learner-facing submodules:
 Ready submodules:
 
 - `PED-D1` — Wave Fundamentals. Runnable bilingual React experience on `main`, canonical Python wave-kinematics API, focused learner-facing UI/state validation integrated through PR #153, and independent scientific/computational QA PASS in Issue #148 with no material finding.
-- `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
+- `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual production React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
 - `PED-D3` — Sonar Equation & Propagation Loss. Runnable bilingual production React experience on `main`, focused learner-facing validation, canonical Python sonar-equation API, and risk-proportionate independent QA closure in Issue #155.
 - `PED-D4` — Sound Speed & Refraction. Runnable bilingual production React experience on `main` via PR #165, focused learner-facing tests, canonical Python refraction bridge/Core, and narrow independent QA PASS in Issue #170.
 - `PED-D6` — Array Geometry & Directivity. Complete 12-atom learner-facing slice on `main`; PR #236 closes the final `I06 eccentricity` atom with learner-operable RX X/Y/Z placement and canonical TX→RX vector/magnitude readout, preserving the one-way directivity model and bilingual production path.
@@ -28,7 +28,7 @@ Ready submodules:
 - `PED-D15` — Sounding Formation. Complete 10-atom learner-facing slice on `main`: PR #269 integrated the ping-to-detection/range, frame/transformation and 3D-sounding outputs; PR #291 completes all seven learner-operable inputs through the canonical sounding-formation API while preserving bilingual production behavior.
 - `PED-D18` — Uncertainty & Error Sources. Complete 11-atom learner-facing slice on `main`; PR #262 closes the final `O04` sounding-uncertainty consequence after the earlier uncertainty controls and THU/TVU/TPU outputs were integrated.
 
-**Atom indicator: 140/243 ready learner atoms (57.6%).**  
+**Atom indicator: 143/243 ready learner atoms (58.8%).**  
 Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
 
 The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Enabling work is never counted as product atoms.
@@ -54,7 +54,7 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 
 - `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D10`, `PED-D11`, `PED-D12`, `PED-D14`, `PED-D15` and `PED-D18` are complete and no longer pipeline work.
 - `PED-D9` and `PED-D17` have partial learner-facing production readiness recorded atom-by-atom in `product_atom_inventory.md`; their remaining behavior must not be inferred from backend or documentation alone.
-- `PED-D9` is 6/11 after PR #313; `PED-D17` is 8/14 after PR #273.
+- `PED-D9` is 9/11 after PR #336; its remaining atoms are `I05` High Density and `O05` High Density/multiple-detection comparison. `PED-D17` is 8/14 after PR #273.
 - Keep the next independent specialist slice in parallel when a concrete unblocked dependency exists; do not create speculative horizontal inventory.
 
 ## Design / implementation boundary
