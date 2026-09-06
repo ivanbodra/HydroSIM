@@ -62,6 +62,11 @@ These branches are not preservation sources merely because squash merges left un
 - `concept/array-directivity-depth` — PR #311
 - `concept/map-vessel-refinement` — PR #307
 - `ux/d11-reference-dimensions` — PR #316
+- `ux/lesson-navigator-localization` @ `e134f4d344930940e88b065f1dc60437f15f95c2` — PR #327 merged to `main` as `711d911aedb832fe5d38070a63001f31d75d587c` after both required workflows passed.
+- `eng/ped-d6-array-bridge` @ `e98c70edd3e2ce733d5981b2d5924fa5c94b263b` — exact branch head merged by PR #164.
+- `eng/ped-d6-weighting-geometry` @ `7b3892e7478565bc927c39ad76e3bed5c1f42675` — exact branch head merged by PR #208.
+- `eng/ped-d8-api-bridge` @ `ea8fbb5a52ccf7af0e3f74a1dee8366c3d81c07a` — exact branch head merged by PR #190.
+- `eng/ped-d9-bottom-detection-api` @ `178b6cf1dc75d50e39acc0b2c70dbe7536eeec81` — exact branch head merged by PR #203.
 - `concept/map-calm-reconciled` @ `d3ea05855641339a2a4503d3244e17db9395a032` — its `curriculum-map-calm.css` blob is identical on current `main`, and the import is present on `main`; no effect needs harvesting.
 - `concept/visual-reconcile-main` @ `a352589d7706cfa476d5a7f085c4d082f1d89248` — its D12 presentation delta is present on current `main`, which additionally contains later D12 refinements; preserve the newer main version.
 - `concept/full-didactic-module` @ `e892ce299e25424336b5472fb83a0146416a1092` — branch is an ancestor of current `main` (`ahead_by: 0`).
@@ -70,6 +75,7 @@ These branches are not preservation sources merely because squash merges left un
 
 ## CLEANUP-READY — SUPERSEDED / DUPLICATE / NO UNIQUE VALUE
 
+- `eng/ped-d10-multisector-api` @ `16283c2a3e4449041c906728fe82b25d119ec9ad` — PR #212 closed unmerged; its intended canonical multisector timing/geometry API effect was superseded by the narrower current implementation merged in PR #215 (`software-engineering/ped-d10-multisector-api`). Do not revive the old branch.
 - `ux/ped-d9-signal-sounding-link`
 - `ux/ped-d9-signal-sounding-link-v2`
 - `ux/ped-d9-signal-sounding-link-v3`
