@@ -1,3 +1,5 @@
+@import './ready-module-visual-polish.css';
+
 .map2-vessel-refined{width:270px;height:276px;filter:drop-shadow(0 16px 26px #0007);isolation:isolate;animation:map-vessel-drift 7.2s ease-in-out infinite}
 .map2-vessel-refined:before{content:'';position:absolute;left:13%;right:13%;top:29%;height:18px;border-top:1px solid #73eaff55;border-radius:50%;opacity:.18;transform:scaleX(.72);filter:blur(.2px);animation:map-vessel-wake 3.2s ease-out infinite;z-index:-1}
 .map2-vessel-refined:after{content:'';position:absolute;left:22%;right:22%;top:31%;height:8px;background:radial-gradient(ellipse at center,#8deeff32 0,transparent 70%);opacity:.28;filter:blur(5px);animation:map-vessel-glint 2.8s ease-in-out infinite;z-index:-1}
