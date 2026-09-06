@@ -16,6 +16,11 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from hydrosim.acquisition import DetectionMethod
 from hydrosim.acquisition.bottom_detection import detect_bottom_candidates_from_matched_filter
+from hydrosim.app.high_density_api import (
+    D9HighDensityRequest,
+    D9HighDensityResponse,
+    prepare_d9_high_density_response,
+)
 
 
 class D9BottomDetectionRequest(BaseModel):
@@ -37,6 +42,7 @@ class D9BottomDetectionRequest(BaseModel):
     multiple_detection: bool = False
     truth_echo_lag_samples: tuple[int, ...] | None = None
     truth_match_tolerance_samples: int = Field(default=0, ge=0)
+    high_density: D9HighDensityRequest | None = None
 
     @model_validator(mode="after")
     def validate_detection_window(self) -> "D9BottomDetectionRequest":
@@ -117,6 +123,7 @@ class D9BottomDetectionResponse(BaseModel):
     selected_detection: D9DetectionCandidate | None
     classifications: tuple[D9DetectionClassification, ...]
     comparison: D9DetectionComparison
+    high_density: D9HighDensityResponse | None = None
     unsupported_reason: str | None = None
     metadata: dict[str, float | int | str | bool]
 
@@ -302,6 +309,9 @@ def prepare_d9_bottom_detection_response(
     if request.detection_window_end_ms is not None:
         metadata["detection_window_end_ms"] = request.detection_window_end_ms
 
+    high_density = (
+        None if request.high_density is None else prepare_d9_high_density_response(request.high_density)
+    )
     empty_comparison = _comparison((), 0, request.sample_rate_hz)
     if request.detection_method != "amplitude_peak":
         return D9BottomDetectionResponse(
@@ -313,6 +323,7 @@ def prepare_d9_bottom_detection_response(
             selected_detection=None,
             classifications=(),
             comparison=empty_comparison,
+            high_density=high_density,
             unsupported_reason=(
                 "phase_zero_crossing is represented by the Core data model but has no "
                 "canonical matched-filter detector in this PED-D9 slice"
@@ -359,5 +370,6 @@ def prepare_d9_bottom_detection_response(
         selected_detection=selected,
         classifications=classifications,
         comparison=comparison,
+        high_density=high_density,
         metadata=metadata,
     )
