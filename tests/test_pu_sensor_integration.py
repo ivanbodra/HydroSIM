@@ -111,8 +111,7 @@ def test_network_stream_has_no_serial_baud_semantics() -> None:
 
     assert evaluate_pu_sensor_compatibility(stream, pu_input).status == "compatible"
 
+    invalid = stream.model_dump()
+    invalid["baud_rate_baud"] = 38400.0
     with pytest.raises(ValueError, match="must not define serial baud"):
-        SensorStreamProfile(
-            **stream.model_dump(),
-            baud_rate_baud=38400.0,
-        )
+        SensorStreamProfile(**invalid)
