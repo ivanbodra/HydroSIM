@@ -1,8 +1,9 @@
 """Application adapter for the PED-D9 bottom-detection learner slice.
 
 Scientific detection remains owned by ``hydrosim.acquisition.bottom_detection``.
-This module only validates/serializes learner controls and converts units for the
-production React application.
+This module validates/serializes learner controls, Truth-relative didactic
+classification, and render-ready comparison quantities for the production React
+application.
 """
 
 from __future__ import annotations
@@ -13,7 +14,8 @@ from typing import Literal
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from hydrosim.acquisition import DetectionMethod, detect_bottom_from_matched_filter
+from hydrosim.acquisition import DetectionMethod
+from hydrosim.acquisition.bottom_detection import detect_bottom_candidates_from_matched_filter
 
 
 class D9BottomDetectionRequest(BaseModel):
@@ -31,6 +33,10 @@ class D9BottomDetectionRequest(BaseModel):
     detection_method: DetectionMethod = "amplitude_peak"
     detection_window_start_ms: float | None = None
     detection_window_end_ms: float | None = None
+    threshold: float = Field(default=0.0, ge=0.0, le=1.0)
+    multiple_detection: bool = False
+    truth_echo_lag_samples: tuple[int, ...] | None = None
+    truth_match_tolerance_samples: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
     def validate_detection_window(self) -> "D9BottomDetectionRequest":
@@ -39,7 +45,13 @@ class D9BottomDetectionRequest(BaseModel):
             and self.detection_window_end_ms is not None
             and self.detection_window_end_ms < self.detection_window_start_ms
         ):
-            raise ValueError("detection_window_end_ms must be greater than or equal to detection_window_start_ms")
+            raise ValueError(
+                "detection_window_end_ms must be greater than or equal to detection_window_start_ms"
+            )
+        if self.truth_echo_lag_samples is not None and any(
+            lag < 0 for lag in self.truth_echo_lag_samples
+        ):
+            raise ValueError("truth_echo_lag_samples must contain non-negative arrival lags")
         return self
 
 
@@ -50,6 +62,7 @@ class D9CorrelationTrace(BaseModel):
 
     lag_us: tuple[float, ...]
     magnitude: tuple[float, ...]
+    normalized_magnitude: tuple[float, ...]
 
 
 class D9DetectionCandidate(BaseModel):
@@ -68,6 +81,29 @@ class D9DetectionCandidate(BaseModel):
     quality: float | None
 
 
+class D9DetectionClassification(BaseModel):
+    """Truth-relative didactic classification; never a detection probability."""
+
+    model_config = ConfigDict(frozen=True)
+
+    classification: Literal["true_detection", "false_detection", "missed_detection"]
+    detection_lag_samples: int | None
+    truth_lag_samples: int | None
+
+
+class D9DetectionComparison(BaseModel):
+    """Render-ready single-versus-multiple retention summary."""
+
+    model_config = ConfigDict(frozen=True)
+
+    eligible_candidate_count: int = Field(ge=0)
+    single_detection_count: int = Field(ge=0)
+    multiple_detection_count: int = Field(ge=0)
+    retained_detection_count: int = Field(ge=0)
+    detection_separation_samples: tuple[int, ...]
+    detection_separation_ms: tuple[float, ...]
+
+
 class D9BottomDetectionResponse(BaseModel):
     """Stable production contract for PED-D9."""
 
@@ -76,9 +112,13 @@ class D9BottomDetectionResponse(BaseModel):
     status: Literal["detected", "unsupported"]
     correlation: D9CorrelationTrace
     candidates: tuple[D9DetectionCandidate, ...]
+    eligible_candidates: tuple[D9DetectionCandidate, ...]
+    retained_detections: tuple[D9DetectionCandidate, ...]
     selected_detection: D9DetectionCandidate | None
+    classifications: tuple[D9DetectionClassification, ...]
+    comparison: D9DetectionComparison
     unsupported_reason: str | None = None
-    metadata: dict[str, float | int | str]
+    metadata: dict[str, float | int | str | bool]
 
 
 def _correlation_from_request(request: D9BottomDetectionRequest) -> np.ndarray:
@@ -94,6 +134,14 @@ def _correlation_from_request(request: D9BottomDetectionRequest) -> np.ndarray:
     return real.astype(np.complex128) + 1j * imag
 
 
+def _normalized_magnitude(correlation: np.ndarray) -> tuple[float, ...]:
+    magnitude = np.abs(correlation)
+    maximum = float(np.max(magnitude))
+    if maximum <= 0.0:
+        return tuple(0.0 for _ in magnitude)
+    return tuple(float(value / maximum) for value in magnitude)
+
+
 def _trace(
     correlation: np.ndarray, *, reference_sample_count: int, sample_rate_hz: float
 ) -> D9CorrelationTrace:
@@ -101,6 +149,7 @@ def _trace(
     return D9CorrelationTrace(
         lag_us=tuple(float(value * 1e6 / sample_rate_hz) for value in lag_samples),
         magnitude=tuple(float(value) for value in np.abs(correlation)),
+        normalized_magnitude=_normalized_magnitude(correlation),
     )
 
 
@@ -112,7 +161,7 @@ def _apply_detection_window(
     start_ms: float | None,
     end_ms: float | None,
 ) -> np.ndarray:
-    """Restrict the detector search domain without changing canonical detection math."""
+    """Restrict the detector search domain without changing the full render trace."""
 
     if start_ms is None and end_ms is None:
         return correlation
@@ -148,10 +197,90 @@ def _candidate_from_detection(detection) -> D9DetectionCandidate:
     )
 
 
+def _classify_against_truth(
+    detections: tuple[D9DetectionCandidate, ...],
+    truth_lags: tuple[int, ...] | None,
+    tolerance_samples: int,
+) -> tuple[D9DetectionClassification, ...]:
+    if truth_lags is None:
+        return ()
+
+    detection_lags = tuple(
+        int(item.peak_lag_samples)
+        for item in detections
+        if item.peak_lag_samples is not None
+    )
+    possible = sorted(
+        (
+            (abs(detection_lag - truth_lag), detection_lag, truth_lag, detection_index, truth_index)
+            for detection_index, detection_lag in enumerate(detection_lags)
+            for truth_index, truth_lag in enumerate(truth_lags)
+            if abs(detection_lag - truth_lag) <= tolerance_samples
+        ),
+        key=lambda item: (item[0], item[1], item[2]),
+    )
+    matched_detections: dict[int, int] = {}
+    matched_truth: set[int] = set()
+    for _, _, _, detection_index, truth_index in possible:
+        if detection_index in matched_detections or truth_index in matched_truth:
+            continue
+        matched_detections[detection_index] = truth_index
+        matched_truth.add(truth_index)
+
+    result: list[D9DetectionClassification] = []
+    for detection_index, detection_lag in enumerate(detection_lags):
+        truth_index = matched_detections.get(detection_index)
+        if truth_index is None:
+            result.append(
+                D9DetectionClassification(
+                    classification="false_detection",
+                    detection_lag_samples=detection_lag,
+                    truth_lag_samples=None,
+                )
+            )
+        else:
+            result.append(
+                D9DetectionClassification(
+                    classification="true_detection",
+                    detection_lag_samples=detection_lag,
+                    truth_lag_samples=truth_lags[truth_index],
+                )
+            )
+    for truth_index, truth_lag in enumerate(truth_lags):
+        if truth_index not in matched_truth:
+            result.append(
+                D9DetectionClassification(
+                    classification="missed_detection",
+                    detection_lag_samples=None,
+                    truth_lag_samples=truth_lag,
+                )
+            )
+    return tuple(result)
+
+
+def _comparison(
+    eligible: tuple[D9DetectionCandidate, ...], retained_count: int, sample_rate_hz: float
+) -> D9DetectionComparison:
+    lags = sorted(
+        int(item.peak_lag_samples)
+        for item in eligible
+        if item.peak_lag_samples is not None
+    )
+    separations = tuple(lags[index + 1] - lags[index] for index in range(len(lags) - 1))
+    return D9DetectionComparison(
+        eligible_candidate_count=len(eligible),
+        single_detection_count=min(1, len(eligible)),
+        multiple_detection_count=len(eligible),
+        retained_detection_count=retained_count,
+        detection_separation_samples=separations,
+        detection_separation_ms=tuple(value * 1e3 / sample_rate_hz for value in separations),
+    )
+
+
 def prepare_d9_bottom_detection_response(
     request: D9BottomDetectionRequest,
 ) -> D9BottomDetectionResponse:
-    """Delegate PED-D9 detection to the canonical amplitude detector."""
+    """Delegate PED-D9 detection to the authoritative deterministic detector."""
 
     correlation = _correlation_from_request(request)
     trace = _trace(
@@ -159,22 +288,31 @@ def prepare_d9_bottom_detection_response(
         reference_sample_count=request.reference_sample_count,
         sample_rate_hz=request.sample_rate_hz,
     )
-    metadata: dict[str, float | int | str] = {
+    metadata: dict[str, float | int | str | bool] = {
         "reference_sample_count": request.reference_sample_count,
         "sample_rate_hz": request.sample_rate_hz,
-        "state_semantics": "Configured input; Derived detection",
+        "threshold": request.threshold,
+        "multiple_detection": request.multiple_detection,
+        "threshold_semantics": "normalized matched-filter magnitude within detection window",
+        "candidate_policy": "local maxima; descending normalized magnitude; earlier lag tie-break",
+        "state_semantics": "Configured controls; Observed detections; Derived ranking/classification",
     }
     if request.detection_window_start_ms is not None:
         metadata["detection_window_start_ms"] = request.detection_window_start_ms
     if request.detection_window_end_ms is not None:
         metadata["detection_window_end_ms"] = request.detection_window_end_ms
 
+    empty_comparison = _comparison((), 0, request.sample_rate_hz)
     if request.detection_method != "amplitude_peak":
         return D9BottomDetectionResponse(
             status="unsupported",
             correlation=trace,
             candidates=(),
+            eligible_candidates=(),
+            retained_detections=(),
             selected_detection=None,
+            classifications=(),
+            comparison=empty_comparison,
             unsupported_reason=(
                 "phase_zero_crossing is represented by the Core data model but has no "
                 "canonical matched-filter detector in this PED-D9 slice"
@@ -193,19 +331,33 @@ def prepare_d9_bottom_detection_response(
         start_ms=request.detection_window_start_ms,
         end_ms=request.detection_window_end_ms,
     )
-    detection = detect_bottom_from_matched_filter(
+    detections = detect_bottom_candidates_from_matched_filter(
         detector_correlation,
         reference_sample_count=request.reference_sample_count,
         sample_rate_hz=request.sample_rate_hz,
+        threshold=request.threshold,
+        multiple_detection=True,
         tx_delay_seconds=request.tx_delay_ms * 1e-3,
         parent_beam_index=request.parent_beam_index,
         steering_across_track_angle_rad=steering_rad,
     )
-    candidate = _candidate_from_detection(detection)
+    eligible = tuple(_candidate_from_detection(item) for item in detections)
+    retained = eligible if request.multiple_detection else eligible[:1]
+    selected = retained[0] if retained else None
+    classifications = _classify_against_truth(
+        retained,
+        request.truth_echo_lag_samples,
+        request.truth_match_tolerance_samples,
+    )
+    comparison = _comparison(eligible, len(retained), request.sample_rate_hz)
     return D9BottomDetectionResponse(
         status="detected",
         correlation=trace,
-        candidates=(candidate,),
-        selected_detection=candidate,
+        candidates=retained,
+        eligible_candidates=eligible,
+        retained_detections=retained,
+        selected_detection=selected,
+        classifications=classifications,
+        comparison=comparison,
         metadata=metadata,
     )
