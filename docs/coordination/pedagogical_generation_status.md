@@ -27,7 +27,7 @@ Ready submodules:
 - `PED-D15` — Sounding Formation. Complete 10-atom learner-facing slice on `main`: PR #269 integrated the ping-to-detection/range, frame/transformation and 3D-sounding outputs; PR #291 completes all seven learner-operable inputs through the canonical sounding-formation API while preserving bilingual production behavior.
 - `PED-D18` — Uncertainty & Error Sources. Complete 11-atom learner-facing slice on `main`; PR #262 closes the final `O04` sounding-uncertainty consequence after the earlier uncertainty controls and THU/TVU/TPU outputs were integrated.
 
-**Atom indicator: 137/243 ready learner atoms (56.4%).**  
+**Atom indicator: 138/243 ready learner atoms (56.8%).**  
 Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
 
 The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Enabling work is never counted as product atoms.
