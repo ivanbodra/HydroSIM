@@ -32,7 +32,24 @@
 .curriculum-map-v2 .planned-badge{opacity:.58}
 .curriculum-map-v2 .lesson-node.planned{opacity:.43}
 .curriculum-map-v2 .node-connector{opacity:.6}
-@media(max-width:1180px){.curriculum-map-v2 .family-lane{grid-template-columns:165px 1fr}}
-@media(max-width:760px){.curriculum-map-v2 .map2-main{padding-top:16px}.curriculum-map-v2 .map2-hero{min-height:auto}.curriculum-map-v2 .map2-hero-copy{padding:28px 24px}.curriculum-map-v2 .family-lane{grid-template-columns:1fr}.curriculum-map-v2 .family-label{min-height:58px}.curriculum-map-v2 .lesson-node{min-height:104px}.curriculum-map-v2 .lesson-open{opacity:.82}}
-@media(hover:none){.curriculum-map-v2 .lesson-open{opacity:.82;transform:none}.curriculum-map-v2 .lesson-node.ready{min-height:104px}}
+
+/* Compact scan pass: preserve lesson identity and access while fitting more of the journey in one viewport. */
+.curriculum-map-v2 .map2-hero{min-height:220px}
+.curriculum-map-v2 .map2-hero-copy{padding-block:28px}
+.curriculum-map-v2 .map2-track-switcher button{min-height:62px}
+.curriculum-map-v2 .map2-journey>header{padding-bottom:10px}
+.curriculum-map-v2 .family-lane{grid-template-columns:155px 1fr;padding-block:8px}
+.curriculum-map-v2 .family-label{min-height:52px;display:flex;flex-direction:column;justify-content:center}
+.curriculum-map-v2 .family-label small,.curriculum-map-v2 .family-label span{display:none}
+.curriculum-map-v2 .family-label strong{font-size:13px;line-height:1.25}
+.curriculum-map-v2 .lesson-node{min-height:78px;padding:8px}
+.curriculum-map-v2 .lesson-node>strong{font-size:11px;line-height:1.25;margin-top:6px}
+.curriculum-map-v2 .lesson-node>small{display:none}
+.curriculum-map-v2 .lesson-open{font-size:10px;margin-top:5px}
+.curriculum-map-v2 .ready-badge,.curriculum-map-v2 .planned-badge{font-size:0;padding:4px;width:22px;height:22px;display:grid;place-items:center;border-radius:999px}
+.curriculum-map-v2 .ready-badge svg,.curriculum-map-v2 .planned-badge svg{width:12px;height:12px}
+
+@media(max-width:1180px){.curriculum-map-v2 .family-lane{grid-template-columns:145px 1fr}}
+@media(max-width:760px){.curriculum-map-v2 .map2-main{padding-top:16px}.curriculum-map-v2 .map2-hero{min-height:auto}.curriculum-map-v2 .map2-hero-copy{padding:24px}.curriculum-map-v2 .family-lane{grid-template-columns:1fr}.curriculum-map-v2 .family-label{min-height:44px}.curriculum-map-v2 .lesson-node{min-height:82px}.curriculum-map-v2 .lesson-open{opacity:.82}}
+@media(hover:none){.curriculum-map-v2 .lesson-open{opacity:.82;transform:none}.curriculum-map-v2 .lesson-node.ready{min-height:82px}}
 @media(prefers-reduced-motion:reduce){.curriculum-map-v2 .lesson-open{transition:none}.curriculum-map-v2 .lesson-node{transition:none}}
