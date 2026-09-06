@@ -1,12 +1,12 @@
 # HydroSIM Product Atom Inventory
 
 Status: canonical product-measurement baseline  
-Scope: active 31-submodule roadmap (`PED-D1`–`PED-D18`, `P1`–`P6`, `A1`–`A7`)
+Scope: active 30-submodule roadmap (17 Didactic + `P1`–`P6` + `A1`–`A7`); `PED-D5` is retired and retained only in the traceability note below.
 
 ## Product indicator
 
-**243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 145/243 ready (59.7%).**
+**238 total atoms = 141 learner inputs + 97 learner-visible outputs.**  
+**Current atom indicator: 145/238 ready (60.9%).**
 
 Readiness counts learner-facing production behavior on `main`. Contracts, documentation, APIs, adapters, tests, PRs, CI, screenshots, infrastructure and coordination are not atoms.
 
@@ -16,7 +16,6 @@ Readiness counts learner-facing production behavior on `main`. Contracts, docume
 | PED-D2 | 7 | 6 | 13 | 13 |
 | PED-D3 | 6 | 4 | 10 | 10 |
 | PED-D4 | 3 | 1 | 4 | 4 |
-| PED-D5 | 3 | 2 | 5 | 0 |
 | PED-D6 | 8 | 4 | 12 | 12 |
 | PED-D7 | 6 | 4 | 10 | 10 |
 | PED-D8 | 6 | 5 | 11 | 11 |
@@ -43,7 +42,21 @@ Readiness counts learner-facing production behavior on `main`. Contracts, docume
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **145** |
+| **TOTAL** | **141** | **97** | **238** | **145** |
+
+### Retired PED-D5 traceability
+
+`PED-D5 — Acoustic Detection Fundamentals` was retired as a standalone submodule by Product Owner decision on 2026-09-06. Its former atoms are mapped to existing receiving behavior and therefore are removed from the denominator rather than duplicated:
+
+| Retired atom | Former wording | Receiving objective / atom |
+|---|---|---|
+| PED-D5-I01 | signal level | PED-D3 source/received-level reasoning (`PED-D3-I01` and `PED-D3-O01`) |
+| PED-D5-I02 | noise level | PED-D3 noise level (`PED-D3-I05`) and SNR consequence (`PED-D3-O02`) |
+| PED-D5-I03 | threshold | PED-D3 required SNR/detection threshold (`PED-D3-I06`) for detection margin and PED-D9 threshold (`PED-D9-I03`) for bottom-detection behavior |
+| PED-D5-O01 | signal/noise/SNR detectability | PED-D3 SNR versus range and detection margin (`PED-D3-O02`, `PED-D3-O04`) |
+| PED-D5-O02 | detected/not-detected state | PED-D9 detection formation and false/missed consequence (`PED-D9-O01`, `PED-D9-O03`) |
+
+Signal/pulse representation and processing prerequisites that supported the retired D5 learning question remain in PED-D2's existing waveform, received-echo, envelope and processing atoms; no new PED-D2 atom is introduced by the retirement.
 
 ### Ready atom evidence for partially/newly reconciled submodules
 
@@ -60,7 +73,6 @@ Format: `inputs -> outputs`. IDs are sequential per list as `<submodule>-I01...`
 - **PED-D2:** signal type CW/chirp; frequency; bandwidth; pulse length; envelope/filter mode; matched-filter toggle; phase -> transmitted waveform; received echo; envelope; pulse-compression result; temporal resolution; range resolution.
 - **PED-D3:** source level; spreading model/parameter; absorption/frequency; range; noise level; detection threshold/required SNR -> received level vs range; SNR vs range; frequency/absorption comparison; detection margin.
 - **PED-D4:** SVP; depth/profile geometry; launch angle -> ray/path visualization including refraction and configured-profile error consequence.
-- **PED-D5:** signal level; noise level; threshold -> signal/noise/SNR detectability; detected/not-detected state.
 - **PED-D6:** element count; frequency; spacing; aperture/dimension; array geometry; eccentricity; Mills Cross; shading/apodization -> array construction; directivity/beam pattern; beamwidth; side-lobe/gain-loss visualization.
 - **PED-D7:** TX/RX role; frequency; element count/array size; spacing/face geometry; steering angle; source/arrival angle -> element phase/coherent contribution; array-factor/physical beam pattern; steered direction/peak; steering-loss/beamwidth/coherent-sum readouts.
 - **PED-D8:** echosounder mode/configuration; depth; beam geometry/count; incidence/swath angle; beam-spacing mode; transducer/footprint configuration -> synchronized SBES/MBES geometry; beam-centre/sounding positions; footprint; geometric swath; equiangular/equidistant and adjacent-spacing comparison.
