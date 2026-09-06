@@ -4,7 +4,22 @@ import { ArrowLeft, Languages, Rotate3D, RotateCcw, Ship, Waves } from 'lucide-r
 type Lang = 'en' | 'pt';
 type Harmonic = { amplitude_deg: number; period_seconds: number; phase_deg: number };
 type Sample = { time_seconds: number; north_m: number; east_m: number; down_m: number; roll_deg: number; pitch_deg: number; heading_deg: number; yaw_deviation_deg: number; heave_up_m: number };
-type Response = { samples: Sample[]; metadata: Record<string, string> };
+type Vector = { north_m: number; east_m: number; down_m: number };
+type BeamConsequence = {
+  beam: 'port' | 'nadir' | 'starboard';
+  steering_angle_deg: number;
+  reference_direction: Vector;
+  moved_direction: Vector;
+  reference_intersection: Vector | null;
+  moved_intersection: Vector | null;
+  displacement: Vector | null;
+};
+type MotionConsequence = {
+  time_seconds: number;
+  beams: BeamConsequence[];
+  swath: { reference_width_m: number | null; moved_width_m: number | null; width_change_m: number | null };
+};
+type Response = { samples: Sample[]; consequences: MotionConsequence[]; metadata: Record<string, string> };
 
 const DEFAULTS = {
   heading: 20,
@@ -19,10 +34,13 @@ const DEFAULTS = {
 
 const copy = {
   en: {
-    title: 'Vessel Motion', intro: 'Configure vessel motion and compare trajectory and attitude over time.', back: 'System Map', lang: 'PT-BR', reset: 'Reset',
+    title: 'Vessel Motion', intro: 'Configure vessel motion and compare trajectory, beams and soundings over time.', back: 'System Map', lang: 'PT-BR', reset: 'Reset',
     heading: 'Heading', speed: 'Speed', duration: 'Duration', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Period',
     trajectory: 'Vessel trajectory', attitude: 'Attitude through time', north: 'North', east: 'East', up: 'Up', current: 'Final sample',
     attitudeScale: 'Shared scale: ±20°', heaveScale: 'Scale: ±3 m',
+    consequences: 'Beam, swath & sounding consequences', consequenceLead: 'Final sample · compare the no-motion reference with the same instant under configured motion.',
+    beamDisplacement: 'Beam displacement', swathEffect: 'Swath width', soundingEffect: 'Sounding positions', reference: 'Reference', moved: 'With motion', change: 'Change',
+    port: 'Port', nadir: 'Nadir', starboard: 'Starboard', noIntersection: 'No bottom intersection', plan: 'Plan view of sounding centres',
     error: 'The motion view could not be updated. Adjust the controls or try again.',
     help: {
       roll: 'Roll is rotation about the vessel longitudinal axis.',
@@ -32,10 +50,13 @@ const copy = {
     },
   },
   pt: {
-    title: 'Movimento da Embarcação', intro: 'Configure o movimento da embarcação e compare trajetória e atitude ao longo do tempo.', back: 'Mapa do Sistema', lang: 'EN', reset: 'Restaurar',
+    title: 'Movimento da Embarcação', intro: 'Configure o movimento da embarcação e compare trajetória, feixes e sondagens ao longo do tempo.', back: 'Mapa do Sistema', lang: 'EN', reset: 'Restaurar',
     heading: 'Heading', speed: 'Velocidade', duration: 'Duração', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Período',
     trajectory: 'Trajetória da embarcação', attitude: 'Atitude ao longo do tempo', north: 'Norte', east: 'Leste', up: 'Cima', current: 'Amostra final',
     attitudeScale: 'Escala comum: ±20°', heaveScale: 'Escala: ±3 m',
+    consequences: 'Consequências nos feixes, faixa e sondagens', consequenceLead: 'Amostra final · compare a referência sem movimento com o mesmo instante sob o movimento configurado.',
+    beamDisplacement: 'Deslocamento dos feixes', swathEffect: 'Largura da faixa', soundingEffect: 'Posições das sondagens', reference: 'Referência', moved: 'Com movimento', change: 'Variação',
+    port: 'Bombordo', nadir: 'Nadir', starboard: 'Boreste', noIntersection: 'Sem interseção com o fundo', plan: 'Vista em planta dos centros das sondagens',
     error: 'Não foi possível atualizar a visualização do movimento. Ajuste os controles ou tente novamente.',
     help: {
       roll: 'Roll é a rotação em torno do eixo longitudinal da embarcação.',
@@ -103,6 +124,22 @@ export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
   }, [data]);
 
   const last = data?.samples.at(-1);
+  const consequence = data?.consequences?.at(-1);
+  const beamName = (beam: BeamConsequence['beam']) => beam === 'port' ? t.port : beam === 'starboard' ? t.starboard : t.nadir;
+  const refNadir = consequence?.beams.find(b => b.beam === 'nadir')?.reference_intersection ?? null;
+  const planExtent = useMemo(() => {
+    if (!consequence || !refNadir) return 1;
+    const referenceDistances = consequence.beams.flatMap(b => b.reference_intersection ? [Math.hypot(b.reference_intersection.north_m - refNadir.north_m, b.reference_intersection.east_m - refNadir.east_m)] : []);
+    return Math.max(1, ...referenceDistances) * 1.45;
+  }, [consequence, refNadir]);
+  const plotPoint = (point: Vector | null) => point && refNadir ? {
+    x: 50 + ((point.east_m - refNadir.east_m) / planExtent) * 42,
+    y: 50 - ((point.north_m - refNadir.north_m) / planExtent) * 42,
+  } : null;
+  const refSwath = consequence?.swath.reference_width_m ?? null;
+  const movedSwath = consequence?.swath.moved_width_m ?? null;
+  const movedSwathPct = refSwath && movedSwath ? Math.max(8, Math.min(100, 80 * movedSwath / refSwath)) : 0;
+
   const reset = () => {
     setHeading(DEFAULTS.heading); setSpeed(DEFAULTS.speed); setDuration(DEFAULTS.duration);
     setRoll({ ...DEFAULTS.roll }); setPitch({ ...DEFAULTS.pitch }); setYaw({ ...DEFAULTS.yaw });
@@ -162,6 +199,30 @@ export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
             </svg>
             <div className="d12-read"><span>{t.current}<strong>{last?.heading_deg.toFixed(1) ?? '—'}° Heading</strong></span><span>{t.up}<strong>{last?.heave_up_m.toFixed(2) ?? '—'} m</strong></span><span>{t.heaveScale}</span></div>
           </article>
+          {consequence && <article className="d12-consequences">
+            <div className="d12-title"><Waves size={17} /><span>{t.consequences}</span></div>
+            <p className="d12-consequence-lead">{t.consequenceLead}</p>
+            <div className="d12-consequence-grid">
+              <section className="d12-sounding-panel">
+                <h3>{t.soundingEffect}</h3><small>{t.plan}</small>
+                <svg className="d12-sounding-plan" viewBox="0 0 100 100" role="img" aria-label={t.plan}>
+                  <line x1="50" y1="5" x2="50" y2="95" /><line x1="5" y1="50" x2="95" y2="50" />
+                  {consequence.beams.map(beam => {
+                    const ref = plotPoint(beam.reference_intersection); const moved = plotPoint(beam.moved_intersection);
+                    return <g key={beam.beam}>{ref && moved && <line className="shift" x1={ref.x} y1={ref.y} x2={moved.x} y2={moved.y} />}{ref && <circle className="reference" cx={ref.x} cy={ref.y} r="2.2" />}{moved && <circle className={`moved ${beam.beam}`} cx={moved.x} cy={moved.y} r="2.8" />}</g>;
+                  })}
+                </svg>
+                <div className="d12-plan-legend"><span className="reference">{t.reference}</span><span className="moved">{t.moved}</span></div>
+              </section>
+              <section className="d12-swath-panel">
+                <h3>{t.swathEffect}</h3>
+                <div className="d12-swath-bars"><div><small>{t.reference}</small><i style={{ width: '80%' }} /></div><div><small>{t.moved}</small><i className="moved" style={{ width: `${movedSwathPct}%` }} /></div></div>
+                <div className="d12-read"><span>{t.reference}<strong>{refSwath?.toFixed(2) ?? '—'} m</strong></span><span>{t.moved}<strong>{movedSwath?.toFixed(2) ?? '—'} m</strong></span><span>{t.change}<strong>{consequence.swath.width_change_m?.toFixed(2) ?? '—'} m</strong></span></div>
+              </section>
+            </div>
+            <section className="d12-beam-displacements"><h3>{t.beamDisplacement}</h3><div>{consequence.beams.map(beam => <section key={beam.beam}><strong>{beamName(beam.beam)}</strong>{beam.displacement ? <><span>ΔN <b>{beam.displacement.north_m.toFixed(2)} m</b></span><span>ΔE <b>{beam.displacement.east_m.toFixed(2)} m</b></span><span>ΔD <b>{beam.displacement.down_m.toFixed(2)} m</b></span></> : <span>{t.noIntersection}</span>}</section>)}</div></section>
+            <section className="d12-sounding-readouts"><h3>{t.soundingEffect}</h3><div>{consequence.beams.map(beam => <section key={beam.beam}><strong>{beamName(beam.beam)}</strong><small>{t.reference}</small><span>{beam.reference_intersection ? `N ${beam.reference_intersection.north_m.toFixed(1)} · E ${beam.reference_intersection.east_m.toFixed(1)} · D ${beam.reference_intersection.down_m.toFixed(1)} m` : t.noIntersection}</span><small>{t.moved}</small><span>{beam.moved_intersection ? `N ${beam.moved_intersection.north_m.toFixed(1)} · E ${beam.moved_intersection.east_m.toFixed(1)} · D ${beam.moved_intersection.down_m.toFixed(1)} m` : t.noIntersection}</span></section>)}</div></section>
+          </article>}
         </>}
       </section>
     </main>
