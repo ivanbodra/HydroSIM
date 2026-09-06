@@ -4,14 +4,16 @@ Status: canonical coordination baseline
 
 ## Product indicators
 
-The active roadmap contains 31 learner-facing submodules: `PED-D1`–`PED-D18`, `P1`–`P6`, `A1`–`A7`.
+The active roadmap contains 30 learner-facing submodules: 17 active Didactic submodules (`PED-D1`–`PED-D18`, excluding retired `PED-D5`), `P1`–`P6`, and `A1`–`A7`.
 
-**Submodule indicator: 14/31 ready submodules (45.2%).**
+**Submodule indicator: 14/30 ready submodules (46.7%).**
 
 Ready submodules: `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D9`, `PED-D10`, `PED-D11`, `PED-D12`, `PED-D14`, `PED-D15`, `PED-D18`.
 
-**Atom indicator: 145/243 ready learner atoms (59.7%).**
+**Atom indicator: 145/238 ready learner atoms (60.9%).**
 Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
+
+`PED-D5 — Acoustic Detection Fundamentals` was retired as a standalone submodule by Product Owner decision on 2026-09-06. Its former objectives are explicitly redistributed to PED-D2, PED-D3 and PED-D9; the five retired D5 atoms are not counted again because their learner behavior is already represented by receiving atoms in those submodules.
 
 ## Completion rule
 
@@ -30,7 +32,8 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 - `PED-D9` is complete at 11/11 after PR #341 integrated learner-operable phase-based High Density and its distinct comparison/consequence through the authoritative API.
 - `PED-D17` remains the nearest partial submodule at 8/14 and is the next completion-oriented learner slice unless a concrete dependency blocks it.
 - `PED-D13` remains dependent on its scientific definition; do not serialize independent PED-D17 work behind it.
-- `PED-D5` and `PED-D16` remain unstarted in the canonical atom inventory; do not open them merely to increase WIP.
+- `PED-D16` remains unstarted in the canonical atom inventory; do not open it merely to increase WIP.
+- `PED-D5` is retired, not unstarted: its former learning objectives are redistributed and traceable in the canonical inventory.
 
 ## Design / implementation boundary
 
