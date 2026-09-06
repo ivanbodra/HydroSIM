@@ -62,6 +62,11 @@ These branches are not preservation sources merely because squash merges left un
 - `concept/array-directivity-depth` — PR #311
 - `concept/map-vessel-refinement` — PR #307
 - `ux/d11-reference-dimensions` — PR #316
+- `concept/map-calm-reconciled` @ `d3ea05855641339a2a4503d3244e17db9395a032` — its `curriculum-map-calm.css` blob is identical on current `main`, and the import is present on `main`; no effect needs harvesting.
+- `concept/visual-reconcile-main` @ `a352589d7706cfa476d5a7f085c4d082f1d89248` — its D12 presentation delta is present on current `main`, which additionally contains later D12 refinements; preserve the newer main version.
+- `concept/full-didactic-module` @ `e892ce299e25424336b5472fb83a0146416a1092` — branch is an ancestor of current `main` (`ahead_by: 0`).
+- `concept/full-didactic-module-v2` @ `e892ce299e25424336b5472fb83a0146416a1092` — exact alias of the ancestor branch above.
+- `concept/full-didactic-module-v3` @ `e892ce299e25424336b5472fb83a0146416a1092` — exact alias of the ancestor branch above.
 
 ## CLEANUP-READY — SUPERSEDED / DUPLICATE / NO UNIQUE VALUE
 
