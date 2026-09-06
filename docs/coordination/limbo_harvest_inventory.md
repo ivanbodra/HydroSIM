@@ -71,6 +71,10 @@ These branches are not preservation sources merely because squash merges left un
 - `eng/ped-d9-detection-window` @ `0eda221dde6b8ad2504112bbeeb621b3844c1499` — exact branch head merged by PR #304.
 - `eng/ped-d11-reference-geometry` @ `2185ee3fa0e7540da8574f5b92c3482e2e0a3b2f` — exact branch head merged by PR #301.
 - `eng/ped-d12-motion-consequences` @ `154bee02f5d15dbe2dcfb96cb09468283a6e6b41` — exact branch head merged by PR #309.
+- `eng/ped-d14-association` @ `1189074194ad526bb7e463c98f4e15edf104c559` — exact branch head merged by PR #305.
+- `eng/ped-d15-sounding-formation-api` @ `048369dde2383dacefbfc3df51f9eb02794db02b` — exact branch head merged by PR #245.
+- `eng/ped-d18-scalar-uncertainty` @ `287312fdd2c2093b7c03d0b148ad11721a80fd60` — exact branch head merged by PR #246.
+- `eng/ped-d18-uncertainty-api` @ `6bfd152f89e8256d3d1894b2b69db3a2462d2c7c` — exact branch head merged by PR #240.
 - `concept/map-calm-reconciled` @ `d3ea05855641339a2a4503d3244e17db9395a032` — its `curriculum-map-calm.css` blob is identical on current `main`, and the import is present on `main`; no effect needs harvesting.
 - `concept/visual-reconcile-main` @ `a352589d7706cfa476d5a7f085c4d082f1d89248` — its D12 presentation delta is present on current `main`, which additionally contains later D12 refinements; preserve the newer main version.
 - `concept/full-didactic-module` @ `e892ce299e25424336b5472fb83a0146416a1092` — branch is an ancestor of current `main` (`ahead_by: 0`).
@@ -123,6 +127,8 @@ Disposition: CLEANUP-READY.
 - `main`
 - intentional `archive/pedagogical-concept-pre-science`
 - intentional `archive/v0.0.1-prototype`
+- `ux/d17-delta-comparison` — active PR #329
+- `concept/multisector-spatial-pass` — active PR #330
 - any branch attached to genuinely active WIP discovered after this inventory update
 
 ## Morning target
