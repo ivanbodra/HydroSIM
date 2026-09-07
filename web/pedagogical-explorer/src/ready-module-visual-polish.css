@@ -1,0 +1,31 @@
+/* Presentation-only refinement for completed learner-facing modules.
+   Scientific values, geometry, frames and API behavior remain untouched. */
+
+/* PED-D11 — vessel configuration: make the reference geometry read as one coherent instrument view. */
+.d11-panel{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.d11-panel:hover{border-color:#ffbd683c;box-shadow:0 28px 72px #0005,inset 0 1px #ffffff09}
+.d11-plan{background:radial-gradient(ellipse at 50% 45%,#25362f 0,#111c1a 43%,#080d0c 100%);box-shadow:inset 0 0 80px #0008,0 18px 40px #0003}
+.d11-plan .vessel-envelope{border-color:#ffce8468;box-shadow:0 0 38px #ffbd6811,inset 0 0 38px #ffbd680b}
+.d11-plan .vrp{box-shadow:0 0 0 5px #fff1,0 0 18px #ffffff28}
+.d11-plan .sensor{font-weight:700;letter-spacing:.02em;box-shadow:0 0 9px currentColor,0 0 22px color-mix(in srgb,currentColor 30%,transparent)}
+.d11-plan .sensor:hover{transform:translate(-50%,-50%) scale(1.08);filter:brightness(1.16)}
+.d11-readouts div{background:linear-gradient(155deg,#171008,#100b06);transition:border-color .18s ease,transform .18s ease,background .18s ease}
+.d11-readouts div:hover{border-color:#ffbd6845;background:linear-gradient(155deg,#1c1309,#120c06);transform:translateY(-1px)}
+.d11-readouts strong{font-variant-numeric:tabular-nums;color:#f6dfbd}
+.d11-controls input[type=range]:focus-visible,.d11-reset:focus-visible,.d11-export:focus-visible{outline:2px solid #ffbd68;outline-offset:3px}
+
+/* PED-D12 — vessel motion: strengthen reference/current spatial comparison without changing the motion model. */
+.d12-consequences{position:relative}
+.d12-consequences:before{content:'';position:absolute;inset:-4px;border-radius:18px;background:radial-gradient(circle at 72% 18%,#5ce1f00d,transparent 35%);pointer-events:none}
+.d12-consequence-grid>section,.d12-beam-displacements,.d12-sounding-readouts{box-shadow:inset 0 1px #ffffff08,0 14px 34px #0002}
+.d12-sounding-plan{background:radial-gradient(circle at 50% 48%,#0c2a35 0,#071b25 48%,#05131a 100%);box-shadow:inset 0 0 44px #0005}
+.d12-sounding-plan circle.reference{opacity:.72}
+.d12-sounding-plan circle.moved{filter:drop-shadow(0 0 4px currentColor) drop-shadow(0 0 10px #65dff166)}
+.d12-swath-bars i{transition:width .22s ease,filter .22s ease,opacity .22s ease}
+.d12-swath-bars i.moved{filter:drop-shadow(0 0 7px #67d9ef55)}
+.d12-beam-displacements>div>section,.d12-sounding-readouts>div>section{transition:border-color .18s ease,background .18s ease,transform .18s ease}
+.d12-beam-displacements>div>section:hover,.d12-sounding-readouts>div>section:hover{border-color:#3f6c7d;background:#0d2935;transform:translateY(-1px)}
+.d12-beam-displacements b,.d12-sounding-readouts span{font-variant-numeric:tabular-nums}
+
+@media(hover:none){.d11-panel:hover,.d11-readouts div:hover,.d12-beam-displacements>div>section:hover,.d12-sounding-readouts>div>section:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.d11-panel,.d11-plan .sensor,.d11-readouts div,.d12-swath-bars i,.d12-beam-displacements>div>section,.d12-sounding-readouts>div>section{transition:none!important}}
