@@ -1,5 +1,5 @@
 id: hydrosim.propagation.environmental_sound_speed_extension
-version: 0.1.0
+version: 0.1.1
 status: specified_deferred_post_v0_1
 
 physical_quantity: seawater sound speed below a truncated didactic environmental profile
@@ -47,19 +47,30 @@ architecture:
   generic_layered_profile_semantics: strict_finite_domain
   extension_location: explicit_scientific_helper_or_composition_path
 
-references:
-  - key: wong_zhu_1995
-    citation: "Wong, G. S. K., & Zhu, S. (1995). Speed of sound in seawater as a function of salinity, temperature, and pressure. JASA 97(3), 1732-1736."
+source_mapping:
+  - reference_id: wong_zhu_1995_sound_speed_seawater
+    locator: "empirical sound-speed formulation recast on the ITS-90 temperature scale"
     evidence_level: direct_source
-  - key: chen_millero_1977
-    citation: "Chen, C.-T., & Millero, F. J. (1977). Speed of sound in seawater at high pressures. JASA 62(5), 1129-1135."
+  - reference_id: chen_millero_1977_sound_speed_seawater
+    locator: "underlying pressure-dependent seawater sound-speed formulation"
     evidence_level: direct_source
-  - key: teos10
-    citation: "IOC, SCOR & IAPSO (2010). The international thermodynamic equation of seawater – 2010 (TEOS-10)."
+  - reference_id: ioc_scor_iapso_2010_teos10_manual
+    locator: "TEOS-10 pressure/depth and thermodynamic seawater framework"
     evidence_level: direct_source
-  - key: hydroffice_sound_speed_manager
-    citation: "NOAA/UNH HydrOffice Sound Speed Manager (hydroffice/hyo2_soundspeed)."
-    evidence_level: supporting_implementation
+
+supporting_implementation_reference:
+  name: "NOAA/UNH HydrOffice Sound Speed Manager"
+  role: supporting_implementation_only
+  note: >-
+    HydrOffice informed the explicit profile-extension workflow, but the scientific
+    equations used by this model are grounded in the stable bibliography references above.
+
+hydrosim_derivation:
+  evidence_level: derived_from_source
+  statement: >-
+    Holding the deepest supplied T and S constant below z_m while allowing pressure to
+    vary is an explicit HydroSIM didactic continuation assumption. It is not an observed
+    environmental profile and is not attributed to Wong-Zhu, Chen-Millero or TEOS-10.
 
 implementation:
   status: deferred_post_v0_1
