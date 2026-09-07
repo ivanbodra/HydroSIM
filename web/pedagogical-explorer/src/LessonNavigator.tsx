@@ -27,16 +27,18 @@ const copy={
  pt:{lesson:'LIÇÃO',previous:'Anterior',next:'Próxima',lessons:'Lições',availableLessons:'Lições disponíveis',close:'Fechar lições',current:'Lição atual',open:'Abrir lição',map:'Mapa do Sistema',explorer:'Explorador Didático',lang:'EN'}
 };
 const lessonTitle=(lesson:Lesson,lang:Lang)=>lang==='pt'?lesson.titlePt:lesson.title;
+const initialLanguage=():Lang=>sessionStorage.getItem('hydrosim-language')==='pt'?'pt':'en';
 
 export default function LessonNavigator({currentId}:{currentId:string}){
- const[open,setOpen]=useState(false);const[lang,setLang]=useState<Lang>('en');const t=copy[lang];const index=lessons.findIndex(l=>l.id===currentId);const current=lessons[index];if(!current)return null;
+ const[open,setOpen]=useState(false);const[lang,setLang]=useState<Lang>(initialLanguage);const t=copy[lang];const index=lessons.findIndex(l=>l.id===currentId);const current=lessons[index];if(!current)return null;
+ const setLanguage=(next:Lang)=>{setLang(next);sessionStorage.setItem('hydrosim-language',next);window.dispatchEvent(new CustomEvent('hydrosim-language-change',{detail:next}))};
  const go=(lesson?:Lesson)=>{if(!lesson)return;sessionStorage.setItem('hydrosim-lesson-transition',JSON.stringify({from:current.displayId,to:lesson.displayId,title:lessonTitle(lesson,lang),family:lesson.family}));location.hash=lesson.route};
  return <><div className={`lesson-shell family-${current.family}`}>
   <button className="lesson-map-button" onClick={()=>{location.hash=''}} aria-label={t.map}><Grid3X3 size={16}/><span>{t.explorer}</span></button>
   <div className="lesson-location"><small>{t.lesson}</small><strong><span>{current.displayId}</span>{lessonTitle(current,lang)}</strong></div>
   <div className="lesson-spacer"/>
   <button className="lesson-step" disabled={index===0} onClick={()=>go(lessons[index-1])}><ArrowLeft size={15}/><span>{t.previous}</span></button>
-  <button className="lesson-menu-button" onClick={()=>setLang(v=>v==='en'?'pt':'en')} aria-label={lang==='en'?'Mudar idioma para português':'Switch language to English'}><Languages size={16}/><span>{t.lang}</span></button>
+  <button className="lesson-menu-button" onClick={()=>setLanguage(lang==='en'?'pt':'en')} aria-label={lang==='en'?'Mudar idioma para português':'Switch language to English'}><Languages size={16}/><span>{t.lang}</span></button>
   <button className="lesson-menu-button" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-label={t.lessons}><Menu size={16}/><span>{t.lessons}</span></button>
   <button className="lesson-step next" disabled={index===lessons.length-1} onClick={()=>go(lessons[index+1])}><span>{t.next}</span><ArrowRight size={15}/></button>
  </div>
