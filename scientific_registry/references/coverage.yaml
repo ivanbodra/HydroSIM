@@ -1,4 +1,4 @@
-version: 0.1.0
+version: 0.1.1
 language: en
 purpose: >-
   Canonical map from HydroSIM scientific domains and explanatory contracts to stable
@@ -173,11 +173,13 @@ domains:
     references:
       - jcgm_100_2008_gum
       - jcgm_100_2008_amd1_2026
+      - jcgm_101_2008_monte_carlo
       - iho_s44_6_2_0_2024
       - hughes_clarke_2003_dynamic_motion_residuals
     evidence:
       covariance_and_first_order_propagation: direct_source_standard
       nonlinear_model_caution: direct_source_standard
+      monte_carlo_alternative: direct_source_standard
       thu_tvu_hydrographic_context: direct_source_standard
       truth_error_vs_residual_semantics: internal_contract
     status: covered
@@ -186,7 +188,6 @@ domains:
     documents:
       - docs/science/dynamic_motion_residuals.md
       - docs/science/risc.md
-      - docs/science/pitch_patch_test_v0_1_contract.md
     references:
       - hughes_clarke_2003_dynamic_motion_residuals
       - maingot_2019_high_frequency_motion_residuals_thesis
@@ -195,15 +196,25 @@ domains:
     evidence:
       dynamic_residual_taxonomy: direct_source
       risc_model_and_parameters: direct_source
-      pitch_patch_reference_geometry_and_estimator: derived_from_source
     status: covered
 
-known_reference_corrections:
+  patch_test_calibration:
+    documents:
+      - docs/science/pitch_patch_test_v0_1_contract.md
+    references:
+      - noaa_ocean_exploration_2010_patch_test
+      - noaa_hssd_2022
+      - r2sonic_2017_patch_test
+    evidence:
+      reciprocal_pitch_line_geometry: direct_source_practice
+      slope_observability_guidance: direct_source_practice
+      iterative_pitch_null_minimum: direct_source_manufacturer_training
+      hydrosim_rms_estimator: derived_from_source
+    status: covered
+
+reference_corrections:
   - document: docs/science/ped_d9_high_density_phase_contract.md
-    incorrect_attribution: "Trenkel et al. (2009)"
+    former_incorrect_attribution: "Trenkel et al. (2009)"
     canonical_reference_id: bourguignon_et_al_2009_me70_bottom_detection
-    correction_required: true
-    reason: >-
-      The cited ICES Journal article, volume 66(6), pages 1015-1022, DOI
-      10.1093/icesjms/fsp089, is authored by Bourguignon, Berger, Scalabrin,
-      Fablet and Mazauric.
+    correction_completed: true
+    correction_commit: bea7da044047d8a6b576ad0b4350b3f7d1bb398b
