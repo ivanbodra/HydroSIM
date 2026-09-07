@@ -1,27 +1,14 @@
 # HydroSIM Product Atom Inventory
 
 Status: canonical product-measurement baseline  
-Scope: active 31-submodule roadmap (`PED-D1`–`PED-D18`, `P1`–`P6`, `A1`–`A7`)
-
-## Purpose and counting rules
-
-This file defines the denominator for HydroSIM's granular product-progress indicator. It is a measurement baseline, not a new implementation specification.
-
-- One **input atom** = one distinct learner-operable control/selection that changes the functional experience.
-- One **output atom** = one distinct learner-visible functional consequence, visualization or computed readout required by the pedagogical plan.
-- One selector with mutually exclusive choices is one input; independent scalar controls are separate inputs.
-- One plot/view is one output even when it contains several traces expressing the same phenomenon; a separately meaningful computed readout is separate.
-- Navigation, localization, explanatory text, contracts, docs, APIs, adapters, tests, PRs, CI, screenshots, infrastructure and coordination are not atoms.
-- An atom is `ready` only when functional in the production path on `main`; specification, mock or backend-only availability is not enough.
-- Scope changes must edit this inventory explicitly; the denominator must never change silently.
-- `PED-D5` atoms remain in the denominator while D5 remains in the canonical roadmap. A future merge/reallocation must update the pedagogical plan and this inventory together.
+Scope: active 30-submodule roadmap (17 Didactic + `P1`–`P6` + `A1`–`A7`); `PED-D5` is retired and retained only in the traceability note below.
 
 ## Product indicator
 
-**243 total atoms = 144 learner inputs + 99 learner-visible outputs.**  
-**Current atom indicator: 143/243 ready (58.8%).**
+**238 total atoms = 141 learner inputs + 97 learner-visible outputs.**  
+**Current atom indicator: 145/238 ready (60.9%).**
 
-Readiness counts learner-facing production behavior on `main`. The current conservative reconciliation includes only atom IDs explicitly evidenced by merged production work; unsupported or inferred behavior remains unready.
+Readiness counts learner-facing production behavior on `main`. Contracts, documentation, APIs, adapters, tests, PRs, CI, screenshots, infrastructure and coordination are not atoms.
 
 | Submodule | Inputs | Outputs | Total | Ready |
 |---|---:|---:|---:|---:|
@@ -29,11 +16,10 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | PED-D2 | 7 | 6 | 13 | 13 |
 | PED-D3 | 6 | 4 | 10 | 10 |
 | PED-D4 | 3 | 1 | 4 | 4 |
-| PED-D5 | 3 | 2 | 5 | 0 |
 | PED-D6 | 8 | 4 | 12 | 12 |
 | PED-D7 | 6 | 4 | 10 | 10 |
 | PED-D8 | 6 | 5 | 11 | 11 |
-| PED-D9 | 6 | 5 | 11 | 9 |
+| PED-D9 | 6 | 5 | 11 | 11 |
 | PED-D10 | 6 | 4 | 10 | 10 |
 | PED-D11 | 7 | 4 | 11 | 11 |
 | PED-D12 | 4 | 4 | 8 | 8 |
@@ -56,21 +42,28 @@ Readiness counts learner-facing production behavior on `main`. The current conse
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **144** | **99** | **243** | **143** |
+| **TOTAL** | **141** | **97** | **238** | **145** |
+
+### Retired PED-D5 traceability
+
+`PED-D5 — Acoustic Detection Fundamentals` was retired as a standalone submodule by Product Owner decision on 2026-09-06. Its former atoms are mapped to existing receiving behavior and therefore are removed from the denominator rather than duplicated:
+
+| Retired atom | Former wording | Receiving objective / atom |
+|---|---|---|
+| PED-D5-I01 | signal level | PED-D3 source/received-level reasoning (`PED-D3-I01` and `PED-D3-O01`) |
+| PED-D5-I02 | noise level | PED-D3 noise level (`PED-D3-I05`) and SNR consequence (`PED-D3-O02`) |
+| PED-D5-I03 | threshold | PED-D3 required SNR/detection threshold (`PED-D3-I06`) for detection margin and PED-D9 threshold (`PED-D9-I03`) for bottom-detection behavior |
+| PED-D5-O01 | signal/noise/SNR detectability | PED-D3 SNR versus range and detection margin (`PED-D3-O02`, `PED-D3-O04`) |
+| PED-D5-O02 | detected/not-detected state | PED-D9 detection formation and false/missed consequence (`PED-D9-O01`, `PED-D9-O03`) |
+
+Signal/pulse representation and processing prerequisites that supported the retired D5 learning question remain in PED-D2's existing waveform, received-echo, envelope and processing atoms; no new PED-D2 atom is introduced by the retirement.
 
 ### Ready atom evidence for partially/newly reconciled submodules
 
-- **PED-D6 — 12/12:** `I01`–`I08`, `O01`–`O04`. `I06` eccentricity is learner-operable on `main` through PR #236, with RX X/Y/Z controls and canonical TX→RX vector/magnitude readout.
-- **PED-D9 — 9/11:** `I01`, `I02`, `I03`, `I04`, `I06`, `O01`, `O02`, `O03`, `O04`. PR #313 makes `I02` detection window learner-operable on `main`, sending its bounds to the canonical bottom-detection API and exposing the selected-window consequence on the production matched-filter trace. PR #336 adds learner-operable threshold (`I03`) and single/multiple detection retention (`I04`) plus the learner-visible false/missed classification consequence (`O03`) through the canonical bottom-detection bridge. `I05` High Density remains unready, and `O05` remains unready because its canonical High Density/multiple-detection comparison is not complete until the distinct phase-based High Density behavior is available in production.
-- **PED-D10 — 10/10:** `I01`–`I06`, `O01`–`O04`.
-- **PED-D11 — 11/11:** `I01`–`I07`, `O01`–`O04`. PR #316 completes `I01` vessel dimensions/model and `I02` reference point with learner-operable vessel envelope and VRP controls backed by the canonical PED-D11 vessel/reference API; the previously ready sensor pose, waterline, installation and configuration representation atoms remain functional on `main`.
-- **PED-D12 — 8/8:** `I01`–`I04`, `O01`–`O04`. PR #312 completes `O02` beam displacement, `O03` swath consequence and `O04` sounding consequence by rendering the canonical vessel-motion consequence API merged through PR #309; all four motion controls and all four learner-visible consequences are functional bilingually on `main`.
-- **PED-D14 — 9/9:** `I01`–`I05`, `O01`–`O04`. PR #278 established timestamp/latency controls and timeline/synchronization behavior; PR #308 completes learner-operable sensor rates, vessel speed and stream selection plus explicit TX sample association and signed along-track position timing consequence through the canonical timing API. Attitude timing remains age-only and is not converted to metres.
-- **PED-D15 — 10/10:** `I01`–`I07`, `O01`–`O03`. PR #269 integrated the three sounding-formation outputs; PR #291 completes the seven learner-operable inputs through the canonical sounding-formation API.
+- **PED-D9 — 11/11:** `I01`–`I06`, `O01`–`O05`. PR #336 added learner-operable threshold (`I03`) and single/multiple detection retention (`I04`) plus false/missed consequence (`O03`). PR #341 completes learner-operable phase-based High Density (`I05`) and the canonical High Density/multiple-detection comparison (`O05`) through authoritative API outputs; High Density remains explicitly distinct from generic multiple detection.
 - **PED-D17 — 8/14:** current learner-facing readiness includes the established controls/consequences through PR #254 plus the explicit sounding-pattern consequence integrated by PR #273. No additional unsupported survey-product behavior is inferred.
-- **PED-D18 — 11/11:** `I01`–`I07`, `O01`–`O04`, with the final sounding-uncertainty consequence integrated through PR #262.
 
-Existing complete ready baselines remain PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D10, PED-D11, PED-D12, PED-D14, PED-D15 and PED-D18.
+Complete ready baselines: PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D9, PED-D10, PED-D11, PED-D12, PED-D14, PED-D15 and PED-D18.
 
 ## Atom definitions
 
@@ -80,7 +73,6 @@ Format: `inputs -> outputs`. IDs are sequential per list as `<submodule>-I01...`
 - **PED-D2:** signal type CW/chirp; frequency; bandwidth; pulse length; envelope/filter mode; matched-filter toggle; phase -> transmitted waveform; received echo; envelope; pulse-compression result; temporal resolution; range resolution.
 - **PED-D3:** source level; spreading model/parameter; absorption/frequency; range; noise level; detection threshold/required SNR -> received level vs range; SNR vs range; frequency/absorption comparison; detection margin.
 - **PED-D4:** SVP; depth/profile geometry; launch angle -> ray/path visualization including refraction and configured-profile error consequence.
-- **PED-D5:** signal level; noise level; threshold -> signal/noise/SNR detectability; detected/not-detected state.
 - **PED-D6:** element count; frequency; spacing; aperture/dimension; array geometry; eccentricity; Mills Cross; shading/apodization -> array construction; directivity/beam pattern; beamwidth; side-lobe/gain-loss visualization.
 - **PED-D7:** TX/RX role; frequency; element count/array size; spacing/face geometry; steering angle; source/arrival angle -> element phase/coherent contribution; array-factor/physical beam pattern; steered direction/peak; steering-loss/beamwidth/coherent-sum readouts.
 - **PED-D8:** echosounder mode/configuration; depth; beam geometry/count; incidence/swath angle; beam-spacing mode; transducer/footprint configuration -> synchronized SBES/MBES geometry; beam-centre/sounding positions; footprint; geometric swath; equiangular/equidistant and adjacent-spacing comparison.

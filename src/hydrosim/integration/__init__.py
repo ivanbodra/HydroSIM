@@ -1,10 +1,17 @@
-"""Reference models for hydrographic sensor integration errors.
+"""Reference models for hydrographic sensor integration errors and configuration.
 
 The modules in this package are scientific reference implementations. They are
 kept separate from UI code and from future optimization/calibration routines so
 that equations, conventions, and validation cases remain independently testable.
 """
 
+from .pu_sensor import (
+    ProtocolMessageAcceptance,
+    PuInputProfile,
+    PuSensorCompatibilityResult,
+    SensorStreamProfile,
+    evaluate_pu_sensor_compatibility,
+)
 from .risc_maingot import (
     AdjustedMotionState,
     apply_maingot_motion_errors,
@@ -31,7 +38,11 @@ __all__ = [
     "AdjustedMotionState",
     "DerivedSemanticState",
     "InputSemanticState",
+    "ProtocolMessageAcceptance",
     "PropagatedUncertainty",
+    "PuInputProfile",
+    "PuSensorCompatibilityResult",
+    "SensorStreamProfile",
     "TruthErrorVector",
     "UncertainInputSet",
     "VerificationResidual",
@@ -39,6 +50,7 @@ __all__ = [
     "compute_truth_error",
     "compute_verification_residual",
     "configured_lever_arm_from_maingot_error",
+    "evaluate_pu_sensor_compatibility",
     "hydrosim_lever_arm_error_from_maingot",
     "hydrosim_sss_error_from_maingot",
     "maingot_latency_adjusted",

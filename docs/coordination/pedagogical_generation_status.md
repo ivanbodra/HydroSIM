@@ -4,34 +4,16 @@ Status: canonical coordination baseline
 
 ## Product indicators
 
-The active roadmap contains 31 learner-facing submodules:
+The active roadmap contains 30 learner-facing submodules: 17 active Didactic submodules (`PED-D1`–`PED-D18`, excluding retired `PED-D5`), `P1`–`P6`, and `A1`–`A7`.
 
-- `PED-D1`–`PED-D18`: Didactic Module
-- `P1`–`P6`: Patch Test Module
-- `A1`–`A7`: Acquisition Simulator
+**Submodule indicator: 14/30 ready submodules (46.7%).**
 
-**Submodule indicator: 13/31 ready submodules (41.9%).**
+Ready submodules: `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D9`, `PED-D10`, `PED-D11`, `PED-D12`, `PED-D14`, `PED-D15`, `PED-D18`.
 
-Ready submodules:
-
-- `PED-D1` — Wave Fundamentals. Runnable bilingual React experience on `main`, canonical Python wave-kinematics API, focused learner-facing UI/state validation integrated through PR #153, and independent scientific/computational QA PASS in Issue #148 with no material finding.
-- `PED-D2` — Signal Types & Pulse Compression. Runnable bilingual production React experience on `main` using the canonical Python signal API, focused learner-facing validation and real React + Python API end-to-end runtime evidence through PR #154, and independent narrow scientific/computational QA PASS in Issue #162 with no material finding.
-- `PED-D3` — Sonar Equation & Propagation Loss. Runnable bilingual production React experience on `main`, focused learner-facing validation, canonical Python sonar-equation API, and risk-proportionate independent QA closure in Issue #155.
-- `PED-D4` — Sound Speed & Refraction. Runnable bilingual production React experience on `main` via PR #165, focused learner-facing tests, canonical Python refraction bridge/Core, and narrow independent QA PASS in Issue #170.
-- `PED-D6` — Array Geometry & Directivity. Complete 12-atom learner-facing slice on `main`; PR #236 closes the final `I06 eccentricity` atom with learner-operable RX X/Y/Z placement and canonical TX→RX vector/magnitude readout, preserving the one-way directivity model and bilingual production path.
-- `PED-D7` — Beamforming & Electronic Steering. Production learner experience integrated under `web/pedagogical-explorer/` through PR #193 / merge `5e5788cef23599247d158d687997ff1599df3607`, consuming the canonical Python beamforming API and preserving the Concept baseline. The previously identified Port/Starboard identity defect was corrected on `main`, and narrow independent confirmation #107 is complete.
-- `PED-D8` — Echosounders — SBES vs MBES. Production bilingual learner experience integrated under `web/pedagogical-explorer/` through PR #192 / merge `176d4331ff5e560cbdf498a6540b9269d88de397`, consuming the canonical Python echosounders API and preserving the Concept baseline.
-- `PED-D10` — Multisector MBES. Complete inventoried learner-facing slice is integrated bilingually on `main` through PR #221, consuming the canonical Python multisector capability with focused production validation; all 10 inventoried learner atoms are ready.
-- `PED-D11` — Vessel & Sensor Configuration. Complete 11-atom bilingual learner-facing slice on `main`; PR #316 completes vessel dimensions/model and VRP/reference-point controls through the canonical PED-D11 vessel/reference API, while the sensor pose, waterline, installation/lever-arm and configuration representation behavior was already operational.
-- `PED-D12` — Vessel Motion. Complete 8-atom bilingual learner-facing slice on `main`; the four Roll/Pitch/Yaw/Heave controls and vessel/sensor motion output were already operational, PR #309 supplied canonical beam/swath/sounding motion consequences, and PR #312 exposes the remaining beam displacement, swath and sounding consequences directly from that API.
-- `PED-D14` — Timing & Latency. Complete 9-atom bilingual learner-facing slice on `main`; PR #278 established the timing timeline and synchronization controls/consequences, PR #305 supplied the canonical association/spatial-consequence capability, and PR #308 exposes all remaining learner-operable rates/speed/stream selection plus explicit TX sample association and signed along-track position timing consequence without converting attitude age into metres.
-- `PED-D15` — Sounding Formation. Complete 10-atom learner-facing slice on `main`: PR #269 integrated the ping-to-detection/range, frame/transformation and 3D-sounding outputs; PR #291 completes all seven learner-operable inputs through the canonical sounding-formation API while preserving bilingual production behavior.
-- `PED-D18` — Uncertainty & Error Sources. Complete 11-atom learner-facing slice on `main`; PR #262 closes the final `O04` sounding-uncertainty consequence after the earlier uncertainty controls and THU/TVU/TPU outputs were integrated.
-
-**Atom indicator: 143/243 ready learner atoms (58.8%).**  
+**Atom indicator: 145/238 ready learner atoms (60.9%).**
 Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
 
-The atom inventory contains 144 learner inputs and 99 learner-visible outputs. Enabling work is never counted as product atoms.
+`PED-D5 — Acoustic Detection Fundamentals` was retired as a standalone submodule by Product Owner decision on 2026-09-06. Its former objectives are explicitly redistributed to PED-D2, PED-D3 and PED-D9; the five retired D5 atoms are not counted again because their learner behavior is already represented by receiving atoms in those submodules.
 
 ## Completion rule
 
@@ -43,19 +25,15 @@ Every visible scientific quantity must trace to a Scientific Contract output.
 
 ## Delivery strategy
 
-Build outside-in until the scientific boundary, then complete submodules vertically.
-
-1. Product shell: Home/System Map → Didactic / Patch Test / Acquisition, with all 31 entries and explicit availability state.
-2. Scientific submodules: complete one submodule through science → application/visualization → UX → focused validation → integration before counting it.
-3. Keep the active pipeline small (normally 2–3 results in flight). Do not create horizontal implementation inventories merely to generate work.
-4. Maintain `product_atom_inventory.md` as a measurement baseline; it describes planned learner-facing inputs/outputs and must not create implementation scope by itself.
+Build outside-in until the scientific boundary, then complete submodules vertically. Keep the active pipeline small and prefer completing near-ready learner slices over opening speculative horizontal work.
 
 ## Current pipeline
 
-- `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D10`, `PED-D11`, `PED-D12`, `PED-D14`, `PED-D15` and `PED-D18` are complete and no longer pipeline work.
-- `PED-D9` and `PED-D17` have partial learner-facing production readiness recorded atom-by-atom in `product_atom_inventory.md`; their remaining behavior must not be inferred from backend or documentation alone.
-- `PED-D9` is 9/11 after PR #336; its remaining atoms are `I05` High Density and `O05` High Density/multiple-detection comparison. `PED-D17` is 8/14 after PR #273.
-- Keep the next independent specialist slice in parallel when a concrete unblocked dependency exists; do not create speculative horizontal inventory.
+- `PED-D9` is complete at 11/11 after PR #341 integrated learner-operable phase-based High Density and its distinct comparison/consequence through the authoritative API.
+- `PED-D17` remains the nearest partial submodule at 8/14 and is the next completion-oriented learner slice unless a concrete dependency blocks it.
+- `PED-D13` remains dependent on its scientific definition; do not serialize independent PED-D17 work behind it.
+- `PED-D16` remains unstarted in the canonical atom inventory; do not open it merely to increase WIP.
+- `PED-D5` is retired, not unstarted: its former learning objectives are redistributed and traceable in the canonical inventory.
 
 ## Design / implementation boundary
 
@@ -66,8 +44,6 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 ## Historical boundary
 
 `v0.0.1-prototype` preserves the pre-transition Didactic Explorer prototype at commit `d76c4222959afc5be119e8941173c4a67ddddb76`.
-
-The former eight-submodule `V01-D*` inventory is historical and must not be used as a current product indicator.
 
 ## UX / terminology rule
 
