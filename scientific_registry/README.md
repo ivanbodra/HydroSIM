@@ -18,7 +18,8 @@ scientific_registry/
 │   ├── beamforming/
 │   └── signal_processing/
 ├── references/
-│   └── bibliography.yaml
+│   ├── bibliography.yaml
+│   └── coverage.yaml
 └── validation/
     └── golden_values/
 ```
@@ -67,6 +68,30 @@ Each model record should contain, where applicable:
 - related models;
 - alternatives;
 - `supersedes` / `superseded_by` relationships where applicable.
+
+## Reference coverage rule
+
+`references/bibliography.yaml` is the canonical store for external scientific, standards, and manufacturer references. `references/coverage.yaml` maps the active HydroSIM scientific domains and authoritative contracts to those stable bibliography IDs.
+
+A scientific contract is traceability-complete only when every material external claim is covered by one of the following explicit provenance classes:
+
+- a stable bibliography reference ID;
+- `mathematical_identity` or `mathematical_geometry` for a direct mathematical consequence that does not depend on an empirical scientific source;
+- `internal_contract` for a HydroSIM-defined state, sign, frame, naming, or API semantic convention;
+- `derived_from_source` with the named upstream model/reference when HydroSIM deliberately defines a transparent pedagogical approximation from sourced behavior.
+
+This distinction is important: HydroSIM must not create decorative citations for identities such as `distance = speed * time`, but it also must not leave empirical formulas, standards claims, manufacturer behavior, or literature-derived algorithms without a traceable source.
+
+When adding or materially changing an authoritative scientific contract:
+
+1. reuse an existing bibliography ID where it already supports the claim;
+2. add any genuinely new external reference to `bibliography.yaml` once, with stable ID and scope;
+3. add or update the relevant domain mapping in `coverage.yaml`;
+4. use the narrowest useful source locator in a model record or contract when a specific equation, section, figure, or manual passage is important;
+5. never use a manufacturer manual as evidence for universal MBES behavior unless the claim is explicitly limited to that named system or independently supported by general literature;
+6. correct bibliographic attribution errors in the originating authoritative document, not only in downstream notes.
+
+A passing software test does not compensate for missing scientific provenance.
 
 ## Evidence levels
 
