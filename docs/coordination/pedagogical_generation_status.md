@@ -6,11 +6,11 @@ Status: canonical coordination baseline
 
 The active roadmap contains 30 learner-facing submodules: 17 active Didactic submodules (`PED-D1`–`PED-D18`, excluding retired `PED-D5`), `P1`–`P6`, and `A1`–`A7`.
 
-**Submodule indicator: 16/30 ready submodules (53.3%).**
+**Submodule indicator: 17/30 ready submodules (56.7%).**
 
-Ready submodules: `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D9`, `PED-D10`, `PED-D11`, `PED-D12`, `PED-D13`, `PED-D14`, `PED-D15`, `PED-D17`, `PED-D18`.
+Ready submodules: `PED-D1`, `PED-D2`, `PED-D3`, `PED-D4`, `PED-D6`, `PED-D7`, `PED-D8`, `PED-D9`, `PED-D10`, `PED-D11`, `PED-D12`, `PED-D13`, `PED-D14`, `PED-D15`, `PED-D16`, `PED-D17`, `PED-D18`.
 
-**Atom indicator: 161/238 ready learner atoms (67.6%).**
+**Atom indicator: 172/238 ready learner atoms (72.3%).**
 Canonical denominator and atom-by-atom evidence: `docs/coordination/product_atom_inventory.md`.
 
 `PED-D5 — Acoustic Detection Fundamentals` was retired as a standalone submodule by Product Owner decision on 2026-09-06. Its former objectives are explicitly redistributed to PED-D2, PED-D3 and PED-D9; the five retired D5 atoms are not counted again because their learner behavior is already represented by receiving atoms in those submodules.
@@ -29,10 +29,11 @@ Build outside-in until the scientific boundary, then complete submodules vertica
 
 ## Current pipeline
 
-- `PED-D17` is complete at 14/14 after PR #346 integrated High Density, ping-rate/speed, coverage/gaps and along/across density through authoritative API outputs.
-- `PED-D16` is the only remaining active Didactic submodule not ready in the canonical inventory and is now the shortest path to Didactic functional completion.
-- `PED-D5` is retired, not unstarted: its former learning objectives are redistributed and traceable in the canonical inventory.
-- Patch Test implementation remains gated by #359 until Didactic completion, stabilization, Product Owner review and explicit transition authorization.
+- The active Didactic set is functionally complete at the atom/submodule level after PED-D16 Survey Planning reached production through PR #373.
+- PED-D17 is complete at 14/14 after PR #346 integrated High Density, ping-rate/speed, coverage/gaps and along/across density through authoritative API outputs.
+- PED-D5 is retired, not unstarted: its former learning objectives are redistributed and traceable in the canonical inventory.
+- Current Didactic work is now stabilization and learner-experience refinement, including the learner-visible D6 Beamforming redesign; this work must not inflate atom counts when it only improves an already-ready contract.
+- Patch Test implementation remains gated by #359 until Didactic stabilization, Product Owner review and explicit transition authorization.
 
 ## Design / implementation boundary
 
