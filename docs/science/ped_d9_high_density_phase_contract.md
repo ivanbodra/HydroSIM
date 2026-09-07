@@ -18,12 +18,12 @@ Split-aperture phase bottom detection is established practice. The receive apert
 
 Kongsberg's EM 2040 documentation explicitly states that, in High Density mode, the phase curve for one beam is used to derive more than one detection rather than only the beam-centre detection, with sounding spacing chosen to obtain approximately equidistant bottom sampling. The same documentation notes that phase detection becomes unreliable when too few phase samples exist or the phase curve is too noisy, commonly near normal incidence/shallow geometry.
 
-Peer-reviewed work on split-beam phase bottom detection likewise describes the phase difference between sub-apertures, the zero crossing at the beam-axis arrival, and the need for a sufficiently coherent/approximately linear phase trend around the bottom interaction.
+Peer-reviewed work on split-beam phase bottom detection likewise describes the phase difference between sub-apertures and use of phase cancellation/zero crossing for bottom detection in oblique beams.
 
-Primary references:
+Primary references (stable IDs in `scientific_registry/references/bibliography.yaml`):
 
-- Kongsberg Maritime, *EM 2040 Multibeam Echosounder Instruction Manual*, document 346210, section `Bottom detection`.
-- Trenkel, V. M. et al. (2009), `Methodological developments for improved bottom detection with the ME70 multibeam echosounder`, *ICES Journal of Marine Science*, 66(6), 1015–1022.
+- `kongsberg_em2040_instruction_manual_346210` — Kongsberg Maritime, *EM 2040 Multibeam Echo Sounder Instruction Manual*, document 346210/C, section `Bottom detection`.
+- `bourguignon_et_al_2009_me70_bottom_detection` — Bourguignon, S.; Berger, L.; Scalabrin, C.; Fablet, R.; Mazauric, V. (2009), *Methodological developments for improved bottom detection with the ME70 multibeam echosounder*, *ICES Journal of Marine Science*, 66(6), 1015–1022, DOI 10.1093/icesjms/fsp089.
 
 Evidence level:
 
