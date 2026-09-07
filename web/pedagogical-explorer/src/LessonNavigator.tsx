@@ -19,6 +19,7 @@ const lessons:Lesson[]=[
 {id:'D13',displayId:'D12',title:'PU & Sensor Integration',titlePt:'Integração da PU e Sensores',route:'#pu-sensor-lab',family:'platform'},
 {id:'D14',displayId:'D13',title:'Timing & Latency',titlePt:'Tempo e Latência',route:'#timing-lab',family:'platform'},
 {id:'D15',displayId:'D14',title:'Sounding Formation',titlePt:'Formação da Sondagem',route:'#sounding-formation-lab',family:'platform'},
+{id:'D16',displayId:'D15',title:'Survey Planning',titlePt:'Planejamento do Levantamento',route:'#survey-planning-lab',family:'integration'},
 {id:'D17',displayId:'D16',title:'Survey Coverage & Acquisition Trade-offs',titlePt:'Cobertura e Compromissos de Aquisição',route:'#tradeoff-lab',family:'integration'},
 {id:'D18',displayId:'D17',title:'Uncertainty & Error Sources',titlePt:'Incerteza e Fontes de Erro',route:'#uncertainty-lab',family:'integration'},
 ];
