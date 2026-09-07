@@ -73,3 +73,93 @@ def test_d7_tx_rx_roles_share_same_first_slice_numeric_response() -> None:
 def test_d7_requires_steering_inside_requested_scan() -> None:
     with pytest.raises(ValueError, match="steering_angle_deg"):
         D7BeamformingRequest(steering_angle_deg=70.0, scan_max_deg=60.0)
+
+
+def test_d7_relative_timing_uses_explicit_channel_zero_reference() -> None:
+    response = prepare_d7_beamforming_response(
+        D7BeamformingRequest(
+            role="rx",
+            element_count=6,
+            element_spacing_m=0.00375,
+            steering_angle_deg=25.0,
+            source_angle_deg=10.0,
+        )
+    )
+
+    assert response.reference_channel_index == 0
+    reference = response.elements[0]
+    assert reference.relative_arrival_offset_us == pytest.approx(0.0, abs=1e-12)
+    assert reference.relative_compensation_delay_us == pytest.approx(0.0, abs=1e-12)
+    assert reference.residual_relative_timing_us == pytest.approx(0.0, abs=1e-12)
+    assert reference.residual_relative_phase_rad == pytest.approx(0.0, abs=1e-12)
+
+
+def test_d7_source_equal_steering_closes_relative_timing_residual() -> None:
+    response = prepare_d7_beamforming_response(
+        D7BeamformingRequest(
+            role="rx",
+            element_count=6,
+            steering_angle_deg=30.0,
+            source_angle_deg=30.0,
+        )
+    )
+
+    assert all(abs(element.residual_relative_timing_us) < 1e-12 for element in response.elements)
+    assert all(abs(element.residual_relative_phase_rad) < 1e-12 for element in response.elements)
+
+
+def test_d7_delay_gradient_inverse_matches_angle_control() -> None:
+    angle_response = prepare_d7_beamforming_response(
+        D7BeamformingRequest(
+            role="rx",
+            element_count=6,
+            steering_angle_deg=20.0,
+            source_angle_deg=20.0,
+        )
+    )
+    delay_response = prepare_d7_beamforming_response(
+        D7BeamformingRequest(
+            role="rx",
+            element_count=6,
+            steering_control_mode="delay_gradient",
+            delay_gradient_us_per_element=angle_response.steering_delay_gradient_us_per_element,
+            source_angle_deg=20.0,
+        )
+    )
+
+    assert delay_response.steering_angle_deg == pytest.approx(20.0, abs=1e-10)
+    assert delay_response.evaluated_array_factor_power == pytest.approx(1.0, abs=1e-12)
+
+
+def test_d7_delay_gradient_rejects_nonphysical_mapping() -> None:
+    with pytest.raises(ValueError, match="physical steering angle"):
+        prepare_d7_beamforming_response(
+            D7BeamformingRequest(
+                steering_control_mode="delay_gradient",
+                delay_gradient_us_per_element=100.0,
+            )
+        )
+
+
+def test_d7_reports_unambiguous_and_aliased_regimes() -> None:
+    unambiguous = prepare_d7_beamforming_response(
+        D7BeamformingRequest(
+            frequency_khz=200.0,
+            sound_speed_mps=1500.0,
+            element_spacing_m=0.00375,
+            steering_angle_deg=20.0,
+        )
+    )
+    aliased = prepare_d7_beamforming_response(
+        D7BeamformingRequest(
+            frequency_khz=200.0,
+            sound_speed_mps=1500.0,
+            element_spacing_m=0.012,
+            steering_angle_deg=20.0,
+        )
+    )
+
+    assert unambiguous.steering_regime == "unambiguous"
+    assert unambiguous.grating_lobe_angles_deg == ()
+    assert aliased.steering_regime == "aliased"
+    assert aliased.grating_lobe_angles_deg
