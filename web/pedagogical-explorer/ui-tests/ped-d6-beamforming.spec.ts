@@ -26,5 +26,5 @@ test('D6 keeps the array fixed and exposes authoritative channel timing',async({
  expect(requests.at(-1)?.delay_gradient_us_per_element).toBe(.001);
  await expect(page.getByText('Effective steering').locator('..').getByText('+18°',{exact:true})).toBeVisible();
  await expect(page.getByText('Aliased',{exact:true})).toBeVisible();
- await expect(page.getByText('−47.5°',{exact:false})).toBeVisible();
+ await expect(page.getByText('-47.5°',{exact:false})).toBeVisible();
 });
