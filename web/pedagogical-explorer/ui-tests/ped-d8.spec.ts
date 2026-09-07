@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('PED-D8 keeps learner controls wired to canonical echosounder outputs', async ({ page }) => {
+  await page.addInitScript(()=>sessionStorage.setItem('hydrosim-language','en'));
   let lastBody:any=null;
   await page.route('**/api/v1/pedagogical/echosounders', async route => {
     lastBody=JSON.parse(route.request().postData()||'{}');
@@ -9,12 +10,12 @@ test('PED-D8 keeps learner controls wired to canonical echosounder outputs', asy
     await route.fulfill({json:{selected_system:lastBody.selected_system,target_depth_m:lastBody.vertical_separation_m,sbes:lastBody.selected_system==='sbes'?system:{...system,system:'sbes',beams:[beams[1]??beams[0]],adjacent_across_track_spacings_m:[],geometric_beam_center_swath_width_m:0},mbes:lastBody.selected_system==='mbes'?system:{...system,system:'mbes'},metadata:{}}});
   });
   await page.goto('/#echosounder-lab');
-  await expect(page.getByRole('heading',{name:'Single beam or swath?'})).toBeVisible();
+  await expect(page.locator('.lesson-location').getByText('D7',{exact:true})).toBeVisible();
   await expect(page.getByText('160.0 m').first()).toBeVisible();
   await expect(page.getByLabel('Synchronized SBES × MBES comparison')).toContainText('160.0 m');
   await page.getByRole('button',{name:'SBES'}).click();
   await expect.poll(()=>lastBody?.selected_system).toBe('sbes');
   await expect(page.getByText('0.0 m').first()).toBeVisible();
   await page.getByRole('button',{name:'PT-BR'}).click();
-  await expect(page.getByRole('heading',{name:'Um feixe ou uma faixa?'})).toBeVisible();
+  await expect(page.getByText('Profundidade',{exact:true})).toBeVisible();
 });
