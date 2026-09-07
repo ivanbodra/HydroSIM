@@ -1,4 +1,4 @@
-version: 0.1.3
+version: 0.2.0
 language: en
 
 references:
@@ -212,3 +212,313 @@ references:
       for beam steering and as the first sound-speed-profile value. HydroSIM represents
       the corresponding point value as an explicit zero-thickness boundary rather than
       overwriting a finite-thickness layer.
+
+  - id: ainslie_mccolm_1998_seawater_absorption
+    type: journal_article
+    authors:
+      - Michael A. Ainslie
+      - James G. McColm
+    year: 1998
+    title: "A simplified formula for viscous and chemical absorption in sea water"
+    publication: "The Journal of the Acoustical Society of America"
+    volume: "103"
+    issue: "3"
+    pages: "1671-1672"
+    doi: "10.1121/1.421258"
+    primary_url: "https://doi.org/10.1121/1.421258"
+    scope:
+      - seawater acoustic absorption
+      - frequency dependence
+      - temperature
+      - salinity
+      - pH
+      - depth pressure correction
+    notes: >-
+      Primary reference for the empirical absorption approximation selected by the
+      HydroSIM PED-D3 sonar-equation lesson.
+
+  - id: francois_garrison_1982_absorption_part1
+    type: journal_article
+    authors:
+      - R. E. Francois
+      - G. R. Garrison
+    year: 1982
+    title: "Sound absorption based on ocean measurements: Part I: Pure water and magnesium sulfate contributions"
+    publication: "The Journal of the Acoustical Society of America"
+    volume: "72"
+    issue: "3"
+    pages: "896-907"
+    doi: "10.1121/1.388170"
+    primary_url: "https://doi.org/10.1121/1.388170"
+    scope:
+      - seawater acoustic absorption
+      - magnesium sulfate relaxation
+      - pure-water contribution
+
+  - id: francois_garrison_1982_absorption_part2
+    type: journal_article
+    authors:
+      - R. E. Francois
+      - G. R. Garrison
+    year: 1982
+    title: "Sound absorption based on ocean measurements. Part II: Boric acid contribution and equation for total absorption"
+    publication: "The Journal of the Acoustical Society of America"
+    volume: "72"
+    issue: "6"
+    pages: "1879-1890"
+    doi: "10.1121/1.388673"
+    primary_url: "https://doi.org/10.1121/1.388673"
+    scope:
+      - seawater acoustic absorption
+      - boric acid relaxation
+      - total absorption equation
+
+  - id: waite_2002_sonar_for_practising_engineers
+    type: book
+    authors:
+      - Ashley D. Waite
+    year: 2002
+    title: "Sonar for Practising Engineers"
+    edition: "3"
+    publisher: "John Wiley & Sons"
+    isbn: "978-0-471-49750-9"
+    primary_url: "https://www.wiley-vch.de/en/areas-interest/engineering/sonar-for-practising-engineers-978-0-471-49750-9"
+    scope:
+      - sonar equation
+      - acoustic levels
+      - arrays and directivity
+      - propagation
+      - active sonar
+      - echo sounding
+    notes: >-
+      General engineering reference for level-domain sonar terminology and baseline sonar
+      relationships. It does not override more specific HydroSIM model contracts.
+
+  - id: lurton_2010_underwater_acoustics
+    type: book
+    authors:
+      - Xavier Lurton
+    year: 2010
+    title: "An Introduction to Underwater Acoustics: Principles and Applications"
+    edition: "2"
+    publisher: "Springer"
+    primary_url: "https://link.springer.com/book/9783540784807"
+    scope:
+      - underwater acoustic waves
+      - propagation
+      - scattering
+      - transducers
+      - arrays
+      - signal processing
+      - sonar performance
+    notes: >-
+      General underwater-acoustics reference supporting foundational waveform, array,
+      directivity and sonar-processing concepts where a more specific primary source is
+      not required.
+
+  - id: van_trees_2002_optimum_array_processing
+    type: book
+    authors:
+      - Harry L. Van Trees
+    year: 2002
+    title: "Optimum Array Processing: Part IV of Detection, Estimation, and Modulation Theory"
+    publisher: "John Wiley & Sons"
+    doi: "10.1002/0471221104"
+    isbn: "9780471093909"
+    primary_url: "https://doi.org/10.1002/0471221104"
+    scope:
+      - array factor
+      - spatial filtering
+      - uniform linear arrays
+      - beam steering
+      - grating lobes
+      - spatial aliasing
+      - coherent summation
+    notes: >-
+      Foundational array-processing reference for the D6/D7 steering and spatial-aliasing
+      interpretation. HydroSIM retains its own explicit sign/frame convention.
+
+  - id: wong_zhu_1995_sound_speed_seawater
+    type: journal_article
+    authors:
+      - George S. K. Wong
+      - Shi-ming Zhu
+    year: 1995
+    title: "Speed of sound in seawater as a function of salinity, temperature, and pressure"
+    publication: "The Journal of the Acoustical Society of America"
+    volume: "97"
+    issue: "3"
+    pages: "1732-1736"
+    doi: "10.1121/1.413048"
+    primary_url: "https://doi.org/10.1121/1.413048"
+    scope:
+      - seawater sound speed
+      - ITS-90 temperature scale
+      - salinity
+      - pressure
+    notes: >-
+      ITS-90 recast/correction of the Chen-Millero sound-speed formulation used by the
+      HydroSIM environmental sound-speed extension where that empirical model is selected.
+
+  - id: chen_millero_1977_sound_speed_seawater
+    type: journal_article
+    authors:
+      - Chen-Tung Chen
+      - Frank J. Millero
+    year: 1977
+    title: "Speed of sound in seawater at high pressures"
+    publication: "The Journal of the Acoustical Society of America"
+    volume: "62"
+    issue: "5"
+    pages: "1129-1135"
+    doi: "10.1121/1.381646"
+    primary_url: "https://doi.org/10.1121/1.381646"
+    scope:
+      - seawater sound speed
+      - salinity
+      - temperature
+      - pressure
+
+  - id: ioc_scor_iapso_2010_teos10_manual
+    type: standard_manual
+    organizations:
+      - Intergovernmental Oceanographic Commission
+      - Scientific Committee on Oceanic Research
+      - International Association for the Physical Sciences of the Oceans
+    year: 2010
+    title: "The international thermodynamic equation of seawater - 2010: Calculation and use of thermodynamic properties"
+    series: "IOC Manuals and Guides No. 56"
+    publisher: "UNESCO"
+    primary_url: "https://www.teos-10.org/"
+    scope:
+      - TEOS-10
+      - Absolute Salinity
+      - Conservative Temperature
+      - sea pressure
+      - thermodynamic sound speed
+    notes: >-
+      Authoritative modern seawater-thermodynamics framework and basis for GSW sound-speed
+      calculations. Kept distinct from the optional Wong-Zhu empirical model.
+
+  - id: bourguignon_et_al_2009_me70_bottom_detection
+    type: journal_article
+    authors:
+      - Sebastien Bourguignon
+      - Laurent Berger
+      - Carla Scalabrin
+      - Ronan Fablet
+      - Valerie Mazauric
+    year: 2009
+    title: "Methodological developments for improved bottom detection with the ME70 multibeam echosounder"
+    publication: "ICES Journal of Marine Science"
+    volume: "66"
+    issue: "6"
+    pages: "1015-1022"
+    doi: "10.1093/icesjms/fsp089"
+    primary_url: "https://doi.org/10.1093/icesjms/fsp089"
+    scope:
+      - multibeam bottom detection
+      - split-beam phase difference
+      - phase zero crossing
+      - amplitude detection
+      - outer-beam detection
+    notes: >-
+      Peer-reviewed support for phase-difference bottom detection and zero-crossing
+      behavior. This corrects an earlier HydroSIM miscitation that attributed the paper
+      to Trenkel et al.
+
+  - id: kongsberg_em2040_instruction_manual_346210
+    type: manufacturer_manual
+    organization: "Kongsberg Maritime"
+    year: 2012
+    title: "EM 2040 Multibeam Echo Sounder Instruction Manual"
+    document_number: "346210/C"
+    primary_url: "https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/346210_em2040_instruction_manual.pdf"
+    scope:
+      - multibeam bottom detection
+      - split-aperture phase
+      - phase zero crossing
+      - High Density
+      - sounding spacing
+      - footprint
+      - multisector transmission
+      - ping rate
+    notes: >-
+      Product-specific direct source for the documented EM 2040 High Density behavior.
+      HydroSIM uses it only to ground the transparent reference behavior and does not claim
+      to reproduce proprietary processing.
+
+  - id: iec_61162_1_2024
+    type: international_standard
+    organization: "International Electrotechnical Commission"
+    year: 2024
+    title: "Maritime navigation and radiocommunication equipment and systems - Digital interfaces - Part 1: Single talker and multiple listeners"
+    standard_number: "IEC 61162-1:2024"
+    scope:
+      - maritime digital interfaces
+      - serial communication
+      - single talker multiple listeners
+      - navigation equipment integration
+    notes: >-
+      Normative interface reference for the generic PU/sensor integration semantics used
+      by PED-D13. HydroSIM does not claim conformance testing from the pedagogical model.
+
+  - id: nmea_0183_interface_standard
+    type: industry_standard
+    organization: "National Marine Electronics Association"
+    title: "NMEA 0183 Interface Standard"
+    primary_url: "https://www.nmea.org/nmea-0183.html"
+    scope:
+      - marine serial data
+      - single talker multiple listeners
+      - 4800 baud
+      - NMEA 0183-HS 38400 baud
+      - printable ASCII messages
+    notes: >-
+      Official NMEA overview used only for generic transport/message semantics and published
+      standard/HS signalling rates. Detailed sentence behavior requires the licensed standard.
+
+  - id: jcgm_100_2008_gum
+    type: international_guide
+    organization: "Joint Committee for Guides in Metrology"
+    year: 2008
+    title: "Evaluation of measurement data - Guide to the expression of uncertainty in measurement"
+    standard_number: "JCGM 100:2008"
+    doi: "10.59161/JCGM100-2008E"
+    primary_url: "https://doi.org/10.59161/JCGM100-2008E"
+    scope:
+      - measurement uncertainty
+      - covariance
+      - law of propagation of uncertainty
+      - standard uncertainty
+      - expanded uncertainty
+
+  - id: jcgm_100_2008_amd1_2026
+    type: international_guide
+    organization: "Joint Committee for Guides in Metrology"
+    year: 2026
+    title: "Evaluation of measurement data - Guide to the expression of uncertainty in measurement. Amendment 1: Nonlinearity in measurement models"
+    standard_number: "JCGM 100:2008/Amd.1:2026"
+    doi: "10.59161/PPDI3267"
+    primary_url: "https://doi.org/10.59161/PPDI3267"
+    scope:
+      - measurement uncertainty
+      - nonlinear measurement models
+      - uncertainty propagation
+
+  - id: iho_s44_6_2_0_2024
+    type: international_standard
+    organization: "International Hydrographic Organization"
+    year: 2024
+    title: "IHO Standards for Hydrographic Surveys"
+    standard_number: "S-44 Edition 6.2.0"
+    primary_url: "https://iho.int/uploads/user/pubs/standards/s-44/S-44_Edition_6.2.0_adopted.pdf"
+    scope:
+      - hydrographic survey standards
+      - horizontal uncertainty
+      - vertical uncertainty
+      - bathymetric coverage
+      - feature detection
+    notes: >-
+      Hydrographic survey authority used where HydroSIM discusses THU/TVU and survey-quality
+      context. PED-D16/D17 geometry is deliberately not presented as S-44 compliance scoring.
