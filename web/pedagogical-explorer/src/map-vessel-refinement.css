@@ -1,7 +1,12 @@
 @import './ready-module-visual-polish.css';
 
-.map2-vessel-refined{width:270px;height:276px;filter:drop-shadow(0 16px 26px #0007);isolation:isolate;animation:map-vessel-drift 7.2s ease-in-out infinite}
+.map2-vessel-refined{width:270px;height:276px;filter:drop-shadow(0 16px 26px #0007);isolation:isolate;transform-origin:47% 31%;animation:map-vessel-drift 6.4s ease-in-out infinite}
 .map2-vessel-refined .map2-vessel-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transform-origin:47% 31%;filter:drop-shadow(0 7px 15px #0012194d)}
-@keyframes map-vessel-drift{0%,100%{translate:-5px 1px}50%{translate:5px -2px}}
+@keyframes map-vessel-drift{
+  0%,100%{translate:-8px 2px;rotate:-.45deg}
+  25%{translate:-3px -2px;rotate:-.1deg}
+  50%{translate:8px -4px;rotate:.45deg}
+  75%{translate:3px 0;rotate:.12deg}
+}
 @media(max-width:1180px){.map2-vessel-refined{width:248px;height:254px;transform:scale(.96)}}
-@media(prefers-reduced-motion:reduce){.map2-vessel-refined,.map2-vessel-refined .map2-vessel-art{animation:none!important}.map2-vessel-refined .map2-vessel-art{transform:none!important}}
+@media(prefers-reduced-motion:reduce){.map2-vessel-refined,.map2-vessel-refined .map2-vessel-art{animation:none!important}.map2-vessel-refined{translate:0;rotate:0}.map2-vessel-refined .map2-vessel-art{transform:none!important}}
