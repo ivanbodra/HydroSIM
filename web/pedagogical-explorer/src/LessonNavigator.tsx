@@ -16,6 +16,7 @@ const lessons:Lesson[]=[
 {id:'D10',displayId:'D9',title:'Multisector MBES',titlePt:'MBES Multissetorial',route:'#multisector-lab',family:'arrays'},
 {id:'D11',displayId:'D10',title:'Vessel & Sensor Configuration',titlePt:'Configuração da Embarcação e Sensores',route:'#vessel-configuration-lab',family:'platform'},
 {id:'D12',displayId:'D11',title:'Vessel Motion',titlePt:'Movimento da Embarcação',route:'#vessel-motion-lab',family:'platform'},
+{id:'D13',displayId:'D12',title:'PU & Sensor Integration',titlePt:'Integração da PU e Sensores',route:'#pu-sensor-lab',family:'platform'},
 {id:'D14',displayId:'D13',title:'Timing & Latency',titlePt:'Tempo e Latência',route:'#timing-lab',family:'platform'},
 {id:'D15',displayId:'D14',title:'Sounding Formation',titlePt:'Formação da Sondagem',route:'#sounding-formation-lab',family:'platform'},
 {id:'D17',displayId:'D16',title:'Survey Coverage & Acquisition Trade-offs',titlePt:'Cobertura e Compromissos de Aquisição',route:'#tradeoff-lab',family:'integration'},
