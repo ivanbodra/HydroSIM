@@ -14,7 +14,7 @@ test('D6 keeps the physical array fixed while electronic steering changes',async
  await expect.poll(()=>requests.length).toBeGreaterThan(0);
  expect(requests.at(-1)?.element_count).toBe(6);
  expect(requests.at(-1)?.role).toBe('rx');
- const steering=page.getByLabel('Steering angle');
+ const steering=page.getByRole('slider',{name:'Steering angle'});
  await setRangeValue(steering,'30');
  await expect.poll(()=>requests.at(-1)?.steering_angle_deg).toBe(30);
  expect(requests.at(-1)?.element_count).toBe(6);
