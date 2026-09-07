@@ -6,7 +6,7 @@ Scope: active 30-submodule roadmap (17 Didactic + `P1`–`P6` + `A1`–`A7`); `P
 ## Product indicator
 
 **238 total atoms = 141 learner inputs + 97 learner-visible outputs.**  
-**Current atom indicator: 145/238 ready (60.9%).**
+**Current atom indicator: 155/238 ready (65.1%).**
 
 Readiness counts learner-facing production behavior on `main`. Contracts, documentation, APIs, adapters, tests, PRs, CI, screenshots, infrastructure and coordination are not atoms.
 
@@ -23,7 +23,7 @@ Readiness counts learner-facing production behavior on `main`. Contracts, docume
 | PED-D10 | 6 | 4 | 10 | 10 |
 | PED-D11 | 7 | 4 | 11 | 11 |
 | PED-D12 | 4 | 4 | 8 | 8 |
-| PED-D13 | 6 | 4 | 10 | 0 |
+| PED-D13 | 6 | 4 | 10 | 10 |
 | PED-D14 | 5 | 4 | 9 | 9 |
 | PED-D15 | 7 | 3 | 10 | 10 |
 | PED-D16 | 7 | 4 | 11 | 0 |
@@ -42,7 +42,7 @@ Readiness counts learner-facing production behavior on `main`. Contracts, docume
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **141** | **97** | **238** | **145** |
+| **TOTAL** | **141** | **97** | **238** | **155** |
 
 ### Retired PED-D5 traceability
 
@@ -61,9 +61,10 @@ Signal/pulse representation and processing prerequisites that supported the reti
 ### Ready atom evidence for partially/newly reconciled submodules
 
 - **PED-D9 — 11/11:** `I01`–`I06`, `O01`–`O05`. PR #336 added learner-operable threshold (`I03`) and single/multiple detection retention (`I04`) plus false/missed consequence (`O03`). PR #341 completes learner-operable phase-based High Density (`I05`) and the canonical High Density/multiple-detection comparison (`O05`) through authoritative API outputs; High Density remains explicitly distinct from generic multiple detection.
+- **PED-D13 — 10/10:** PR #362 makes `I01`–`I06` learner-operable in production (sensor/device, connection/port, baud/data rate, update/message rate, protocol/message and time source) and exposes `O01`–`O04` through the authoritative PU-sensor API: PU↔sensor diagram, stream/status and rate readouts, incompatibility state/reasons and configuration-error consequence. The lesson is bilingual and in the production sequence.
 - **PED-D17 — 8/14:** current learner-facing readiness includes the established controls/consequences through PR #254 plus the explicit sounding-pattern consequence integrated by PR #273. No additional unsupported survey-product behavior is inferred.
 
-Complete ready baselines: PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D9, PED-D10, PED-D11, PED-D12, PED-D14, PED-D15 and PED-D18.
+Complete ready baselines: PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D9, PED-D10, PED-D11, PED-D12, PED-D13, PED-D14, PED-D15 and PED-D18.
 
 ## Atom definitions
 
