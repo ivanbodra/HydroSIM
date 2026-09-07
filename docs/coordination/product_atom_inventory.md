@@ -6,7 +6,7 @@ Scope: active 30-submodule roadmap (17 Didactic + `P1`–`P6` + `A1`–`A7`); `P
 ## Product indicator
 
 **238 total atoms = 141 learner inputs + 97 learner-visible outputs.**  
-**Current atom indicator: 161/238 ready (67.6%).**
+**Current atom indicator: 172/238 ready (72.3%).**
 
 Readiness counts learner-facing production behavior on `main`. Contracts, documentation, APIs, adapters, tests, PRs, CI, screenshots, infrastructure and coordination are not atoms.
 
@@ -26,7 +26,7 @@ Readiness counts learner-facing production behavior on `main`. Contracts, docume
 | PED-D13 | 6 | 4 | 10 | 10 |
 | PED-D14 | 5 | 4 | 9 | 9 |
 | PED-D15 | 7 | 3 | 10 | 10 |
-| PED-D16 | 7 | 4 | 11 | 0 |
+| PED-D16 | 7 | 4 | 11 | 11 |
 | PED-D17 | 9 | 5 | 14 | 14 |
 | PED-D18 | 7 | 4 | 11 | 11 |
 | P1 | 4 | 2 | 6 | 0 |
@@ -42,7 +42,7 @@ Readiness counts learner-facing production behavior on `main`. Contracts, docume
 | A5 | 5 | 2 | 7 | 0 |
 | A6 | 1 | 3 | 4 | 0 |
 | A7 | 1 | 2 | 3 | 0 |
-| **TOTAL** | **141** | **97** | **238** | **161** |
+| **TOTAL** | **141** | **97** | **238** | **172** |
 
 ### Retired PED-D5 traceability
 
@@ -62,9 +62,10 @@ Signal/pulse representation and processing prerequisites that supported the reti
 
 - **PED-D9 — 11/11:** `I01`–`I06`, `O01`–`O05`. PR #336 added learner-operable threshold (`I03`) and single/multiple detection retention (`I04`) plus false/missed consequence (`O03`). PR #341 completes learner-operable phase-based High Density (`I05`) and the canonical High Density/multiple-detection comparison (`O05`) through authoritative API outputs; High Density remains explicitly distinct from generic multiple detection.
 - **PED-D13 — 10/10:** PR #362 makes `I01`–`I06` learner-operable in production (sensor/device, connection/port, baud/data rate, update/message rate, protocol/message and time source) and exposes `O01`–`O04` through the authoritative PU-sensor API: PU↔sensor diagram, stream/status and rate readouts, incompatibility state/reasons and configuration-error consequence. The lesson is bilingual and in the production sequence.
+- **PED-D16 — 11/11:** PR #373 makes `I01`–`I07` learner-operable in production (survey area, depth, sonar/configuration, swath/sector consequence, overlap or explicit line spacing, line direction and vessel speed) and exposes `O01`–`O04` through the authoritative survey-planning API: planned/clipped line geometry, predicted coverage strips, gap/overlap classification, line count and total planned length. The production lesson is bilingual and includes Reset plus Baseline × Current comparison.
 - **PED-D17 — 14/14:** PR #346 completes the remaining learner-facing effects on `main`: High Density (`I04`), ping rate (`I07`), vessel speed (`I08`), multisector/detection configuration (`I09`), coverage/gaps (`O03`) and along/across spacing+density (`O04`). These consume the authoritative survey-density and detection outputs; React renders returned values/coverage intervals rather than deriving the science. Existing swath/footprint, sounding-pattern and trade-off behavior supplies the other canonical atoms.
 
-Complete ready baselines: PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D9, PED-D10, PED-D11, PED-D12, PED-D13, PED-D14, PED-D15, PED-D17 and PED-D18.
+Complete ready baselines: PED-D1, PED-D2, PED-D3, PED-D4, PED-D6, PED-D7, PED-D8, PED-D9, PED-D10, PED-D11, PED-D12, PED-D13, PED-D14, PED-D15, PED-D16, PED-D17 and PED-D18.
 
 ## Atom definitions
 
