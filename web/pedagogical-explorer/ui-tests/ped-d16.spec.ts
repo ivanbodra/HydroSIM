@@ -29,9 +29,9 @@ test('PED-D16 turns planning controls into visible lines and coverage', async ({
   const spacing=page.locator('label').filter({hasText:'Line spacing'}).locator('input');
   await setRangeValue(spacing,'180');
   await expect.poll(()=>requests.at(-1)?.line_spacing_m).toBe(180);
-  await expect(page.getByText('Gapped')).toBeVisible();
+  await expect(page.getByText('Gapped').first()).toBeVisible();
 
   await page.getByRole('button',{name:'PT-BR'}).click();
   await expect(page.getByRole('heading',{name:'Planejamento do levantamento'})).toBeVisible();
-  await expect(page.getByText('Com lacunas')).toBeVisible();
+  await expect(page.getByText('Com lacunas').first()).toBeVisible();
 });
