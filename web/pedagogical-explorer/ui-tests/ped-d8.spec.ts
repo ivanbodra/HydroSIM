@@ -17,5 +17,6 @@ test('PED-D8 keeps learner controls wired to canonical echosounder outputs', asy
   await expect.poll(()=>lastBody?.selected_system).toBe('sbes');
   await expect(page.getByText('0.0 m').first()).toBeVisible();
   await page.getByRole('button',{name:'Mudar idioma para português'}).click();
-  await expect(page.getByText('Profundidade',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Switch language to English'})).toBeVisible();
+  await expect(page.getByText('Controles do aluno',{exact:true})).toBeVisible();
 });
