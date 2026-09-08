@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Languages, LocateFixed, RotateCcw } from 'lucide-react';
+import { LocateFixed, RotateCcw } from 'lucide-react';
 
 type Language = 'en' | 'pt';
 type Method = 'amplitude_peak' | 'phase_zero_crossing';
@@ -63,9 +63,7 @@ const HIGH_DENSITY_PHASE = [1.4547515713804893,0.730154243024546,0,-0.7301542430
 
 const copy = {
   en: {
-    title:'Bottom Detection', module:'ACQUISITION CHAIN', chain:'INPUT → DETECTION → TIMING',
-    intro:'Change the detector inputs and watch which echoes are retained, rejected or missed.',
-    back:'System Map', lang:'PT-BR', reset:'Reset', scenario:'Echo scenario', clean:'Single clear echo', late:'Later echo', double:'Competing echoes',
+    chain:'INPUT → DETECTION → TIMING', reset:'Reset', scenario:'Echo scenario', clean:'Single clear echo', late:'Later echo', double:'Competing echoes',
     delay:'TX delay', steering:'Steering angle', method:'Detection method', amp:'Amplitude peak', phase:'Phase zero crossing', window:'Detection window',
     windowStart:'Window start', windowEnd:'Window end', windowHint:'Only echoes inside the highlighted time window can be selected.',
     threshold:'Detection threshold', thresholdHint:'Raise the threshold to reject weaker local peaks.', retention:'Retention', single:'Single detection', multiple:'Multiple detections',
@@ -74,16 +72,13 @@ const copy = {
     hdUnavailable:'High Density is unavailable for this phase support.', acrossTrack:'Across-track bottom points',
     trace:'Matched-filter magnitude', selected:'Selected detection', twtt:'TWTT', arrival:'Arrival offset', angle:'Detected angle', peakLag:'Peak lag',
     unsupported:'This detection method is not available yet', unsupportedDetail:'Phase zero crossing is not yet available in this lesson. Select Amplitude peak to continue exploring the detection.',
-    intuition:'Physical intuition', insight:'Threshold decides which local peaks are eligible; retention decides whether one or several eligible echoes continue downstream. High Density is different: it uses phase within one beam footprint to resolve additional bottom points.',
     relationship:'Detection outcome', transmit:'Transmit reference', echo:'Primary echo', sounding:'Timing passed downstream', noDetection:'No echo selected',
     eligible:'Eligible peaks', retained:'Retained', trueDet:'True', falseDet:'False', missedDet:'Missed', separation:'Detection separation',
     candidate:'candidate', retainedMark:'retained', rejectedMark:'eligible, not retained',
     error:'The detection view could not be updated. Adjust the controls or try again.'
   },
   pt: {
-    title:'Detecção do Fundo', module:'CADEIA DE AQUISIÇÃO', chain:'ENTRADA → DETECÇÃO → TEMPO',
-    intro:'Altere as entradas do detector e observe quais ecos são retidos, rejeitados ou perdidos.',
-    back:'Mapa do Sistema', lang:'EN', reset:'Redefinir', scenario:'Cenário de eco', clean:'Um eco nítido', late:'Eco mais tardio', double:'Ecos concorrentes',
+    chain:'ENTRADA → DETECÇÃO → TEMPO', reset:'Redefinir', scenario:'Cenário de eco', clean:'Um eco nítido', late:'Eco mais tardio', double:'Ecos concorrentes',
     delay:'Atraso de TX', steering:'Ângulo de steering', method:'Método de detecção', amp:'Pico de amplitude', phase:'Cruzamento de fase por zero', window:'Janela de detecção',
     windowStart:'Início da janela', windowEnd:'Fim da janela', windowHint:'Somente ecos dentro da janela de tempo destacada podem ser selecionados.',
     threshold:'Limiar de detecção', thresholdHint:'Eleve o limiar para rejeitar picos locais mais fracos.', retention:'Retenção', single:'Uma detecção', multiple:'Múltiplas detecções',
@@ -92,7 +87,6 @@ const copy = {
     hdUnavailable:'High Density não está disponível para este suporte de fase.', acrossTrack:'Pontos do fundo na direção transversal',
     trace:'Magnitude do filtro casado', selected:'Detecção selecionada', twtt:'TWTT', arrival:'Offset de chegada', angle:'Ângulo detectado', peakLag:'Atraso do pico',
     unsupported:'Este método de detecção ainda não está disponível', unsupportedDetail:'O cruzamento de fase por zero ainda não está disponível nesta lição. Selecione Pico de amplitude para continuar explorando a detecção.',
-    intuition:'Intuição física', insight:'O limiar decide quais picos locais são elegíveis; a retenção decide se um ou vários ecos elegíveis seguem adiante. High Density é diferente: usa a fase dentro da pegada de um único feixe para resolver pontos adicionais no fundo.',
     relationship:'Resultado da detecção', transmit:'Referência de transmissão', echo:'Eco principal', sounding:'Tempo enviado adiante', noDetection:'Nenhum eco selecionado',
     eligible:'Picos elegíveis', retained:'Retidos', trueDet:'Verdadeiras', falseDet:'Falsas', missedDet:'Perdidas', separation:'Separação entre detecções',
     candidate:'candidato', retainedMark:'retido', rejectedMark:'elegível, não retido',
@@ -106,9 +100,10 @@ const scenarios = {
   double:[0,0.04,0.2,0.76,0.45,0.18,0.38,1,0.5,0.08]
 };
 const scenarioTruth: Record<keyof typeof scenarios, number[]> = {clean:[4],late:[7],double:[2,6]};
+const initialLanguage=():Language=>sessionStorage.getItem('hydrosim-language')==='pt'?'pt':'en';
 
-export default function BottomDetectionLab({onBack}:{onBack:()=>void}) {
-  const [language,setLanguage]=useState<Language>('en');
+export default function BottomDetectionLab({onBack:_onBack}:{onBack:()=>void}) {
+  const [language,setLanguage]=useState<Language>(initialLanguage);
   const [scenario,setScenario]=useState<keyof typeof scenarios>('clean');
   const [txDelay,setTxDelay]=useState(0.2);
   const [steering,setSteering]=useState(0);
@@ -122,6 +117,7 @@ export default function BottomDetectionLab({onBack}:{onBack:()=>void}) {
   const [error,setError]=useState(false);
   const t=copy[language];
 
+  useEffect(()=>{const sync=(event:Event)=>setLanguage((event as CustomEvent<string>).detail==='pt'?'pt':'en');window.addEventListener('hydrosim-language-change',sync);return()=>window.removeEventListener('hydrosim-language-change',sync)},[]);
   useEffect(()=>{
     const controller=new AbortController();
     setError(false);
@@ -160,7 +156,6 @@ export default function BottomDetectionLab({onBack}:{onBack:()=>void}) {
   const hdExtent=useMemo(()=>Math.max(1,...hdPoints.map(p=>Math.abs(p.local_bottom_point_m[1]))),[hdPoints]);
 
   return <div className="d9-lab">
-    <header className="d9-head"><button onClick={onBack}><ArrowLeft size={16}/>{t.back}</button><div><span>PED-D9 · {t.module}</span><h1>{t.title}</h1><p>{t.intro}</p></div><button onClick={()=>setLanguage(language==='en'?'pt':'en')}><Languages size={16}/>{t.lang}</button></header>
     <main className="d9-layout">
       <aside className="d9-controls">
         <button type="button" onClick={reset}><RotateCcw size={16}/>{t.reset}</button>
@@ -188,7 +183,6 @@ export default function BottomDetectionLab({onBack}:{onBack:()=>void}) {
         <div className="d9-readouts"><div><small>{t.twtt}</small><strong>{detection?`${detection.twtt_ms.toFixed(3)} ms`:'—'}</strong></div><div><small>{t.arrival}</small><strong>{detection?`${detection.arrival_offset_ms.toFixed(3)} ms`:'—'}</strong></div><div><small>{t.angle}</small><strong>{detection?.detected_across_track_angle_deg!=null?`${detection.detected_across_track_angle_deg.toFixed(0)}°`:'—'}</strong></div><div><small>{t.peakLag}</small><strong>{selectedLag!=null?`${selectedLag.toFixed(0)} µs`:'—'}</strong></div></div>
         <div className="d9-intuition"><small>{t.hdComparison}</small>{highDensity&&hd?.status==='available'?<><div className="d9-readouts"><div><small>{t.ordinaryPoints}</small><strong>{hd.comparison.ordinary_detection_count}</strong></div><div><small>{t.hdPoints}</small><strong>{hd.comparison.high_density_detection_count}</strong></div><div><small>{t.densityGain}</small><strong>{hd.comparison.density_multiplier.toFixed(1)}×</strong></div><div><small>{t.targetSpacing}</small><strong>{hd.comparison.target_spacing_m!=null?`${hd.comparison.target_spacing_m.toFixed(2)} m`:'—'}</strong></div></div><svg viewBox="0 0 600 120" role="img" aria-label={t.acrossTrack} style={{width:'100%',height:'120px'}}><line x1="40" y1="78" x2="560" y2="78" stroke="currentColor" opacity="0.35"/><circle cx="300" cy="78" r="8" fill="none" stroke="currentColor" strokeWidth="2"/><text x="300" y="108" textAnchor="middle" fill="currentColor" fontSize="12">{t.ordinaryPoints}</text>{hdPoints.map(point=>{const y=point.local_bottom_point_m[1];const x=300+(y/hdExtent)*230;return <circle key={point.detection_index} cx={x} cy="48" r="6" fill="currentColor"><title>{`${point.detected_across_track_angle_deg.toFixed(1)}° · y ${y.toFixed(2)} m`}</title></circle>})}</svg></>:highDensity?<div className="d9-message" role="status">{t.hdUnavailable}</div>:<div className="d9-readouts"><div><small>{t.ordinaryPoints}</small><strong>1</strong></div><div><small>{t.hdPoints}</small><strong>—</strong></div><div><small>{t.densityGain}</small><strong>—</strong></div></div>}</div>
         <div className="d9-intuition"><small>{t.relationship}</small><div className="d9-readouts"><div><small>{t.transmit}</small><strong>{detection?`${detection.tx_delay_ms.toFixed(3)} ms`:`${txDelay.toFixed(3)} ms`}</strong></div><div><small>{t.echo}</small><strong>{detection?`${detection.arrival_offset_ms.toFixed(3)} ms`:t.noDetection}</strong></div><div><small>{t.sounding}</small><strong>{detection?`${detection.twtt_ms.toFixed(3)} ms`:t.noDetection}</strong></div></div></div>
-        <div className="d9-intuition"><small>{t.intuition}</small><p>{t.insight}</p></div>
       </section>
     </main>
   </div>;

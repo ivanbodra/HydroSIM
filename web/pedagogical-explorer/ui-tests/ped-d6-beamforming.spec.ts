@@ -5,10 +5,11 @@ const response=(req:Record<string,unknown>)=>{const mode=String(req.steering_con
 async function setRangeValue(locator:import('@playwright/test').Locator,value:string){await locator.evaluate((element,next)=>{const input=element as HTMLInputElement;const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;if(!setter)throw new Error('HTMLInputElement value setter unavailable');setter.call(input,next);input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))},value)}
 
 test('D6 keeps the array fixed and exposes authoritative channel timing',async({page})=>{
+ await page.addInitScript(()=>sessionStorage.setItem('hydrosim-language','en'));
  const requests:Array<Record<string,unknown>>=[];
  await page.route('**/api/v1/pedagogical/beamforming',async route=>{const req=route.request().postDataJSON() as Record<string,unknown>;requests.push(req);await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(response(req))})});
  await page.goto('/#beamforming-lab');
- await expect(page.getByRole('heading',{name:'Steer a beam without moving the transducer'})).toBeVisible();
+ await expect(page.locator('.lesson-location').getByText('D6',{exact:true})).toBeVisible();
  await expect(page.getByText('Fixed 6-element array',{exact:true})).toBeVisible();
  await expect(page.locator('.fixed-elements i')).toHaveCount(6);
  await expect(page.locator('.timing-row')).toHaveCount(6);
