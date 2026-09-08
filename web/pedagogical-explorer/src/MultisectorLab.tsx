@@ -20,7 +20,7 @@ export default function MultisectorLab({onBack:_onBack}:{onBack:()=>void}){
  useEffect(()=>{const sync=(event:Event)=>setLanguage((event as CustomEvent<Language>).detail);window.addEventListener('hydrosim-language-change',sync);return()=>window.removeEventListener('hydrosim-language-change',sync)},[]);
  useEffect(()=>{const controller=new AbortController();setError('');fetch('/api/v1/pedagogical/multisector',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({tx_time_s:10,sound_speed_mps:soundSpeed,sectors})}).then(async response=>{if(!response.ok)throw new Error(await response.text());return response.json() as Promise<Response>}).then(setData).catch(reason=>{if(reason.name!=='AbortError')setError(String(reason))});return()=>controller.abort()},[soundSpeed,sectors]);
  const update=(index:number,patch:Partial<Sector>)=>setSectors(current=>current.map((sector,i)=>i===index?{...sector,...patch}:sector));
- const reset=()=>{setSoundSpeed(1500);setSectors(defaultSectors.map(s=>({...s}))};
+ const reset=()=>{setSoundSpeed(1500);setSectors(defaultSectors.map(s=>({...s})))};
  const maxDelay=useMemo(()=>Math.max(...(data?.sectors.map(s=>s.tx_delay_ms+s.pulse_duration_ms)??[1]),1),[data]);const groupFor=(id:string)=>Math.max(0,data?.transmit_groups.findIndex(g=>g.includes(id))??0);
  return <div className="d10-lab"><main className="d10-layout"><aside className="d10-controls">
   <label>{t.sound}<strong>{soundSpeed.toFixed(0)} m/s</strong><input type="range" min="1400" max="1600" step="5" value={soundSpeed} onChange={e=>setSoundSpeed(+e.target.value)}/></label>
