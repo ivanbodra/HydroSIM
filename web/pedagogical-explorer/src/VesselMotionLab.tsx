@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Languages, Rotate3D, RotateCcw, Ship, Waves } from 'lucide-react';
+import { Rotate3D, RotateCcw, Ship, Waves } from 'lucide-react';
 
 type Lang = 'en' | 'pt';
 type Harmonic = { amplitude_deg: number; period_seconds: number; phase_deg: number };
@@ -32,38 +32,21 @@ const DEFAULTS = {
   heavePeriod: 7,
 };
 
+const initialLanguage=():Lang=>sessionStorage.getItem('hydrosim-language')==='pt'?'pt':'en';
 const copy = {
   en: {
-    title: 'Vessel Motion', intro: 'Configure vessel motion and compare trajectory, beams and soundings over time.', back: 'System Map', lang: 'PT-BR', reset: 'Reset',
-    heading: 'Heading', speed: 'Speed', duration: 'Duration', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Period',
-    trajectory: 'Vessel trajectory', attitude: 'Attitude through time', north: 'North', east: 'East', up: 'Up', current: 'Final sample',
-    attitudeScale: 'Shared scale: ±20°', heaveScale: 'Scale: ±3 m',
-    consequences: 'Beam, swath & sounding consequences', consequenceLead: 'Final sample · compare the no-motion reference with the same instant under configured motion.',
-    beamDisplacement: 'Beam displacement', swathEffect: 'Swath width', soundingEffect: 'Sounding positions', reference: 'Reference', moved: 'With motion', change: 'Change',
-    port: 'Port', nadir: 'Nadir', starboard: 'Starboard', noIntersection: 'No bottom intersection', plan: 'Plan view of sounding centres',
-    error: 'The motion view could not be updated. Adjust the controls or try again.',
-    help: {
-      roll: 'Roll is rotation about the vessel longitudinal axis.',
-      pitch: 'Pitch is rotation about the vessel transverse axis.',
-      yaw: 'Yaw is angular deviation about the vertical axis; Heading is the vessel direction clockwise from North.',
-      heave: 'Heave is vertical translation; HydroSIM reports it positive Up.',
-    },
+    reset: 'Reset', heading: 'Heading', speed: 'Speed', duration: 'Duration', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Period',
+    trajectory: 'Vessel trajectory', attitude: 'Attitude through time', north: 'North', east: 'East', up: 'Up', current: 'Final sample', attitudeScale: 'Shared scale: ±20°', heaveScale: 'Scale: ±3 m',
+    consequences: 'Beam, swath & sounding consequences', consequenceLead: 'Final sample · compare the no-motion reference with the same instant under configured motion.', beamDisplacement: 'Beam displacement', swathEffect: 'Swath width', soundingEffect: 'Sounding positions', reference: 'Reference', moved: 'With motion', change: 'Change',
+    port: 'Port', nadir: 'Nadir', starboard: 'Starboard', noIntersection: 'No bottom intersection', plan: 'Plan view of sounding centres', error: 'The motion view could not be updated. Adjust the controls or try again.',
+    help: { roll: 'Roll is rotation about the vessel longitudinal axis.', pitch: 'Pitch is rotation about the vessel transverse axis.', yaw: 'Yaw is angular deviation about the vertical axis; Heading is the vessel direction clockwise from North.', heave: 'Heave is vertical translation; HydroSIM reports it positive Up.' },
   },
   pt: {
-    title: 'Movimento da Embarcação', intro: 'Configure o movimento da embarcação e compare trajetória, feixes e sondagens ao longo do tempo.', back: 'Mapa do Sistema', lang: 'EN', reset: 'Restaurar',
-    heading: 'Heading', speed: 'Velocidade', duration: 'Duração', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Período',
-    trajectory: 'Trajetória da embarcação', attitude: 'Atitude ao longo do tempo', north: 'Norte', east: 'Leste', up: 'Cima', current: 'Amostra final',
-    attitudeScale: 'Escala comum: ±20°', heaveScale: 'Escala: ±3 m',
-    consequences: 'Consequências nos feixes, faixa e sondagens', consequenceLead: 'Amostra final · compare a referência sem movimento com o mesmo instante sob o movimento configurado.',
-    beamDisplacement: 'Deslocamento dos feixes', swathEffect: 'Largura da faixa', soundingEffect: 'Posições das sondagens', reference: 'Referência', moved: 'Com movimento', change: 'Variação',
-    port: 'Bombordo', nadir: 'Nadir', starboard: 'Boreste', noIntersection: 'Sem interseção com o fundo', plan: 'Vista em planta dos centros das sondagens',
-    error: 'Não foi possível atualizar a visualização do movimento. Ajuste os controles ou tente novamente.',
-    help: {
-      roll: 'Roll é a rotação em torno do eixo longitudinal da embarcação.',
-      pitch: 'Pitch é a rotação em torno do eixo transversal da embarcação.',
-      yaw: 'Yaw é o desvio angular em torno do eixo vertical; Heading é a direção da embarcação, medida no sentido horário a partir do Norte.',
-      heave: 'Heave é a translação vertical; no HydroSIM é apresentada positiva para cima.',
-    },
+    reset: 'Restaurar', heading: 'Heading', speed: 'Velocidade', duration: 'Duração', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Período',
+    trajectory: 'Trajetória da embarcação', attitude: 'Atitude ao longo do tempo', north: 'Norte', east: 'Leste', up: 'Cima', current: 'Amostra final', attitudeScale: 'Escala comum: ±20°', heaveScale: 'Escala: ±3 m',
+    consequences: 'Consequências nos feixes, faixa e sondagens', consequenceLead: 'Amostra final · compare a referência sem movimento com o mesmo instante sob o movimento configurado.', beamDisplacement: 'Deslocamento dos feixes', swathEffect: 'Largura da faixa', soundingEffect: 'Posições das sondagens', reference: 'Referência', moved: 'Com movimento', change: 'Variação',
+    port: 'Bombordo', nadir: 'Nadir', starboard: 'Boreste', noIntersection: 'Sem interseção com o fundo', plan: 'Vista em planta dos centros das sondagens', error: 'Não foi possível atualizar a visualização do movimento. Ajuste os controles ou tente novamente.',
+    help: { roll: 'Roll é a rotação em torno do eixo longitudinal da embarcação.', pitch: 'Pitch é a rotação em torno do eixo transversal da embarcação.', yaw: 'Yaw é o desvio angular em torno do eixo vertical; Heading é a direção da embarcação, medida no sentido horário a partir do Norte.', heave: 'Heave é a translação vertical; no HydroSIM é apresentada positiva para cima.' },
   },
 };
 
@@ -83,8 +66,8 @@ function fixedSeriesPath(samples: Sample[], key: keyof Sample, min: number, max:
   }).join(' ');
 }
 
-export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
-  const [lang, setLang] = useState<Lang>('en');
+export default function VesselMotionLab({ onBack:_onBack }: { onBack: () => void }) {
+  const [lang, setLang] = useState<Lang>(initialLanguage);
   const [heading, setHeading] = useState(DEFAULTS.heading);
   const [speed, setSpeed] = useState(DEFAULTS.speed);
   const [duration, setDuration] = useState(DEFAULTS.duration);
@@ -97,6 +80,7 @@ export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState(false);
   const t = copy[lang];
 
+  useEffect(()=>{const sync=(event:Event)=>setLang((event as CustomEvent<Lang>).detail);window.addEventListener('hydrosim-language-change',sync);return()=>window.removeEventListener('hydrosim-language-change',sync)},[]);
   useEffect(() => {
     const ac = new AbortController();
     setError(false);
@@ -152,11 +136,6 @@ export default function VesselMotionLab({ onBack }: { onBack: () => void }) {
   </section>;
 
   return <div className="d12-lab">
-    <header>
-      <button onClick={onBack}><ArrowLeft size={16} />{t.back}</button>
-      <div><span>PED-D12 · VESSEL MOTION</span><h1>{t.title}</h1><p>{t.intro}</p></div>
-      <button onClick={() => setLang(lang === 'en' ? 'pt' : 'en')}><Languages size={16} />{t.lang}</button>
-    </header>
     <main>
       <aside>
         <label>{t.heading}<strong>{heading.toFixed(0)}°</strong><input type="range" min="0" max="359" value={heading} onChange={e => setHeading(+e.target.value)} /></label>

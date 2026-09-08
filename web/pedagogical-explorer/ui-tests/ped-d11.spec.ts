@@ -8,7 +8,8 @@ test('PED-D11 sends configured vessel geometry and renders canonical sensor/refe
   });
 
   await page.goto('/#vessel-configuration-lab');
-  await expect(page.getByRole('heading',{name:'Vessel & Sensor Configuration'})).toBeVisible();
+  const languageControl=page.getByRole('button',{name:'Mudar idioma para português'});
+  await expect(languageControl).toHaveCount(1);
   await expect(page.getByText('2.00 m').first()).toBeVisible();
   await expect(page.getByText('5.00 m',{exact:true})).toBeVisible();
 
@@ -22,7 +23,7 @@ test('PED-D11 sends configured vessel geometry and renders canonical sensor/refe
   });
   await expect.poll(()=>((requests.at(-1)?.transducer_lever_arm_m as Record<string,unknown>)?.x)).toBe(6);
 
-  await page.getByRole('button',{name:'PT-BR'}).click();
-  await expect(page.getByRole('heading',{name:'Configuração da Embarcação e Sensores'})).toBeVisible();
+  await languageControl.click();
+  await expect(page.getByRole('button',{name:'Switch language to English'})).toHaveCount(1);
   await expect(page.getByText('X · Proa').first()).toBeVisible();
 });
