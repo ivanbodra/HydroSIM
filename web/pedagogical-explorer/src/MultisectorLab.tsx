@@ -15,7 +15,7 @@ const defaultSectors:Sector[]=[
  {sector_id:'centre',centre_across_track_deg:0,across_track_min_deg:-15,across_track_max_deg:15,frequency_khz:300,pulse_duration_ms:.5,tx_delay_ms:.35,relative_power:1},
  {sector_id:'starboard',centre_across_track_deg:-35,across_track_min_deg:-55,across_track_max_deg:-15,frequency_khz:200,pulse_duration_ms:.8,tx_delay_ms:0,relative_power:.8}
 ];
-export default function MultisectorLab({_onBack}:{onBack:()=>void}){
+export default function MultisectorLab({onBack:_onBack}:{onBack:()=>void}){
  const[language,setLanguage]=useState<Language>(initialLanguage);const[soundSpeed,setSoundSpeed]=useState(1500);const[sectors,setSectors]=useState<Sector[]>(()=>defaultSectors.map(s=>({...s})));const[data,setData]=useState<Response|null>(null);const[error,setError]=useState('');const t=copy[language];
  useEffect(()=>{const sync=(event:Event)=>setLanguage((event as CustomEvent<Language>).detail);window.addEventListener('hydrosim-language-change',sync);return()=>window.removeEventListener('hydrosim-language-change',sync)},[]);
  useEffect(()=>{const controller=new AbortController();setError('');fetch('/api/v1/pedagogical/multisector',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({tx_time_s:10,sound_speed_mps:soundSpeed,sectors})}).then(async response=>{if(!response.ok)throw new Error(await response.text());return response.json() as Promise<Response>}).then(setData).catch(reason=>{if(reason.name!=='AbortError')setError(String(reason))});return()=>controller.abort()},[soundSpeed,sectors]);
