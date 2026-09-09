@@ -11,7 +11,7 @@ type Domain={min:number;max:number};
 type SignalConfig={pulse_type:PulseType;center_frequency_khz:number;duration_ms:number;bandwidth_khz:number;chirp_direction:ChirpDirection;envelope_model:EnvelopeModel};
 
 const API_BASE=(import.meta.env.VITE_HYDROSIM_API_BASE as string|undefined)??'http://127.0.0.1:8000';
-const initial:SignalConfig={pulse_type:'lfm',center_frequency_khz:300,duration_ms:3,bandwidth_khz:20,chirp_direction:'up',envelope_model:'rectangular'};
+const initial:SignalConfig={pulse_type:'lfm',center_frequency_khz:200,duration_ms:3,bandwidth_khz:20,chirp_direction:'up',envelope_model:'rectangular'};
 const WAVE_DOMAIN:Domain={min:-1.05,max:1.05};
 const MATCHED_DOMAIN:Domain={min:-1.05,max:1.05};
 
