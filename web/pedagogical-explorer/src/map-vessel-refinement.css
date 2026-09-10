@@ -1,47 +1,45 @@
 @import './ready-module-visual-polish.css';
 
-.map2-module-hero{min-height:286px;grid-template-columns:minmax(0,1.45fr) minmax(300px,.55fr)}
-.map2-module-selector-wrap{display:flex;align-items:center;padding:30px 26px 30px 32px;z-index:2}
-.map2-track-switcher-hero{width:100%;margin:0;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.map2-track-switcher-hero button{min-height:156px;padding:22px 20px;align-content:center;grid-template-columns:46px minmax(0,1fr) 20px;border-radius:17px}
-.map2-track-switcher-hero button div{align-content:center}
-.map2-track-switcher-hero button div small{font-size:9px}
-.map2-track-switcher-hero button div strong{font-size:15px;line-height:1.2}
-.map2-track-switcher-hero button div span{font-size:9px;line-height:1.4;margin-top:6px}
-.map2-track-switcher-hero button>svg{width:18px;height:18px}
-.track-icon-wrap{width:42px;height:42px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);border-radius:12px;background:color-mix(in srgb,var(--accent) 7%,transparent);color:#7894a1;overflow:hidden}
+.map2-module-hero.map2-hero{min-height:292px;grid-template-columns:minmax(0,1.45fr) minmax(320px,.55fr)}
+.map2-module-selector-wrap{display:flex;align-items:center;padding:24px 28px 34px 34px;z-index:2}
+.map2-module-hero .map2-track-switcher-hero{width:100%;margin:0;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.map2-module-hero .map2-track-switcher-hero button{min-height:168px;padding:24px 22px;align-content:center;grid-template-columns:54px minmax(0,1fr) 22px;border-radius:18px}
+.map2-module-hero .map2-track-switcher-hero button div{align-content:center;grid-template-columns:1fr}
+.map2-module-hero .map2-track-switcher-hero button div small{display:none}
+.map2-module-hero .map2-track-switcher-hero button div strong{font-size:17px;line-height:1.2}
+.map2-module-hero .map2-track-switcher-hero button div span{grid-column:1;font-size:9px;line-height:1.4;margin-top:7px}
+.map2-module-hero .map2-track-switcher-hero button>svg{width:20px;height:20px}
+.track-icon-wrap{width:50px;height:50px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);border-radius:14px;background:color-mix(in srgb,var(--accent) 7%,transparent);color:#7894a1;overflow:hidden}
 .map2-track-switcher-hero button.active .track-icon-wrap{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 46%,transparent);background:color-mix(in srgb,var(--accent) 12%,transparent);box-shadow:0 0 20px color-mix(in srgb,var(--accent) 12%,transparent)}
-.track-custom-icon{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.track-vessel-icon{width:48px;height:48px;object-fit:contain;display:block;filter:drop-shadow(0 2px 6px #0008)}
+.track-custom-icon{width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.track-vessel-icon{width:58px;height:58px;object-fit:contain;display:block;filter:drop-shadow(0 2px 6px #0008)}
 
 .map2-actions{display:flex;align-items:center}
-.map2-language-button{appearance:none;border:1px solid #7ba2b331;background:#07141c;color:#b8ccd5;border-radius:9px;min-width:74px;height:36px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:10px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:.18s ease}
+.map2-language-button{appearance:none;border:1px solid #7ba2b331;background:#07141c;color:#b8ccd5;border-radius:9px;min-width:64px;height:36px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-size:10px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:.18s ease}
 .map2-language-button:hover{border-color:color-mix(in srgb,var(--accent) 48%,transparent);color:#e4f3f7;background:color-mix(in srgb,var(--accent) 8%,#07141c)}
 .map2-language-button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
-.map2-vessel-refined{width:282px;height:288px;filter:drop-shadow(0 16px 26px #0007);isolation:isolate;transform-origin:47% 31%}
-.map2-vessel-refined .map2-vessel-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transform-origin:47% 31%;filter:drop-shadow(0 7px 15px #0012194d);animation:map-vessel-drift 4.4s ease-in-out infinite;will-change:transform}
-@keyframes map-vessel-drift{
-  0%,100%{transform:translate3d(-16px,5px,0) rotate(-1.15deg)}
-  25%{transform:translate3d(-7px,-5px,0) rotate(-.4deg)}
-  50%{transform:translate3d(16px,-9px,0) rotate(1.15deg)}
-  75%{transform:translate3d(7px,3px,0) rotate(.4deg)}
-}
+.map2-orbit{min-height:292px}
+.map2-vessel-refined{width:300px;height:310px;filter:drop-shadow(0 16px 26px #0007);isolation:isolate;transform-origin:47% 31%;will-change:transform}
+.map2-vessel-refined .map2-vessel-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 7px 15px #0012194d)}
+.curriculum-map-v2 .map2-journey{position:relative;z-index:4;margin-top:-24px}
+
 @media(max-width:1180px){
-  .map2-module-hero{grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr)}
-  .map2-module-selector-wrap{padding:22px}
-  .map2-track-switcher-hero{gap:10px}
-  .map2-track-switcher-hero button{min-height:134px;padding:17px 14px;grid-template-columns:38px minmax(0,1fr) 16px}
-  .track-icon-wrap{width:36px;height:36px}
-  .track-custom-icon{width:27px;height:27px}.track-vessel-icon{width:42px;height:42px}
-  .map2-vessel-refined{width:252px;height:258px;transform:scale(.96)}
+  .map2-module-hero.map2-hero{grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);min-height:270px}
+  .map2-module-selector-wrap{padding:20px 22px 28px}
+  .map2-module-hero .map2-track-switcher-hero{gap:11px}
+  .map2-module-hero .map2-track-switcher-hero button{min-height:146px;padding:19px 16px;grid-template-columns:44px minmax(0,1fr) 18px}
+  .track-icon-wrap{width:42px;height:42px}
+  .track-custom-icon{width:31px;height:31px}.track-vessel-icon{width:48px;height:48px}
+  .map2-vessel-refined{width:270px;height:280px}
 }
 @media(max-width:760px){
-  .map2-module-hero{grid-template-columns:1fr;min-height:auto}
+  .map2-module-hero.map2-hero{grid-template-columns:1fr;min-height:auto}
   .map2-module-selector-wrap{padding:18px}
-  .map2-track-switcher-hero{grid-template-columns:1fr}
-  .map2-track-switcher-hero button{min-height:96px}
+  .map2-module-hero .map2-track-switcher-hero{grid-template-columns:1fr}
+  .map2-module-hero .map2-track-switcher-hero button{min-height:104px}
+  .curriculum-map-v2 .map2-journey{margin-top:0}
 }
 @media(prefers-reduced-motion:reduce){
-  .map2-vessel-refined .map2-vessel-art{animation:none!important;transform:none!important}
+  .map2-vessel-refined{transform:none!important}
 }
