@@ -16,13 +16,9 @@ Related:
 
 HydroSIM is a hydrographic acquisition simulator. The Acoustic Lab develops the physical, signal-processing, geometric and operational intuition required to understand, tune and diagnose hydrographic acquisition.
 
-Target learner progression:
-
 ```text
 SEE -> UNDERSTAND -> PREDICT -> TUNE / DECIDE -> DIAGNOSE / JUSTIFY
 ```
-
-Recurring causal contract:
 
 ```text
 CONTROL
@@ -33,38 +29,32 @@ CONTROL
   -> ACQUISITION DECISION
 ```
 
-Early labs may stop before the final stages, but later labs must reuse their concepts rather than teach disconnected rules.
-
-Implementation rules:
+Rules:
 - one dominant discovery per lab;
 - few primary controls; secondary controls use progressive disclosure;
-- deterministic, immediate visual response;
-- use fixed/shared plot scales whenever autoscaling would hide the effect being taught;
-- show mechanisms before operational rules;
-- show both benefit and cost of tunable acquisition parameters;
-- allow poor configurations when their consequence is pedagogically useful;
-- UI consumes the Scientific Core; equations/signs/frames/validity domains remain scientifically registered and validated;
-- never imply that a vendor-specific behavior is universal.
+- deterministic immediate response;
+- fixed/shared plot scales when autoscaling would hide the concept;
+- mechanism before operational rule;
+- show benefit and cost of tunable parameters;
+- permit poor configurations when their consequence is useful;
+- UI consumes the Scientific Core; no parallel physics;
+- vendor behavior is evidence, not universal law.
 
-## 2. Source hierarchy for lab review
+## 2. Source hierarchy
 
-Use sources for the role they actually support:
-
-1. **IHO S-5A, Edition 2.0.0 (August 2026)** — competence anchor. H2 explicitly includes wave wavelength/amplitude/frequency, CW/chirp, bandwidth, pulse length, pulse repetition rate, range/spatial resolution and the requirement to tune acoustic parameters and assess bottom-detection limitations.
-2. **MIT OpenCourseWare 2.682 Acoustical Oceanography (James Lynch)** — first-principles acoustics and pedagogical progression.
-3. **CCOM/UNH and UNB/OMG** — hydrographic/ocean-mapping science, system integration and operational interpretation.
-4. **DHN** — Brazilian hydrographic operational relevance.
-5. **Authoritative manufacturer documentation** — evidence of real controls, operating modes and trade-offs; never the sole authority for general physics.
+1. **IHO S-5A, Ed. 2.0.0 (Aug 2026)** — competence anchor.
+2. **MIT OCW 2.682 Acoustical Oceanography** — first-principles acoustics.
+3. **CCOM/UNH and UNB/OMG** — hydrographic/ocean-mapping science and integrated-system interpretation.
+4. **DHN** — Brazilian operational relevance.
+5. **Authoritative manufacturer documentation** — real controls/modes/trade-offs.
 
 ## 3. Active lab map
 
-The Acoustic Lab has **17 active labs**. The old standalone `Acoustic Detection Fundamentals` lesson is retired; historical numbering in older documents must not be reused here.
-
-| ID | Lab | Review status |
+| ID | Lab | Status |
 |---|---|---|
 | D1 | Acoustic Wave & Frequency | **Mapped** |
 | D2 | Pulse & Signal Processing | **Mapped** |
-| D3 | Sonar Equation & Propagation Loss | Pending |
+| D3 | Sonar Equation & Propagation Loss | **Mapped** |
 | D4 | Sound Speed & Refraction | Pending |
 | D5 | Transducer & Array Construction | Pending |
 | D6 | Beamforming & Electronic Steering | Pending |
@@ -80,204 +70,233 @@ The Acoustic Lab has **17 active labs**. The old standalone `Acoustic Detection 
 | D16 | Survey Coverage & Acquisition Trade-offs | Pending |
 | D17 | Uncertainty / TPU | Pending |
 
+The old standalone `Acoustic Detection Fundamentals` lesson is retired. Its SNR/detectability objective is carried by D3; threshold-driven bottom detection belongs to D8.
+
 ---
 
 # D1 — Acoustic Wave & Frequency
 
-**Review decision:** `KEEP + REFINE`  
-**Current implementation:** `web/pedagogical-explorer/src/WaveLab.tsx`
+**Decision:** `KEEP + REFINE`  
+**Current:** `web/pedagogical-explorer/src/WaveLab.tsx`
 
-## Pedagogical purpose
+## Purpose
+Build the minimum wave intuition reused later.
 
-Build the minimum wave intuition reused by all later acoustic labs. The learner should see a continuous sinusoidal acoustic wave and understand the relationships among frequency, period, wavelength, amplitude, phase and sound speed without turning D1 into a general acoustics course.
-
-**Dominant discovery:**
-
+**Dominant discovery**
 ```text
-frequency up -> period down
-frequency up + fixed sound speed -> wavelength down
+frequency ↑ -> period ↓
+frequency ↑ at fixed c -> wavelength ↓
 ```
 
-The learner should be able to predict these changes before moving the control.
+## Inputs
+Primary: **frequency `f`**.  
+Secondary: normalized amplitude, initial phase, sound speed `c`.
 
-## Learner inputs
+Period and wavelength are derived outputs, never independent controls.
 
-### Primary
-- **Frequency `f`** — main experiment.
+## Outputs
+- `p(t)` on fixed time scale;
+- `p(x)` on fixed/shared distance scale;
+- period `T=1/f`;
+- wavelength `λ=c/f`;
+- wavelength/cycle markers;
+- optional current/baseline overlay on identical axes.
 
-### Secondary
-- **Normalized amplitude** — changes magnitude only; explicitly **not transmit power/source level**.
-- **Initial phase `phi`** — shifts the cycle without changing frequency/wavelength.
-- **Sound speed `c`** — advanced/secondary control used only to expose `lambda = c/f`; detailed sound-speed physics belongs to D4.
+## Interaction
+Change frequency first; plots and derived values respond immediately. Then use amplitude/phase to distinguish magnitude/phase from frequency. Reveal sound speed only as a secondary `λ=c/f` experiment.
 
-Do **not** expose period or wavelength as independent inputs. They are derived outputs.
+## Forward intuition
+`frequency -> wavelength`, reused for absorption/range (D3), array/beamwidth (D5) and acquisition trade-offs (D16).
 
-## Expected outputs / visual response
+## Guardrails
+No propagation loss, sonar equation, transducer response or bottom detection. Normalized amplitude is not source level/power. Conceptual wave graphics are not a general wavefield solver.
 
-- **Wave in time** `p(t)` with fixed time scale across parameter changes.
-- **Wave in space** `p(x)` with fixed/shared distance scale across parameter changes.
-- Derived **period `T = 1/f`**.
-- Derived **wavelength `lambda = c/f`**.
-- Clear cycle/wavelength ruler or markers when useful.
-- Optional baseline/current overlay using exactly the same axes.
+## Implementation delta
+Keep current WaveLab/API. Replace adaptive spatial x-domain with a fixed/shared domain; make frequency dominant; retain fixed amplitude axis and period/wavelength outputs.
 
-The learner must visually perceive more cycles in the same time/distance window when frequency increases. **Do not autoscale the spatial plot to preserve a similar number of cycles.**
-
-## Interaction contract
-
-1. Start from one simple CW state.
-2. Learner changes **frequency**; both time and space plots update immediately while axes remain fixed.
-3. Period and wavelength values update in synchrony with the plots.
-4. Learner may then vary amplitude and phase to distinguish magnitude/phase from frequency.
-5. Sound speed is revealed as a secondary experiment: changing `c` changes wavelength but not temporal frequency/period.
-6. Reset restores a known baseline.
-
-## Operational intuition carried forward
-
-D1 does **not** teach sonar range or beamwidth yet. It creates the prerequisite chain reused later:
-
-```text
-frequency -> wavelength
-```
-
-Later labs extend the same control to:
-- frequency -> absorption/range (D3);
-- wavelength + aperture -> beam pattern/beamwidth (D5);
-- frequency-dependent acquisition trade-offs (D16).
-
-This prevents the misleading rule `higher frequency = better resolution` from being taught without its physical mechanisms.
-
-## Scope boundaries / scientific guardrails
-
-- No sonar equation, spreading, absorption or SNR in D1.
-- No transducer/array response in D1.
-- No bottom detection in D1.
-- Animated wave graphics are conceptual/analytical wave representations, not a general finite-wavefield solver.
-- Normalized amplitude must not be labeled as acoustic source level or power.
-
-## Current implementation delta
-
-Keep the current `WaveLab` structure and API-backed response. Required refinement for the next version:
-- **replace the current adaptive spatial x-domain with a fixed/shared domain** suitable for frequency comparison;
-- make frequency visually dominant and sound speed/amplitude/phase secondary;
-- retain derived period/wavelength and fixed amplitude axis;
-- optional baseline/current comparison is useful but must share axes.
-
-## Recognized references
-
-- **IHO S-5A, Ed. 2.0.0 (Aug 2026), H2.1a** — plane/spherical waves in terms of wavelength, amplitude and frequency; CW/chirp and acoustic-system parameters. Official standard index: <https://iho.int/standards-and-specifications>
-- **MIT OpenCourseWare, 2.682 Acoustical Oceanography, James Lynch** — foundational wave-equation/acoustics background and frequency-domain framing: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/pages/lecture-notes/>
+## References
+- IHO S-5A Ed. 2.0.0, H2 acoustic foundations: <https://iho.int/standards-and-specifications>
+- MIT OCW 2.682 Acoustical Oceanography: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/pages/lecture-notes/>
 
 ---
 
 # D2 — Pulse & Signal Processing
 
-**Review decision:** `KEEP + REFINE + ADD EXPERIENCE`  
-**Current implementation:** `web/pedagogical-explorer/src/SignalLab.tsx`
+**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Current:** `web/pedagogical-explorer/src/SignalLab.tsx`
 
-## Pedagogical purpose
+## Purpose
+Move from continuous wave intuition to finite sonar transmissions: CW pulses and FM/LFM chirps. Build intuition for pulse duration, bandwidth, signal energy, matched filtering and range resolution.
 
-Move from an indefinitely repeating CW wave to the signals actually transmitted by an echosounder: finite CW pulses and FM/LFM chirps. Build intuition for **pulse duration, bandwidth, transmitted energy, matched filtering/pulse compression and range resolution**, especially the reason FM allows a long energetic pulse without accepting the range-resolution penalty of an equally long unmodulated CW pulse.
-
-**Dominant discovery:**
-
+**Dominant discovery**
 ```text
-finite pulse -> echo-processing problem
-CW: longer pulse -> more energy, but poorer raw range resolution
-FM/LFM: long pulse + bandwidth + matched filter -> energetic transmission + compressed response
-more effective bandwidth -> narrower compressed response -> better range resolution
+CW: longer pulse -> more energy but poorer raw range resolution
+LFM: long pulse + bandwidth + matched filter -> energetic transmission + compressed response
+bandwidth ↑ -> compressed response narrows -> range resolution improves
 ```
 
-## Learner inputs
+## Inputs
+Primary: pulse type CW/LFM, pulse duration `τ`, LFM bandwidth `B`, centre frequency `fc`.  
+Secondary: chirp direction; envelope/window only when its sidelobe consequence is visible.
+
+## Outputs
+- finite TX waveform;
+- instantaneous frequency vs time;
+- matched-filter/pulse-compressed response;
+- visible duration and bandwidth extents;
+- Scientific-Core-derived range resolution;
+- relative pulse-energy indicator at fixed normalized amplitude;
+- recommended: ideal delayed-return timeline before filtering.
+
+## Interaction
+Start with short CW; increase `τ`. Switch to LFM. Increase `τ` at fixed `B`, then increase `B`; compare on fixed/shared axes. Advanced chirp/window controls follow only after the main relationship is clear.
+
+## Operational intuition
+- `τ ↑`: more energy; longer TX occupancy; CW range resolution worsens.
+- `B ↑`: narrower compressed response / better range resolution, subject to system bandwidth and processing.
+- CW→LFM: permits longer energetic transmission with pulse compression.
+- frequency consequences on propagation and array geometry are deferred to D3/D5.
+
+## Guardrails
+Do not teach `pulse length = actual minimum range`, pulse length as sole ping-rate determinant, or centre frequency alone as range resolution. Threshold/detection belongs to D8. Do not duplicate D3 propagation/noise physics merely to decorate the return.
+
+## Implementation delta
+Retain existing CW/LFM, frequency, duration, bandwidth, direction, envelope, waveform, instantaneous-frequency and matched-filter elements. Add explicit range-resolution and relative-energy/occupancy outputs; use fixed/shared comparison domains; add delayed-return bridge if it remains scientifically simple.
+
+## References
+- IHO S-5A Ed. 2.0.0, H2 acoustic systems: <https://iho.int/standards-and-specifications>
+- Schock, LeBlanc & Mayer (2000), *The Development of Chirp Sonar Technology and Its Applications*: <https://scholars.unh.edu/ccom/541/>
+- Hughes Clarke (2017), *Multibeam Echosounders*: <https://scholars.unh.edu/ccom/1370/>
+- Kongsberg EM 2040 family: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040-Mk2/>
+
+---
+
+# D3 — Sonar Equation & Propagation Loss
+
+**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Current:** `web/pedagogical-explorer/src/SonarEquationLab.tsx`
+
+## Purpose
+Build the learner's acoustic-budget intuition: a transmitted signal must survive outward loss, bottom interaction and return loss, then remain sufficiently above noise to support detection. D3 is where the operational meaning of **transmit level/power, range, frequency-dependent absorption, noise and SNR margin** becomes visible.
+
+**Dominant discovery**
+```text
+more source level -> more received level / SNR margin
+more range -> more two-way transmission loss -> less received level / SNR
+higher frequency -> usually more absorption -> less long-range margin
+more noise -> less SNR margin without changing received signal level
+```
+
+The learner should progress from reading a sonar-equation budget to predicting which control can recover a weak return and what trade-off that choice carries.
+
+## Inputs
 
 ### Primary
-- **Pulse type:** CW / LFM (chirp).
-- **Pulse duration `tau`**.
-- **LFM bandwidth `B`** — active only for LFM.
-- **Centre frequency `fc`** — keeps continuity with D1; propagation/range penalty from frequency belongs to D3.
+- **Range `R`** — main loss experiment.
+- **Source level `SL` / transmit level** — scientific quantity. If the future UI exposes a familiar `% power` control, conversion to SL must come from a documented sonar model; never equate percent power linearly with dB.
+- **Frequency `f`** — reused from D1/D2; now changes absorption through the selected Scientific-Core model.
+- **Noise level `NL`**.
 
 ### Secondary / advanced
-- **Chirp direction:** up / down.
-- **Envelope/window model:** e.g. rectangular / Tukey, only if its effect on compressed sidelobes is visibly demonstrated.
-
-Do not expose threshold, receiver gain or bottom-detection method here; those belong to later labs.
+- **Bottom scattering/backscatter term** or simple selectable bottom response, only to show that bottom return strength matters; detailed backscatter is outside current scope.
+- TX/RX relative beam gain only when coupled to later beam/steering labs; otherwise keep fixed.
+- Environmental inputs required by the selected absorption model should normally be hidden under advanced controls or presets.
+- **Required SNR / detection margin reference** may be shown as a pedagogical threshold, but it must not masquerade as the actual bottom detector used in D8.
 
 ## Expected outputs / visual response
 
 Required:
-- **TX acoustic waveform** with the finite pulse clearly visible.
-- **Instantaneous frequency vs time**: horizontal for CW; sweep for LFM.
-- **Matched-filter / pulse-compressed response** on a shared/fixed comparison scale.
-- **Pulse duration** and **bandwidth** displayed as measurable extents, not only numbers.
-- Model-backed **range-resolution indicator** derived by the Scientific Core.
-- **Relative pulse-energy indicator** at fixed normalized amplitude, preferably from signal energy integral, so duration gain is visible without pretending normalized amplitude is source level.
+- **Received level (RL) vs range** on a fixed scale.
+- **SNR vs range** on a fixed scale.
+- selected-range vertical marker shared by both plots.
+- **two-way transmission loss** decomposed into spreading and absorption.
+- sonar-equation contribution budget showing at minimum `SL`, outward TL, bottom-return term, inward TL, `RL`, `NL`, and `SNR`.
+- **detection/SNR margin** = available SNR minus a clearly labeled required/reference SNR, displayed visually as positive/negative margin rather than as a binary bottom-detection algorithm.
+- frequency comparison curve using identical range and vertical scales.
 
-Recommended added experience:
-- a simple **ideal delayed return** view or TX/return timeline before matched filtering, with propagation loss/noise disabled or fixed. This should teach `transmit -> delayed return -> matched filter`, not duplicate D3.
-- show a **TX occupied interval**. It may be translated to an equivalent two-way range only if the model/assumptions are stated.
+Recommended experience:
+- a compact animated or static **energy-budget path**: `TX -> outbound TL -> bottom return -> inbound TL -> receiver/noise`, synchronized with the numeric budget. The goal is causality, not decorative animation.
 
 ## Interaction contract
 
-1. Begin with a short finite **CW pulse**. Learner increases `tau` and sees a longer waveform, more relative energy and a broader raw/matched response.
-2. Switch to **LFM** at comparable centre frequency.
-3. Increase pulse duration while keeping bandwidth fixed: transmitted energy/occupancy rises; compressed resolution should not be falsely presented as scaling directly with total chirp duration.
-4. Increase **bandwidth**: instantaneous-frequency sweep widens and compressed peak narrows.
-5. Compare CW and LFM using fixed/shared axes or baseline/current overlay so the UI cannot visually erase the trade-off by rescaling.
-6. Explore chirp direction/window only after the main CW-vs-FM relationship is understood.
-7. Reset restores a known comparison state.
+1. Start with a detectable reference case and one selected range.
+2. Increase **range**: learner sees both spreading and absorption accumulate on outbound and inbound paths; RL/SNR fall and margin approaches/crosses zero.
+3. Increase **source level**: RL and SNR shift upward while propagation loss itself remains unchanged.
+4. Increase **noise level**: SNR/margin fall while RL remains unchanged. This distinction is mandatory.
+5. Compare **two frequencies** at identical geometry/environment. The higher-frequency curve should diverge only according to the registered absorption model and any explicitly modelled frequency dependence; fixed axes make the range penalty visible.
+6. Optionally vary bottom-return strength to show why a stronger/weaker seabed echo changes detection margin without changing transmission loss.
+7. Reset to the known reference case.
 
-## Operational intuition carried forward
+## Operational intuition / trade-offs
 
-The learner should leave D2 able to reason about why an operator changes pulse settings:
-
-| Control | Benefit to understand | Cost / limitation to understand |
+| Control / condition | Expected benefit or effect | Limitation / cost the learner must understand |
 |---|---|---|
-| Pulse duration `tau` up | more transmitted signal energy at fixed level; can support detection/range | longer TX occupancy; CW range resolution worsens; practical near-range/PRR consequences depend on system timing |
-| LFM bandwidth `B` up | narrower compressed response; better range resolution | processing/windowing/sidelobe and hardware bandwidth constraints; not a free universal improvement |
-| CW -> LFM | permits longer/high-energy transmission with pulse compression | requires matched processing; actual performance depends on effective bandwidth and system implementation |
-| Centre frequency up | D1 wave cycles/wavelength change | range/absorption and array consequences are intentionally deferred to D3/D5 |
+| Source level / transmit power ↑ | RL and SNR margin increase; potential range extension | Does **not** intrinsically improve resolution; real systems may face saturation, reverberation, unwanted-return and hardware limits |
+| Range ↑ | none; it is the geometric demand | two-way spreading + absorption increase; outer/longer paths become harder to detect |
+| Frequency ↑ | resolution/array benefits are learned elsewhere | absorption generally rises in hydrographic operating bands, reducing long-range margin; exact relation depends on environment/model |
+| Noise ↑ | none | SNR decreases while RL is unchanged |
+| Stronger bottom return | echo/SNR improves | seabed response depends on incidence, footprint, material and frequency; D3 uses only a controlled simplified term |
 
-D2 should prepare, not complete, the later acquisition decision chain. D3 adds propagation/SNR; D8 adds detection; D16 synthesizes pulse/frequency/ping-rate trade-offs.
+This lab must directly support the later operator diagnosis: **“I am losing the bottom at long range/outer swath — is the problem insufficient signal, excessive loss, high noise, frequency choice, or geometry?”** D3 teaches only the acoustic-budget part of that diagnosis; beam geometry/steering and detector behavior are added later.
 
 ## Scope boundaries / scientific guardrails
 
-- Do not teach `pulse length = actual minimum range` as a universal equality. Hardware TX/RX switching, blanking and transducer ring-down also matter. D2 may show the transmit-occupied interval and clearly label any simplified equivalent-range metric.
-- Do not teach pulse length as the sole determinant of ping rate. Actual PRR/ping interval is also constrained by two-way travel time, depth/slant range, sector scheduling and system architecture.
-- Do not teach centre frequency alone as range resolution. **Effective bandwidth and processing are central.**
-- Matched filtering belongs here; the threshold/detection decision belongs to D8.
-- Do not add propagation loss/noise models merely to make the return look realistic; those are D3 responsibilities and must come from the shared Scientific Core.
+- **Source level is not resolution.** Increasing power/SL can improve SNR/detectability but must not be rendered as a direct resolution improvement/degradation.
+- **Noise is not propagation loss.** Changing NL must not move the RL curve.
+- Use a named, registered absorption model with validity domain. Do not invent a HydroSIM empirical frequency-loss law.
+- Distinguish one-way and two-way TL. The bottom-return equation must not accidentally apply two-way TL twice.
+- Spreading model (spherical/cylindrical/practical transition if available) must be explicit; do not imply a single spreading law is universal.
+- A simplified scattering/backscatter term is acceptable for teaching the budget, but D3 is not a backscatter-classification lab.
+- The D3 `required SNR` line is a **detectability reference**, not the D8 amplitude/phase/hybrid bottom detector.
+- Do not introduce beamwidth/footprint penalties here unless they come from the shared beam model and are intentionally linked; otherwise hold geometry fixed.
+- Do not imply higher frequency always gives higher resolution as a single causal rule; D5/D16 complete that trade-off.
+
+## Dependencies / concepts passed forward
+
+Consumes:
+- D1: frequency and wavelength vocabulary;
+- D2: transmitted pulse concept.
+
+Passes forward:
+- `frequency -> absorption -> range margin` to D16;
+- `SL / noise / TL -> SNR -> detectability` to D8 Bottom Detection;
+- `slant range -> acoustic loss` to D6/D7/D9/D16 when steering/swath geometry is introduced.
 
 ## Current implementation delta
 
-Retain the current `SignalLab` fundamentals: CW/LFM selector, centre frequency, duration, bandwidth, chirp direction, envelope, acoustic waveform, instantaneous frequency and matched-filter response.
+The existing lab already provides a strong foundation: frequency, range, source level, noise, comparison frequency; fixed RL/SNR axes; a range marker; model-returned absorption and two-way loss; and a contribution breakdown.
 
-Refine for the next version:
-- add an explicit model-backed resolution output and relative pulse-energy/occupancy consequence;
-- provide fixed/shared comparison domains for the key CW/LFM and bandwidth/pulse-length experiments; current x/y domains should not autoscale away the effect being taught;
-- consider the ideal delayed-return/timeline bridge before matched filtering;
-- demote chirp direction and envelope/window to secondary controls unless their visual consequence is being actively taught.
+Next-version changes:
+- **retain** fixed axes, range marker and frequency comparison;
+- separate **spreading loss** and **absorption loss** visually, not only total TL;
+- add a clear **required-SNR / detection-margin** visual because the retired detection-fundamentals objective now belongs here;
+- make range the first/primary experiment and reduce emphasis on raw numeric cards;
+- keep source level scientifically labeled; if a future operator-facing `% power` control is desired, add only through a documented system model;
+- keep temperature/salinity/pH/depth used by the absorption model under advanced controls/presets rather than making D3 an oceanography form;
+- keep bottom scattering and beam gains fixed by default; expose only if the learner is explicitly studying their contribution;
+- consider an energy-budget path synchronized with the existing equation breakdown.
 
 ## Recognized references
 
-- **IHO S-5A, Ed. 2.0.0 (Aug 2026), H2.1a, H2.2a and H2.4b** — differentiate chirp and CW; explain bandwidth vs range resolution; pulse length/PRR/gain/threshold as system parameters; matched filtering and range resolution; tune acoustic parameters and assess detection limitations. Official standard index: <https://iho.int/standards-and-specifications>
-- **Schock, S.G.; LeBlanc, L.R.; Mayer, L.A. (2000), “The Development of Chirp Sonar Technology and Its Applications”** — wideband FM pulse, high pulse energy/SNR and high resolution: <https://scholars.unh.edu/ccom/541/>
-- **Hughes Clarke, J.E. (2017), “Multibeam Echosounders”** — spatial resolution is jointly controlled by pulse bandwidth, projected beamwidths, beam spacing/stabilization and geometry; use as a guardrail against one-parameter resolution rules: <https://scholars.unh.edu/ccom/1370/>
-- **Kongsberg EM 2040 / EM 2040P documentation** — operational evidence that real MBES use short CW pulses and much longer FM chirps, and that FM is used to extend range while maintaining resolution through bandwidth/pulse compression. Treat numerical examples as system-specific: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040-Mk2/>
+- **IHO S-5A, Ed. 2.0.0 (Aug 2026)** — current Category A competence standard; use H2 acoustic-system outcomes as the competence anchor: <https://iho.int/standards-and-specifications>
+- **MIT OpenCourseWare 2.682 Acoustical Oceanography, James Lynch** — propagation/acoustical-oceanography foundation and transmission-loss context: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
+- **Hughes Clarke, J.E. (2017), “Multibeam Echosounders”** — hydrographic MBES context tying range, signal quality and imaging geometry to usable bathymetry: <https://scholars.unh.edu/ccom/1370/>
+- **Schmidt, V.E.; Weber, T.C.; Lurton, X. (2012), “Optimizing Resolution and Uncertainty in Bathymetric Sonar Systems”** — explicitly relates usable bathymetric resolution/uncertainty to SNR, reinforcing that low-SNR soundings are operationally constrained rather than treating resolution as an isolated setting: <https://scholars.unh.edu/ccom/848/>
+- **Kongsberg EM 2040C/EM 2040 MkII official product documentation** — operational evidence that frequency is selected for the application, with lower frequencies used for deeper/longer-range work and higher frequencies for high-resolution inspection; use as system-specific evidence, not universal numerical law: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040C-MkII/> and <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
 
 ---
 
 ## 4. Review queue
 
-Continue in order D3 -> D17. For every lab, add the same concise contract:
+Continue D4 -> D17. For each lab record:
+1. purpose + dominant discovery;
+2. primary/secondary inputs;
+3. outputs/visual response;
+4. interaction sequence;
+5. operational intuition and trade-offs;
+6. scientific guardrails;
+7. dependencies/forward reuse;
+8. implementation delta (`KEEP`, `REFINE`, `MERGE / MOVE`, `ADD EXPERIENCE`);
+9. exact recognized references.
 
-1. pedagogical purpose + dominant discovery;
-2. primary and secondary learner inputs;
-3. expected outputs/visual response;
-4. learner interaction sequence;
-5. operational intuition / benefit-cost trade-offs;
-6. scope boundaries and scientific guardrails;
-7. dependencies on earlier labs / concepts passed forward;
-8. current implementation delta (`KEEP`, `REFINE`, `MERGE / MOVE`, `ADD EXPERIENCE`);
-9. recognized exact references.
-
-A lab is not considered pedagogically specified because a slider and chart exist. It is specified when an implementation agent can identify **what the learner changes, what must visibly change, why it changes, what intuition must be retained, and where that intuition is reused in acquisition decisions**.
+A lab is mapped only when an implementation agent can identify **what the learner changes, what must visibly change, why, what intuition is retained, and where that intuition is reused in acquisition decisions**.
