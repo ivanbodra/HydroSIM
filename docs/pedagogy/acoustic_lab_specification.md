@@ -57,7 +57,7 @@ Rules:
 | D3 | Sonar Equation & Propagation Loss | **Mapped** |
 | D4 | Sound Speed & Refraction | **Mapped** |
 | D5 | Transducer & Array Construction | **Mapped** |
-| D6 | Beamforming & Electronic Steering | Pending |
+| D6 | Beamforming & Electronic Steering | **Mapped** |
 | D7 | Echosounders — SBES vs MBES | Pending |
 | D8 | Bottom Detection | Pending |
 | D9 | Multisector MBES | Pending |
@@ -388,18 +388,145 @@ Next-version changes:
 
 ## Recognized references
 
-- **IHO S-5A Ed. 2.0.0, H2.1a and H2.4a** — requires understanding transducer-array design, sidelobes, effect of transducer design on beam characteristics, side-lobe suppression, TX/RX array construction, and explicitly assessing **aperture size and element spacing on array performance**: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
-- **MIT OCW 2.682 Acoustical Oceanography, Lecture 11** — simple line-array beamformer and grating-lobe equation; useful first-principles bridge from element spacing/wavelength to D6 steering: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/resources/mit2_682s12_lec11/>
-- **Hughes Clarke (2017), “Multibeam Echosounders”** — practical bathymetric resolution depends on pulse bandwidth, projected beam widths/spacing, stabilization and altitude; use to prevent beamwidth-only resolution claims: <https://scholars.unh.edu/ccom/1370/>
-- **de Moustier, Kraft & McGillicuddy (2008), “Multibeam Sonar Calibration Techniques”** — CCOM/UNH work explicitly relating physical element separation to acoustic wavelength and evaluating beamforming gain over steering angles: <https://scholars.unh.edu/ccom/610/>
-- **Lanzoni & Weber (2010), “High Resolution Calibration of a Multibeam Echo Sounder”** — measured 3-D TX/RX beam patterns of a hydrographic MBES and provides empirical context for array directivity: <https://scholars.unh.edu/ccom/789/>
-- **Kongsberg EM 2040 MkII official data** — real hydrographic example in which fixed transducer hardware exhibits different nominal beamwidths as operating frequency changes; useful validation that frequency/aperture interaction is operationally relevant: <https://www.kongsberg.com/globalassets/kongsberg/1.-what-we-do/2.-ocean-space/5.-seafloor-mapping/em-multibeams/em2040/em-2040---mkii-data-sheet.pdf>
+- **IHO S-5A Ed. 2.0.0, H2.1a and H2.4a** — transducer-array design, beam characteristics, sidelobes, TX/RX arrays, aperture size and element spacing: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **MIT OCW 2.682 Acoustical Oceanography, Lecture 11** — simple line-array beamformer and grating-lobe equation: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/resources/mit2_682s12_lec11/>
+- **Hughes Clarke (2017), “Multibeam Echosounders”**: <https://scholars.unh.edu/ccom/1370/>
+- **de Moustier, Kraft & McGillicuddy (2008), “Multibeam Sonar Calibration Techniques”**: <https://scholars.unh.edu/ccom/610/>
+- **Lanzoni & Weber (2010), “High Resolution Calibration of a Multibeam Echo Sounder”**: <https://scholars.unh.edu/ccom/789/>
+- **Kongsberg EM 2040 MkII**: <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
+
+---
+
+# D6 — Beamforming & Electronic Steering
+
+**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Current:** `web/pedagogical-explorer/src/BeamformingLab.tsx`
+
+## Purpose
+Build first-principles intuition for **how an array forms and electronically points a beam by compensating relative arrival/transmission timing or phase across fixed elements**, then show that steering away from broadside changes usable array response and can introduce penalties.
+
+**Dominant discovery**
+```text
+oblique wavefront -> different arrival time / phase at each element
+matched relative delay / phase -> channels align -> coherent sum increases
+change delay gradient -> beam direction changes without moving the array
+larger steering angle -> usable response generally degrades / beam geometry changes
+```
+
+The learner should finish able to predict which channel needs relatively more/less delay for a chosen arrival direction and understand steering as **electronic compensation**, not physical rotation of the transducer.
+
+## Inputs
+
+### Primary
+- **arrival/source angle `θsource`** for RX experiment;
+- **steering angle `θsteer`** or equivalent relative-delay gradient;
+- **RX / TX view** only after the receive-side mechanism is understood.
+
+The array geometry, frequency and sound speed should remain fixed in the core experiment so the learner isolates beamforming from D5 array construction.
+
+### Secondary / advanced
+- delay-gradient versus angle control mode;
+- aperture weighting/apodization, reusing D5 only when its steering consequence is shown;
+- frequency for a narrowband phase-steering comparison, only if the Scientific Core explicitly distinguishes phase steering from true time-delay steering;
+- near-field/dynamic focusing as an advanced concept, not a primary control.
+
+## Expected outputs / visual response
+
+Required:
+- fixed physical array and incoming wavefront/arrival direction;
+- per-channel **relative arrival offset**;
+- per-channel **applied compensation delay/phase**;
+- residual timing/phase after compensation;
+- aligned/misaligned channel representation before summation;
+- coherent-sum magnitude or normalized response at the tested direction;
+- one-way array/physical beam pattern on a fixed angle scale;
+- requested/effective steering direction and actual beam peak;
+- −3 dB beamwidth where defined;
+- explicit warning/markers for grating/ambiguous lobes when the registered model predicts them.
+
+Recommended:
+- baseline broadside pattern overlaid with current steered pattern;
+- a simple seafloor/target bridge showing that larger steering angle also implies more oblique look/slant range, without duplicating D7 footprint geometry;
+- a compact **steering penalty** indicator derived from the Scientific Core (for example relative peak response/gain versus broadside), rather than a generic warning.
+
+## Interaction contract
+
+1. **RX broadside baseline:** set source=0°, steer=0°. All arrival offsets/compensation offsets are zero or symmetric by convention; channels sum coherently.
+2. Move **source angle only** while keeping steering at 0°. Arrival offsets appear across the fixed array; residuals grow and coherent response at that direction falls.
+3. Set **steering angle equal to source angle**. Applied counter-delays cancel relative arrival offsets; channels realign and coherent response returns toward the modelled steered maximum. This is the central discovery.
+4. Move steering away from source. Residual timing/phase reappears and coherent sum decreases. The learner should be able to predict the sign/direction before moving the control.
+5. Keep source matched to steering and progressively increase absolute steering angle. Overlay broadside/current patterns and expose modelled changes in peak response, beamwidth and sidelobes/grating behavior. This introduces the operational cost of large steering.
+6. Only after RX is clear, switch to **TX** and show the reciprocal concept: programmed relative timing/phase causes constructive interference in a selected direction. Do not require a separate new mathematical model in the UI.
+7. Advanced: compare angle control with equivalent relative-delay gradient. Phase-only versus true-time-delay and dynamic focusing are optional only when explicitly supported and pedagogically visible.
+
+## Operational intuition / trade-offs
+
+| Control / condition | Gain | Cost / risk to retain |
+|---|---|---|
+| Steering away from broadside | directs TX/RX sensitivity to off-nadir portions of the swath without rotating hardware | effective aperture/element response and gain can degrade; beam shape/sidelobes can change; slant range and projected footprint grow later in D7 |
+| Correct RX compensation for arrival angle | coherent channel summation and strong directional response | requires correct geometry/timing and steering convention |
+| Steering mismatch | none | residual phase/timing lowers coherent response and can weaken detection margin |
+| True time delay | steering relationship can remain valid over broader bandwidth | implementation complexity; do not conflate with narrowband phase shifts |
+| Phase steering at one frequency | simpler narrowband representation | phase settings are frequency-dependent; not broadband-equivalent to time delay |
+| Stronger apodization | can suppress sidelobes | broadens main lobe / changes effective gain, as already established in D5 |
+
+Desired operator intuition: **“steering lets the system look away from broadside electronically, but outer beams are not free: the array response and later the seafloor geometry become less favorable as steering/obliquity increases.”**
+
+## Scope boundaries / scientific guardrails
+
+- D6 explains **beam formation/steering**, not physical array design (D5), footprint/swath geometry (D7), multisector sequencing (D9), or motion stabilization (D11).
+- Use the Scientific Core for delay, phase, coherent sum, array factor, physical element response, beam peak, beamwidth and aliasing/grating-lobe conditions. UI must not infer steering penalties from angle alone if the core does not compute them.
+- Follow the registered sign convention for port/starboard, element indexing, delay sign and reference channel. Never teach a universal “left channel delayed first” statement without that convention.
+- MIT distinguishes **time-delay beamforming**, which can support broadband signals, from fixed phase-shift beamforming, which is inherently frequency-specific. Do not present the two as interchangeable across bandwidth.
+- A steered beam is not guaranteed to have exactly the broadside shape. MIT's simple derivation uses that as an approximation; the HydroSIM physical beam should show the actual registered element × array response.
+- Grating-lobe behavior depends on `d/λ`, steering and scan geometry; reuse D5's scientifically computed conditions.
+- Do not claim steering intrinsically changes pulse/range resolution. Its dominant penalties are directional response and later projected spatial geometry/SNR consequences.
+- “Dynamic focusing” is not required for the core D6 learning objective. Keep it advanced until the Scientific Core can show a distinct, validated consequence.
+
+## Dependencies / concepts passed forward
+
+Consumes:
+- D1: frequency, wavelength and phase;
+- D5: element spacing, aperture, array factor, beamwidth, sidelobes and grating lobes.
+
+Passes forward:
+- electronic TX/RX beam direction to D7 SBES vs MBES geometry;
+- steering angle and steering penalty to D7 footprint/outer-beam resolution and D16 trade-offs;
+- TX/RX directional formation to D8 bottom detection;
+- sector-specific TX steering to D9 multisector MBES;
+- stabilization as time-varying steering correction to D11 Vessel Motion;
+- coherent-response consequences to D3/D16 SNR intuition.
+
+## Current implementation delta
+
+`BeamformingLab.tsx` already has a scientifically useful causal chain: fixed six-element array; RX/TX view; steering by angle or delay gradient; source angle; per-channel arrival offsets, compensation delays and residuals; coherent sum; physical beam and array factor; peak angle; −3 dB beamwidth; aliasing regime and grating-lobe angles.
+
+Next-version changes:
+- preserve the **fixed array**: D6 should not reopen D5 geometry controls in the primary experience;
+- make the guided order explicit: `source moves -> residual appears -> steer to source -> residual closes -> coherent sum recovers`;
+- visualize the incoming wavefront/channel alignment more strongly than numeric tables alone;
+- make **RX the default first experience**; TX follows as reciprocal application;
+- add broadside/current beam-pattern overlay and a Scientific-Core-derived steering-loss/relative-peak indicator if available;
+- show beam response on a dB scale or another representation that makes sidelobe/steering degradation perceptible; normalized linear power alone can hide penalties;
+- keep angle and delay-gradient modes, but treat delay-gradient as the explanatory/advanced representation after steering-by-angle intuition;
+- retain aliasing/grating diagnostics, but do not let them dominate the normal valid-spacing experiment;
+- remove or defer dynamic focusing unless a distinct validated near-field interaction exists;
+- add only a lightweight bridge to oblique slant range/footprint; the full geometric consequence belongs to D7.
+
+## Recognized references
+
+- **IHO S-5A Ed. 2.0.0, H2.4** — multibeam transducers/arrays, beam characteristics, beam steering and hydrographic use: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **MIT OCW 2.682 Acoustical Oceanography, Lecture 11 Notes — Simple Beamformer Equations** — plane-wave arrival offset across a line array, electronic counter-delay/time-delay beamforming, phase beamforming, focused beamforming and grating-lobe equation: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/resources/mit2_682s12_lec11/>
+- **Hughes Clarke (2017), “Multibeam Echosounders”** — integrated interpretation of projected beamwidth, beam spacing, stabilization and bathymetric resolution: <https://scholars.unh.edu/ccom/1370/>
+- **de Moustier, Kraft & McGillicuddy (2008), “Multibeam Sonar Calibration Techniques”** — evaluates beamforming gain over steering angles in a multibeam context: <https://scholars.unh.edu/ccom/610/>
+- **Kongsberg EM 304 official documentation** — operational evidence of transmit beam steering stabilized for roll/pitch/yaw and receive beam steering stabilized for roll; shows steering is an active MBES mechanism rather than a purely theoretical array topic: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/427620_em304_installation_manual_en.pdf>
+- **Kongsberg ME70 official product description** — configurable beam directions/opening angles within explicit steering limits, demonstrating real-system steering constraints: <https://www.kongsberg.com/what-we-do/ocean-space/ocean-science/me70/>
 
 ---
 
 ## 4. Review queue
 
-Continue **D6 -> D17**. For each lab record:
+Continue **D7 -> D17**. For each lab record:
 1. purpose + dominant discovery;
 2. primary/secondary inputs;
 3. outputs/visual response;
