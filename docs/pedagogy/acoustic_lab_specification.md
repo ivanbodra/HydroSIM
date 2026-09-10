@@ -4,12 +4,12 @@ Status: **next-version development specification — iterative**
 Former name: **Didactic Module**  
 Audience: AI/software/UX/science agents implementing the next HydroSIM version
 
-This is the **canonical lab-by-lab pedagogical contract for the Acoustic Lab**. It complements the general framework and Scientific Registry; it does not redefine physics.
+This is the **canonical lab-by-lab pedagogical contract for the Acoustic Lab**. It complements the general pedagogical framework and Scientific Registry; it does not redefine physics.
 
 Related:
-- [`didactic_module_pedagogical_framework.md`](didactic_module_pedagogical_framework.md) — general pedagogy (to be read as Acoustic Lab framework);
+- [`didactic_module_pedagogical_framework.md`](didactic_module_pedagogical_framework.md) — general pedagogy (read as Acoustic Lab framework);
 - [`pedagogical_reference_index.md`](pedagogical_reference_index.md) — source index;
-- [`hydrosim_pedagogical_plan.md`](hydrosim_pedagogical_plan.md) — broader HydroSIM curriculum history;
+- [`hydrosim_pedagogical_plan.md`](hydrosim_pedagogical_plan.md) — broader curriculum/history;
 - [`../architecture/didactic_explorer_foundation.md`](../architecture/didactic_explorer_foundation.md) — Scientific Core boundary.
 
 ## 1. Product and teaching contract
@@ -56,7 +56,7 @@ Rules:
 | D2 | Pulse & Signal Processing | **Mapped** |
 | D3 | Sonar Equation & Propagation Loss | **Mapped** |
 | D4 | Sound Speed & Refraction | **Mapped** |
-| D5 | Transducer & Array Construction | Pending |
+| D5 | Transducer & Array Construction | **Mapped** |
 | D6 | Beamforming & Electronic Steering | Pending |
 | D7 | Echosounders — SBES vs MBES | Pending |
 | D8 | Bottom Detection | Pending |
@@ -112,11 +112,11 @@ Change frequency first; plots and derived values respond immediately. Then use a
 No propagation loss, sonar equation, transducer response or bottom detection. Normalized amplitude is not source level/power. Conceptual wave graphics are not a general wavefield solver.
 
 ## Implementation delta
-Keep current WaveLab/API. Replace adaptive spatial x-domain with a fixed/shared domain; make frequency dominant; retain fixed amplitude axis and period/wavelength outputs.
+Keep current WaveLab/API. Replace adaptive spatial x-domain with fixed/shared domain; make frequency dominant; retain fixed amplitude axis and period/wavelength outputs.
 
 ## References
-- IHO S-5A Ed. 2.0.0, H2 acoustic foundations: <https://iho.int/standards-and-specifications>
-- MIT OCW 2.682 Acoustical Oceanography: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/pages/lecture-notes/>
+- IHO S-5A Ed. 2.0.0, H2.1 underwater acoustics: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- MIT OCW 2.682 Acoustical Oceanography: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
 
 ---
 
@@ -126,7 +126,7 @@ Keep current WaveLab/API. Replace adaptive spatial x-domain with a fixed/shared 
 **Current:** `web/pedagogical-explorer/src/SignalLab.tsx`
 
 ## Purpose
-Move from continuous wave intuition to finite sonar transmissions: CW pulses and FM/LFM chirps. Build intuition for pulse duration, bandwidth, signal energy, matched filtering and range resolution.
+Move from continuous-wave intuition to finite sonar transmissions: CW pulses and FM/LFM chirps. Build intuition for pulse duration, bandwidth, signal energy, matched filtering and range resolution.
 
 **Dominant discovery**
 ```text
@@ -146,7 +146,7 @@ Secondary: chirp direction; envelope/window only when its sidelobe consequence i
 - visible duration and bandwidth extents;
 - Scientific-Core-derived range resolution;
 - relative pulse-energy indicator at fixed normalized amplitude;
-- recommended: ideal delayed-return timeline before filtering.
+- optional ideal delayed-return timeline before filtering.
 
 ## Interaction
 Start with short CW; increase `τ`. Switch to LFM. Increase `τ` at fixed `B`, then increase `B`; compare on fixed/shared axes. Advanced chirp/window controls follow only after the main relationship is clear.
@@ -161,13 +161,13 @@ Start with short CW; increase `τ`. Switch to LFM. Increase `τ` at fixed `B`, t
 Do not teach `pulse length = actual minimum range`, pulse length as sole ping-rate determinant, or centre frequency alone as range resolution. Threshold/detection belongs to D8. Do not duplicate D3 propagation/noise physics merely to decorate the return.
 
 ## Implementation delta
-Retain existing CW/LFM, frequency, duration, bandwidth, direction, envelope, waveform, instantaneous-frequency and matched-filter elements. Add explicit range-resolution and relative-energy/occupancy outputs; use fixed/shared comparison domains; add delayed-return bridge if it remains scientifically simple.
+Retain existing CW/LFM, frequency, duration, bandwidth, direction, envelope, waveform, instantaneous-frequency and matched-filter elements. Add explicit range-resolution and relative-energy/occupancy outputs; use fixed/shared comparison domains; add delayed-return bridge only if scientifically simple.
 
 ## References
-- IHO S-5A Ed. 2.0.0, H2 acoustic systems: <https://iho.int/standards-and-specifications>
+- IHO S-5A Ed. 2.0.0, H2.1/H2.2: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
 - Schock, LeBlanc & Mayer (2000), *The Development of Chirp Sonar Technology and Its Applications*: <https://scholars.unh.edu/ccom/541/>
 - Hughes Clarke (2017), *Multibeam Echosounders*: <https://scholars.unh.edu/ccom/1370/>
-- Kongsberg EM 2040 family: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040-Mk2/>
+- Kongsberg EM 2040 MkII: <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
 
 ---
 
@@ -212,11 +212,10 @@ Use registered absorption/spreading models and correct one-/two-way conventions.
 Retain current fixed RL/SNR axes, range marker and frequency comparison. Separate spreading/absorption, add detection margin, make range the first experiment and reduce raw-card emphasis. Bottom scattering and beam gains remain fixed by default.
 
 ## References
-- IHO S-5A Ed. 2.0.0, H2 acoustic-system outcomes: <https://iho.int/standards-and-specifications>
+- IHO S-5A Ed. 2.0.0, H2.1b–d: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
 - MIT OCW 2.682 Acoustical Oceanography: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
 - Hughes Clarke (2017), *Multibeam Echosounders*: <https://scholars.unh.edu/ccom/1370/>
 - Schmidt, Weber & Lurton (2012), *Optimizing Resolution and Uncertainty in Bathymetric Sonar Systems*: <https://scholars.unh.edu/ccom/848/>
-- Kongsberg EM 2040 family: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040C-MkII/>
 
 ---
 
@@ -226,7 +225,7 @@ Retain current fixed RL/SNR axes, range marker and frequency comparison. Separat
 **Current:** `web/pedagogical-explorer/src/RefractionLab.tsx`
 
 ## Purpose
-Build hydrographic intuition for **why the water-column sound-speed profile matters to sounding position**. The learner should connect a profile/gradient to ray bending and then connect a wrong or stale processing profile to a systematic spatial error in reconstructed soundings.
+Build intuition for **why the water-column sound-speed profile matters to sounding position**. Connect profile/gradient to ray bending, then connect a wrong/stale processing profile to systematic spatial error in reconstructed soundings.
 
 **Dominant discovery**
 ```text
@@ -235,115 +234,172 @@ wrong processing SVP -> wrong reconstructed ray -> sounding endpoint error
 same SVP mismatch -> error generally grows with obliquity / outer-swath geometry
 ```
 
-The lab is successful when the learner stops thinking of SVP as a correction file and starts thinking: **“the measured travel time and angle are converted into position through a propagation model; if my water-column model is wrong, my sounding moves.”**
+## Inputs
+Primary:
+- launch/beam angle from vertical;
+- reference/Truth sound-speed profile;
+- Processing sound-speed profile, matched by default then deliberately mismatched.
+
+Secondary: layer/gradient parameters, target depth, profile presets. Surface/transducer sound speed appears only in a clearly separated experiment because its steering role differs from the water-column SVP role.
+
+## Outputs
+- explicit `c(z)` plot;
+- Truth/reference and Processing/reconstructed rays on same fixed geometry;
+- visible bottom/target;
+- reference and reconstructed endpoints;
+- error vector with `Δx`, `Δz`;
+- supporting travel time/path values;
+- recommended error-vs-angle curve or small swath fan from the same Scientific Core.
+
+## Interaction
+Start constant; vary angle. Introduce a gradient; vary it while geometry stays fixed. Then compare identical Truth/Processing profiles, deliberately mismatch Processing only, and increase beam angle to expose how endpoint error evolves. Reset to matched profiles.
+
+## Operational intuition
+Representative SVP supports faithful reconstruction; stale/sparse sampling can generate coherent refraction errors, often more evident toward outer swath. Wider angular coverage gains area but generally increases sensitivity to propagation/profile error. Surface sound speed measurement does not replace the water-column profile.
+
+## Guardrails
+Use the registered ray tracer and sign/angle convention. Never let Processing SVP modify Truth propagation. Do not state a universal `Δx/Δz` sign without specified geometry/model. Layered profiles are pedagogical simplifications. Do not expand into physical oceanography or formal uncertainty propagation.
+
+## Implementation delta
+Retain current scenario progression and endpoint-error comparison. Add `c(z)` plot and bottom reference; preserve fixed geometry and explicit Truth/Processing semantics; add optional error-vs-angle view; reduce prominence of ray-parameter/per-layer diagnostics.
+
+## References
+- IHO S-5A Ed. 2.0.0, H2.1e: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- MIT OCW 2.682 Acoustical Oceanography: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
+- Beaudoin (2010), *Real-time Monitoring of Uncertainty due to Refraction in Multibeam Echo Sounding*: <https://scholars.unh.edu/ccom/1050/>
+- Beaudoin, Calder, Hiebert & Imahori (2009), *Estimation of Sounding Uncertainty from Measurements of Water Mass Variability*: <https://scholars.unh.edu/ccom/481/>
+- Beaudoin, Hughes Clarke & Bartlett (2004), *Application of surface sound speed measurements in post-processing for multi-sector multibeam echosounders*: <https://scholars.unh.edu/ccom/1335/>
+
+---
+
+# D5 — Transducer & Array Construction
+
+**Decision:** `KEEP + REFINE + MOVE`  
+**Current:** `web/pedagogical-explorer/src/ArrayDirectivityLab.tsx`
+
+## Purpose
+Build physical intuition for how **wavelength, aperture, number/spacing of elements and aperture weighting create directivity**. The learner should understand that narrow MBES beams do not come from an abstract software setting: they arise from coherent radiation/reception by a finite array.
+
+**Dominant discovery**
+```text
+larger aperture in wavelengths -> narrower main lobe
+frequency ↑ at fixed physical aperture -> aperture/λ ↑ -> narrower beam
+poor / excessive element spacing -> unwanted lobes / ambiguous angular response
+aperture weighting -> lower sidelobes ↔ broader main lobe / reduced effective gain
+```
+
+The lab succeeds when the learner can inspect a physical array and predict the qualitative beam-pattern consequence before changing it.
 
 ## Inputs
 
 ### Primary
-- **Launch / beam angle from vertical** — exposes angular sensitivity and prepares outer-swath reasoning.
-- **Reference (Truth) sound-speed profile** — initially a simple 2–3 layer profile or gradient preset; later editable if needed.
-- **Processing sound-speed profile** — matched to Truth by default, then deliberately offset/stale for comparison.
+- **frequency `f`** (reuses D1 wavelength intuition);
+- **element count `N`**;
+- **element spacing `d`**;
+- or, preferably as an alternate construction mode, **physical aperture `L`** with `N`/`d` visibly derived so the learner can reason in both metres and wavelengths.
 
 ### Secondary / advanced
-- layer-interface depth or gradient magnitude;
-- target/bottom depth;
-- selectable profile presets representing weak vs strong stratification;
-- surface/transducer sound speed only in a clearly separated experiment that explains its distinct role in beam steering; do **not** silently conflate it with the water-column SVP.
+- element face/element factor;
+- aperture weighting/shading (`uniform` vs one registered taper such as Hann);
+- rectangular 2-D array dimensions;
+- Mills Cross architecture as a named advanced construction example.
 
-Do not make temperature, salinity and pressure independent primary controls here. They are causes/measurement inputs to sound speed, not the acquisition intuition D4 is trying to teach.
+### Move out of the core D5 interaction
+- TX↔RX eccentricity/lever-arm controls (`rxX`, `rxY`, `rxZ`) belong to **D10 Vessel & Sensor Configuration**. D5 may show TX/RX arrays spatially separated only as a fixed schematic when explaining Mills Cross; do not make installation offsets an array-directivity control.
+- steering/delay/phase belongs to **D6 Beamforming & Electronic Steering**.
 
 ## Expected outputs / visual response
 
 Required:
-- **sound-speed profile `c(z)`** plotted next to the water column;
-- reference/Truth ray path and processing/reconstructed ray path on the **same fixed geometry**;
-- visible bottom/target surface, not only an abstract target depth;
-- reference and reconstructed endpoints;
-- **endpoint error vector decomposed into `Δx` and `Δz`**;
-- travel time and horizontal range/path outputs as supporting values;
-- angle-at-layer / Snell-law response may be shown as a compact derived annotation, not the dominant output.
+- physical element layout on a **fixed spatial scale**;
+- wavelength `λ` and spacing explicitly shown both as distance and `d/λ`;
+- physical/effective aperture shown as distance and `L/λ`;
+- one-way angular response on a fixed dB/angle scale;
+- main-lobe peak and **−3 dB beamwidth**;
+- sidelobes visibly identified; if a grating lobe exists within the visible field, make it unmistakable rather than merely another peak;
+- optional separate `element factor`, `array factor`, and combined response, but combined response is the principal learner view.
 
 Recommended:
-- a small **across-track error vs beam angle** curve or fan preview computed by the same Scientific Core. This is the bridge from a single ray to MBES intuition: near-nadir error may look small while outer beams diverge strongly.
-- optional Truth-vs-processing swath endpoints over a flat seafloor, without yet introducing full beamforming or bottom detection.
+- a compact far-field polar view synchronized with the Cartesian dB plot;
+- baseline/current overlay when changing one variable;
+- 2-D footprint/directivity preview only as a bridge to D7; full seafloor footprint belongs later.
 
 ## Interaction contract
 
-1. **Constant profile:** vary launch angle; rays remain straight. Establish geometry/travel-time baseline.
-2. **Reference gradient/layers:** introduce one sound-speed change. The ray bends according to the registered propagation model; keep axes fixed so the geometric difference is visible.
-3. Vary the gradient/profile while holding launch angle and target depth fixed; learner predicts the direction/magnitude trend before moving the control.
-4. Switch to **Truth vs Processing**. Begin with identical profiles so endpoints coincide.
-5. Offset the processing lower layer/profile while Truth remains fixed. Show the reconstructed path and endpoint separating immediately.
-6. Increase beam angle while keeping the same profile mismatch. Show how the endpoint error changes; if supported by the core, expose the full across-track error fan/curve.
-7. Reset to matched Truth/Processing profiles.
-
-The UI should make Truth and Processing unmistakable. Never let changing the processing profile also mutate the simulated Truth propagation.
+1. Start with a **simple uniform linear array** at fixed sound speed and broadside, with sensible spacing near `λ/2`.
+2. Increase element count while holding spacing/frequency fixed: physical aperture grows and the main lobe narrows.
+3. Reset. Increase frequency while physical geometry stays fixed: `λ` shrinks, `L/λ` grows and directivity changes. This explicitly reuses D1.
+4. Reset. Increase element spacing through the scientifically valid range until the response develops unwanted/grating lobes; keep the same angle/dB axes.
+5. Return to a valid spacing and compare **uniform vs tapered weighting**: sidelobes fall while the main lobe broadens / effective sensitivity changes. This is the principal trade-off experiment.
+6. Only after the 1-D concept is understood, expose rectangular-array and Mills-Cross construction as advanced views. Do not require the learner to understand steering here.
 
 ## Operational intuition / trade-offs
 
-| Condition / choice | Useful consequence | Cost / risk learner must understand |
+| Design / condition | Gain | Cost / risk to retain |
 |---|---|---|
-| Representative/recent SVP | more faithful ray reconstruction and sounding position | requires adequate water-column sampling in space/time |
-| Sparse/stale SVP sampling | less acquisition interruption/effort | may miss water-mass variability and create coherent refraction error, especially toward outer swath |
-| Wider/steeper beam angle | wider coverage | increases sensitivity to refraction/profile error and later also incurs range/footprint/SNR penalties |
-| Near-nadir geometry | often less sensitive to lateral refraction error | does not imply SVP is unimportant or that vertical/travel-time effects vanish |
-| Surface/transducer SV measurement | supports correct sonar steering/angle handling in applicable MBES systems | is **not a substitute** for the water-column profile used for ray tracing |
+| Larger aperture | narrower angular response; potentially smaller projected footprint / better angular discrimination | larger physical transducer; installation constraints |
+| Higher frequency with same geometry | smaller `λ`, therefore larger aperture in wavelengths and typically narrower beam | propagation range is reduced by absorption (D3); frequency is not a free resolution control |
+| More elements at fixed spacing | larger aperture and narrower beam | greater hardware/channel complexity; do not imply element count alone matters independently of aperture |
+| Larger spacing | can increase aperture for fixed `N` | excessive spacing permits grating/ambiguous lobes; exact condition depends on steering and model |
+| Stronger aperture taper/shading | lower sidelobes; less response to off-axis energy | broader main lobe and changed array gain/effective aperture |
+| Narrow beam | better angular discrimination / smaller footprint at a given range | actual seafloor resolution still depends on range, pulse bandwidth, geometry, beam spacing and detection; defer integrated resolution to D7/D16 |
 
-The desired operator thought is: **“outer-swath disagreement may be a water-column/refraction problem; before changing power or detector settings, check whether the SVP represents the water through which the sound propagated.”**
+Desired operator intuition: **“beamwidth and sidelobes are consequences of physical/acoustic array design. Frequency, aperture and weighting interact; a narrow nominal beam is not an isolated software parameter.”**
 
 ## Scope boundaries / scientific guardrails
 
-- D4 teaches **geometric-acoustic ray tracing**, not a full finite-wavefield solver. Label the visualization accordingly.
-- Use the Scientific Core's registered ray tracer and documented angle/sign convention. The UI must not implement its own Snell-law shortcut.
-- Separate **Truth/reference propagation** from **processing/reconstruction propagation**. Wrong processing SVP must not alter simulated Truth travel time/path.
-- Do not claim a universal sign for `Δx`/`Δz` from “SV too high/low” without specifying profile, geometry, convention and reconstruction method. Let the Scientific Core show the result.
-- Layered/constant-gradient models are pedagogical simplifications. Do not imply the ocean is piecewise constant because the teaching visualization is.
-- Surface sound speed at the transducer and water-column SVP have different operational roles in multibeam systems. Preserve that distinction for D6/D9/D14.
-- Do not expand D4 into physical oceanography, CTD instrumentation, water-mass classification or survey-planning optimization. Sampling strategy is previewed here and synthesized in D15/D16/D17.
-- Refraction error contributes to uncertainty, but formal uncertainty propagation belongs to D17.
+- D5 is **array construction/directivity**, not D6 steering. Keep the default beam at broadside; no learner-controlled phase/delay steering in the core sequence.
+- Use Scientific-Core element factor, array factor and weighting definitions. UI must not draw a decorative beam independent of computed response.
+- Grating-lobe statements must respect actual `d/λ`, scan/steering angle and the registered array model. Do not teach a universal threshold detached from steering conditions; broadside `λ/2` is a safe pedagogical starting point, not the only physically valid spacing.
+- `beamwidth ≈ λ/L` is useful intuition, not a universal exact formula. Display exact/core-derived −3 dB beamwidth.
+- Distinguish one-way TX/RX directivity from two-way combined sonar response. D5 should label exactly which pattern is plotted.
+- Do not equate narrow beam directly with final bathymetric resolution. Hughes Clarke shows practical resolution also depends on pulse bandwidth, projected beam widths/spacing, stabilization and platform altitude.
+- Element face size may affect the element factor but should remain secondary unless its consequence is visible.
+- Piezoelectric material/device physics may be mentioned as context but should not expand D5 into transducer electrical design.
+- Mills Cross explains orthogonal TX/RX apertures; its installation geometry/lever arms are deferred to D10.
 
 ## Dependencies / concepts passed forward
 
 Consumes:
-- D1: sound speed and wavelength vocabulary;
-- D3: longer/slanted paths are acoustically more demanding, though D4 focuses on geometry rather than SNR.
+- D1: `λ=c/f` and frequency/wavelength intuition;
+- D3: frequency has a propagation-range cost, preventing “higher frequency is always better” reasoning.
 
 Passes forward:
-- `SVP -> ray path -> range/angle reconstruction -> sounding position` to D14 Sounding Formation;
-- `profile mismatch + beam angle -> outer-swath error` to D7/D9/D16/D17;
-- distinction between **surface SV** and **water-column SVP** to beam steering/multisector/sounding-formation labs;
-- operational diagnosis of coherent cross-track/refraction artifacts to the Acquisition Simulator.
+- `array geometry -> directivity -> beamwidth/sidelobes` to D6 Beamforming & Steering;
+- TX/RX array roles and Mills Cross concept to D7 SBES vs MBES and D9 Multisector MBES;
+- beamwidth as one contributor to seafloor footprint/spatial resolution in D7/D16;
+- shading trade-off to D6/D9;
+- array/directivity contribution to acoustic gain/SNR when later integrated with D3.
 
 ## Current implementation delta
 
-The current `RefractionLab.tsx` already has the correct scientific/pedagogical seed: constant, two-layer and wrong-processing-profile scenarios; launch angle; lower-layer and processing sound speeds; reference vs reconstructed ray; travel-time/path values; and explicit endpoint `Δx/Δz`.
+`ArrayDirectivityLab.tsx` already exposes linear/rectangular/Mills modes, frequency, sound speed, element count/spacing/face size, uniform/Hann weighting, physical layout, wavelength, aperture, beamwidth, element factor, array factor and combined pattern. This is a strong scientific base.
 
 Next-version changes:
-- **retain** the three-step scenario progression and current endpoint-error comparison;
-- add an explicit **`c(z)` profile plot** synchronized with the water-column geometry;
-- draw a simple bottom/target reference so endpoint error is immediately recognizable as a sounding-position error;
-- keep Truth/reference and Processing visually distinct and semantically fixed;
-- add an optional **error-vs-angle / swath fan** using the same Scientific Core, because Beaudoin's hydrographic work shows that refraction uncertainty must be understood across the potential sounding space, not from one ray alone;
-- reduce prominence of `ray parameter` and per-layer numeric strips; they are useful derived diagnostics but not primary learner outcomes;
-- keep layer count small for the basic lab; progressive disclosure may later allow more realistic profiles/presets;
-- preserve common/fixed geometry scales across comparisons so profile-error growth cannot be hidden by autoscaling.
+- **make linear array the dominant guided experience**; hide rectangular/Mills under advanced progression;
+- expose `d/λ` and `L/λ` directly next to the physical dimensions;
+- keep array geometry and directivity plots on fixed/shared scales so aperture/frequency comparisons remain perceptible;
+- explicitly classify/label main lobe, sidelobes and grating lobes from Scientific-Core results;
+- add baseline/current overlay for one-control experiments if simple;
+- retain weighting comparison but show the main-lobe-width ↔ sidelobe suppression trade-off explicitly;
+- **remove interactive TX↔RX eccentricity (`rxX/rxY/rxZ`) from D5** and transfer that concept to D10 Vessel & Sensor Configuration;
+- avoid presenting rectangular-array weighting as arbitrarily disabled unless that restriction is scientific/model-driven; either support the registered model or state the scope;
+- preserve `element factor -> array factor -> combined pattern`, but make the combined response visually primary and the factor decomposition explanatory.
 
 ## Recognized references
 
-- **IHO S-5A, Ed. 2.0.0 (Aug 2026)** — current competence standard. H2 includes sound-speed profile/gradient, ray-tracing theory and an applied outcome to use an SVP to compute the sound-ray path: <https://iho.int/standards-and-specifications>
-- **MIT OpenCourseWare 2.682 Acoustical Oceanography, James Lynch** — first-principles propagation/refraction foundation: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
-- **Beaudoin, J. (2010), “Real-time Monitoring of Uncertainty due to Refraction in Multibeam Echo Sounding”** — key pedagogical reference for showing refraction consequence across the potential sounding space and for linking profile-sampling regime to sounding uncertainty: <https://scholars.unh.edu/ccom/1050/>
-- **Beaudoin, J.; Calder, B.R.; Hiebert, J.; Imahori, G. (2009), “Estimation of Sounding Uncertainty from Measurements of Water Mass Variability”** — connects water-mass variability/SVP representativeness to potential sounding uncertainty: <https://scholars.unh.edu/ccom/481/>
-- **Hamilton, T.; Beaudoin, J. (2010), “Modeling the Effect of Oceanic Internal Waves on the Accuracy of Multibeam Echosounders”** — shows how spatial/temporal SV structure can create MBES error and interact with survey geometry: <https://scholars.unh.edu/ccom/784/>
-- **Beaudoin, J.D.; Hughes Clarke, J.E.; Bartlett, J.E. (2004), “Application of surface sound speed measurements in post-processing for multi-sector multibeam echosounders”** — supports the required distinction between transducer/surface sound speed and water-column propagation information: <https://scholars.unh.edu/ccom/1335/>
-- **Kongsberg EM 2040 instruction manual** — operational description: bottom detection supplies TWTT/angle; transducer-depth sound speed, water-column SVP and vessel attitude are then used to compute sounding coordinates, with refraction calculated using Snell's law through the SVP layers: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/346210_em2040_instruction_manual.pdf>
-- **Kongsberg EM 2040C MkII official documentation** — confirms water-column sound-speed profile as a real-time correction input and the separate transducer sound-speed sensor context: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040C-MkII/>
+- **IHO S-5A Ed. 2.0.0, H2.1a and H2.4a** — requires understanding transducer-array design, sidelobes, effect of transducer design on beam characteristics, side-lobe suppression, TX/RX array construction, and explicitly assessing **aperture size and element spacing on array performance**: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **MIT OCW 2.682 Acoustical Oceanography, Lecture 11** — simple line-array beamformer and grating-lobe equation; useful first-principles bridge from element spacing/wavelength to D6 steering: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/resources/mit2_682s12_lec11/>
+- **Hughes Clarke (2017), “Multibeam Echosounders”** — practical bathymetric resolution depends on pulse bandwidth, projected beam widths/spacing, stabilization and altitude; use to prevent beamwidth-only resolution claims: <https://scholars.unh.edu/ccom/1370/>
+- **de Moustier, Kraft & McGillicuddy (2008), “Multibeam Sonar Calibration Techniques”** — CCOM/UNH work explicitly relating physical element separation to acoustic wavelength and evaluating beamforming gain over steering angles: <https://scholars.unh.edu/ccom/610/>
+- **Lanzoni & Weber (2010), “High Resolution Calibration of a Multibeam Echo Sounder”** — measured 3-D TX/RX beam patterns of a hydrographic MBES and provides empirical context for array directivity: <https://scholars.unh.edu/ccom/789/>
+- **Kongsberg EM 2040 MkII official data** — real hydrographic example in which fixed transducer hardware exhibits different nominal beamwidths as operating frequency changes; useful validation that frequency/aperture interaction is operationally relevant: <https://www.kongsberg.com/globalassets/kongsberg/1.-what-we-do/2.-ocean-space/5.-seafloor-mapping/em-multibeams/em2040/em-2040---mkii-data-sheet.pdf>
 
 ---
 
 ## 4. Review queue
 
-Continue D5 -> D17. For each lab record:
+Continue **D6 -> D17**. For each lab record:
 1. purpose + dominant discovery;
 2. primary/secondary inputs;
 3. outputs/visual response;
