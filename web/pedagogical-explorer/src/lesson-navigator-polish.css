@@ -1,0 +1,21 @@
+/* Learner-facing navigation polish. Keeps the shell compact and the Labs drawer usable on shorter screens. */
+.lesson-language-button{min-width:62px;justify-content:center;font-weight:700;letter-spacing:.04em;color:#d5e5ec!important}
+
+.lesson-drawer{display:flex;flex-direction:column;overflow:hidden;padding:14px 14px 12px}
+.lesson-drawer header{flex:0 0 auto;padding:4px 3px 12px}
+.lesson-drawer-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:10px 3px 4px 0;gap:4px;scrollbar-gutter:stable}
+.lesson-drawer-list button{min-height:0;grid-template-columns:36px 1fr 16px;padding:7px 9px;border-radius:9px}
+.lesson-drawer-list button>span{font-size:10px}
+.lesson-drawer-list button strong{font-size:10px;line-height:1.2}
+.lesson-drawer-list button svg{opacity:.72}
+.lesson-drawer-list::-webkit-scrollbar{width:8px}
+.lesson-drawer-list::-webkit-scrollbar-track{background:transparent}
+.lesson-drawer-list::-webkit-scrollbar-thumb{background:#769aaa38;border-radius:999px}
+.lesson-drawer-list{scrollbar-width:thin;scrollbar-color:#769aaa55 transparent}
+
+@media(max-height:780px){
+  .lesson-drawer{padding-top:10px}
+  .lesson-drawer header{padding-bottom:9px}
+  .lesson-drawer-list{padding-top:8px;gap:3px}
+  .lesson-drawer-list button{padding:6px 8px}
+}
