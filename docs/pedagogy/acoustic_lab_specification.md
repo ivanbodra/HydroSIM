@@ -55,7 +55,7 @@ Rules:
 | D1 | Acoustic Wave & Frequency | **Mapped** |
 | D2 | Pulse & Signal Processing | **Mapped** |
 | D3 | Sonar Equation & Propagation Loss | **Mapped** |
-| D4 | Sound Speed & Refraction | Pending |
+| D4 | Sound Speed & Refraction | **Mapped** |
 | D5 | Transducer & Array Construction | Pending |
 | D6 | Beamforming & Electronic Steering | Pending |
 | D7 | Echosounders — SBES vs MBES | Pending |
@@ -177,118 +177,173 @@ Retain existing CW/LFM, frequency, duration, bandwidth, direction, envelope, wav
 **Current:** `web/pedagogical-explorer/src/SonarEquationLab.tsx`
 
 ## Purpose
-Build the learner's acoustic-budget intuition: a transmitted signal must survive outward loss, bottom interaction and return loss, then remain sufficiently above noise to support detection. D3 is where the operational meaning of **transmit level/power, range, frequency-dependent absorption, noise and SNR margin** becomes visible.
+Build acoustic-budget intuition: the transmitted signal must survive two-way propagation and bottom interaction and remain sufficiently above noise to support detection.
 
 **Dominant discovery**
 ```text
-more source level -> more received level / SNR margin
-more range -> more two-way transmission loss -> less received level / SNR
-higher frequency -> usually more absorption -> less long-range margin
-more noise -> less SNR margin without changing received signal level
+source level ↑ -> received level / SNR margin ↑
+range ↑ -> two-way transmission loss ↑ -> received level / SNR ↓
+frequency ↑ -> generally absorption ↑ -> long-range margin ↓
+noise ↑ -> SNR ↓ while received signal level is unchanged
 ```
 
-The learner should progress from reading a sonar-equation budget to predicting which control can recover a weak return and what trade-off that choice carries.
+## Inputs
+Primary: range `R`, source level `SL`, frequency `f`, noise level `NL`.  
+Secondary: controlled bottom-return term; model-specific absorption environment; required/reference SNR. `% power` is allowed only through a documented system model mapping it to source level.
+
+## Outputs
+- RL vs range and SNR vs range on fixed scales;
+- shared selected-range marker;
+- two-way TL separated into spreading and absorption;
+- `SL -> TL -> bottom return -> TL -> RL -> NL -> SNR` contribution budget;
+- explicit positive/negative detection margin relative to a clearly labeled SNR reference;
+- same-scale frequency comparison.
+
+## Interaction
+Increase range first; then independently vary SL and NL so the learner sees that SL changes RL/SNR while NL changes only SNR. Compare two frequencies at fixed geometry/environment. Optionally vary bottom-return strength.
+
+## Operational intuition
+Power/SL can recover SNR/range but does not intrinsically improve resolution. Longer/slanted ranges cost SNR. Higher hydrographic frequencies generally sacrifice range through higher absorption. Noise reduces detectability without changing propagation loss.
+
+## Guardrails
+Use registered absorption/spreading models and correct one-/two-way conventions. D3's SNR reference is not D8's bottom detector. Do not turn simplified bottom response into a backscatter module or teach frequency as a single-variable resolution rule.
+
+## Implementation delta
+Retain current fixed RL/SNR axes, range marker and frequency comparison. Separate spreading/absorption, add detection margin, make range the first experiment and reduce raw-card emphasis. Bottom scattering and beam gains remain fixed by default.
+
+## References
+- IHO S-5A Ed. 2.0.0, H2 acoustic-system outcomes: <https://iho.int/standards-and-specifications>
+- MIT OCW 2.682 Acoustical Oceanography: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
+- Hughes Clarke (2017), *Multibeam Echosounders*: <https://scholars.unh.edu/ccom/1370/>
+- Schmidt, Weber & Lurton (2012), *Optimizing Resolution and Uncertainty in Bathymetric Sonar Systems*: <https://scholars.unh.edu/ccom/848/>
+- Kongsberg EM 2040 family: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040C-MkII/>
+
+---
+
+# D4 — Sound Speed & Refraction
+
+**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Current:** `web/pedagogical-explorer/src/RefractionLab.tsx`
+
+## Purpose
+Build hydrographic intuition for **why the water-column sound-speed profile matters to sounding position**. The learner should connect a profile/gradient to ray bending and then connect a wrong or stale processing profile to a systematic spatial error in reconstructed soundings.
+
+**Dominant discovery**
+```text
+sound-speed gradient -> refraction -> acoustic path changes
+wrong processing SVP -> wrong reconstructed ray -> sounding endpoint error
+same SVP mismatch -> error generally grows with obliquity / outer-swath geometry
+```
+
+The lab is successful when the learner stops thinking of SVP as a correction file and starts thinking: **“the measured travel time and angle are converted into position through a propagation model; if my water-column model is wrong, my sounding moves.”**
 
 ## Inputs
 
 ### Primary
-- **Range `R`** — main loss experiment.
-- **Source level `SL` / transmit level** — scientific quantity. If the future UI exposes a familiar `% power` control, conversion to SL must come from a documented sonar model; never equate percent power linearly with dB.
-- **Frequency `f`** — reused from D1/D2; now changes absorption through the selected Scientific-Core model.
-- **Noise level `NL`**.
+- **Launch / beam angle from vertical** — exposes angular sensitivity and prepares outer-swath reasoning.
+- **Reference (Truth) sound-speed profile** — initially a simple 2–3 layer profile or gradient preset; later editable if needed.
+- **Processing sound-speed profile** — matched to Truth by default, then deliberately offset/stale for comparison.
 
 ### Secondary / advanced
-- **Bottom scattering/backscatter term** or simple selectable bottom response, only to show that bottom return strength matters; detailed backscatter is outside current scope.
-- TX/RX relative beam gain only when coupled to later beam/steering labs; otherwise keep fixed.
-- Environmental inputs required by the selected absorption model should normally be hidden under advanced controls or presets.
-- **Required SNR / detection margin reference** may be shown as a pedagogical threshold, but it must not masquerade as the actual bottom detector used in D8.
+- layer-interface depth or gradient magnitude;
+- target/bottom depth;
+- selectable profile presets representing weak vs strong stratification;
+- surface/transducer sound speed only in a clearly separated experiment that explains its distinct role in beam steering; do **not** silently conflate it with the water-column SVP.
+
+Do not make temperature, salinity and pressure independent primary controls here. They are causes/measurement inputs to sound speed, not the acquisition intuition D4 is trying to teach.
 
 ## Expected outputs / visual response
 
 Required:
-- **Received level (RL) vs range** on a fixed scale.
-- **SNR vs range** on a fixed scale.
-- selected-range vertical marker shared by both plots.
-- **two-way transmission loss** decomposed into spreading and absorption.
-- sonar-equation contribution budget showing at minimum `SL`, outward TL, bottom-return term, inward TL, `RL`, `NL`, and `SNR`.
-- **detection/SNR margin** = available SNR minus a clearly labeled required/reference SNR, displayed visually as positive/negative margin rather than as a binary bottom-detection algorithm.
-- frequency comparison curve using identical range and vertical scales.
+- **sound-speed profile `c(z)`** plotted next to the water column;
+- reference/Truth ray path and processing/reconstructed ray path on the **same fixed geometry**;
+- visible bottom/target surface, not only an abstract target depth;
+- reference and reconstructed endpoints;
+- **endpoint error vector decomposed into `Δx` and `Δz`**;
+- travel time and horizontal range/path outputs as supporting values;
+- angle-at-layer / Snell-law response may be shown as a compact derived annotation, not the dominant output.
 
-Recommended experience:
-- a compact animated or static **energy-budget path**: `TX -> outbound TL -> bottom return -> inbound TL -> receiver/noise`, synchronized with the numeric budget. The goal is causality, not decorative animation.
+Recommended:
+- a small **across-track error vs beam angle** curve or fan preview computed by the same Scientific Core. This is the bridge from a single ray to MBES intuition: near-nadir error may look small while outer beams diverge strongly.
+- optional Truth-vs-processing swath endpoints over a flat seafloor, without yet introducing full beamforming or bottom detection.
 
 ## Interaction contract
 
-1. Start with a detectable reference case and one selected range.
-2. Increase **range**: learner sees both spreading and absorption accumulate on outbound and inbound paths; RL/SNR fall and margin approaches/crosses zero.
-3. Increase **source level**: RL and SNR shift upward while propagation loss itself remains unchanged.
-4. Increase **noise level**: SNR/margin fall while RL remains unchanged. This distinction is mandatory.
-5. Compare **two frequencies** at identical geometry/environment. The higher-frequency curve should diverge only according to the registered absorption model and any explicitly modelled frequency dependence; fixed axes make the range penalty visible.
-6. Optionally vary bottom-return strength to show why a stronger/weaker seabed echo changes detection margin without changing transmission loss.
-7. Reset to the known reference case.
+1. **Constant profile:** vary launch angle; rays remain straight. Establish geometry/travel-time baseline.
+2. **Reference gradient/layers:** introduce one sound-speed change. The ray bends according to the registered propagation model; keep axes fixed so the geometric difference is visible.
+3. Vary the gradient/profile while holding launch angle and target depth fixed; learner predicts the direction/magnitude trend before moving the control.
+4. Switch to **Truth vs Processing**. Begin with identical profiles so endpoints coincide.
+5. Offset the processing lower layer/profile while Truth remains fixed. Show the reconstructed path and endpoint separating immediately.
+6. Increase beam angle while keeping the same profile mismatch. Show how the endpoint error changes; if supported by the core, expose the full across-track error fan/curve.
+7. Reset to matched Truth/Processing profiles.
+
+The UI should make Truth and Processing unmistakable. Never let changing the processing profile also mutate the simulated Truth propagation.
 
 ## Operational intuition / trade-offs
 
-| Control / condition | Expected benefit or effect | Limitation / cost the learner must understand |
+| Condition / choice | Useful consequence | Cost / risk learner must understand |
 |---|---|---|
-| Source level / transmit power ↑ | RL and SNR margin increase; potential range extension | Does **not** intrinsically improve resolution; real systems may face saturation, reverberation, unwanted-return and hardware limits |
-| Range ↑ | none; it is the geometric demand | two-way spreading + absorption increase; outer/longer paths become harder to detect |
-| Frequency ↑ | resolution/array benefits are learned elsewhere | absorption generally rises in hydrographic operating bands, reducing long-range margin; exact relation depends on environment/model |
-| Noise ↑ | none | SNR decreases while RL is unchanged |
-| Stronger bottom return | echo/SNR improves | seabed response depends on incidence, footprint, material and frequency; D3 uses only a controlled simplified term |
+| Representative/recent SVP | more faithful ray reconstruction and sounding position | requires adequate water-column sampling in space/time |
+| Sparse/stale SVP sampling | less acquisition interruption/effort | may miss water-mass variability and create coherent refraction error, especially toward outer swath |
+| Wider/steeper beam angle | wider coverage | increases sensitivity to refraction/profile error and later also incurs range/footprint/SNR penalties |
+| Near-nadir geometry | often less sensitive to lateral refraction error | does not imply SVP is unimportant or that vertical/travel-time effects vanish |
+| Surface/transducer SV measurement | supports correct sonar steering/angle handling in applicable MBES systems | is **not a substitute** for the water-column profile used for ray tracing |
 
-This lab must directly support the later operator diagnosis: **“I am losing the bottom at long range/outer swath — is the problem insufficient signal, excessive loss, high noise, frequency choice, or geometry?”** D3 teaches only the acoustic-budget part of that diagnosis; beam geometry/steering and detector behavior are added later.
+The desired operator thought is: **“outer-swath disagreement may be a water-column/refraction problem; before changing power or detector settings, check whether the SVP represents the water through which the sound propagated.”**
 
 ## Scope boundaries / scientific guardrails
 
-- **Source level is not resolution.** Increasing power/SL can improve SNR/detectability but must not be rendered as a direct resolution improvement/degradation.
-- **Noise is not propagation loss.** Changing NL must not move the RL curve.
-- Use a named, registered absorption model with validity domain. Do not invent a HydroSIM empirical frequency-loss law.
-- Distinguish one-way and two-way TL. The bottom-return equation must not accidentally apply two-way TL twice.
-- Spreading model (spherical/cylindrical/practical transition if available) must be explicit; do not imply a single spreading law is universal.
-- A simplified scattering/backscatter term is acceptable for teaching the budget, but D3 is not a backscatter-classification lab.
-- The D3 `required SNR` line is a **detectability reference**, not the D8 amplitude/phase/hybrid bottom detector.
-- Do not introduce beamwidth/footprint penalties here unless they come from the shared beam model and are intentionally linked; otherwise hold geometry fixed.
-- Do not imply higher frequency always gives higher resolution as a single causal rule; D5/D16 complete that trade-off.
+- D4 teaches **geometric-acoustic ray tracing**, not a full finite-wavefield solver. Label the visualization accordingly.
+- Use the Scientific Core's registered ray tracer and documented angle/sign convention. The UI must not implement its own Snell-law shortcut.
+- Separate **Truth/reference propagation** from **processing/reconstruction propagation**. Wrong processing SVP must not alter simulated Truth travel time/path.
+- Do not claim a universal sign for `Δx`/`Δz` from “SV too high/low” without specifying profile, geometry, convention and reconstruction method. Let the Scientific Core show the result.
+- Layered/constant-gradient models are pedagogical simplifications. Do not imply the ocean is piecewise constant because the teaching visualization is.
+- Surface sound speed at the transducer and water-column SVP have different operational roles in multibeam systems. Preserve that distinction for D6/D9/D14.
+- Do not expand D4 into physical oceanography, CTD instrumentation, water-mass classification or survey-planning optimization. Sampling strategy is previewed here and synthesized in D15/D16/D17.
+- Refraction error contributes to uncertainty, but formal uncertainty propagation belongs to D17.
 
 ## Dependencies / concepts passed forward
 
 Consumes:
-- D1: frequency and wavelength vocabulary;
-- D2: transmitted pulse concept.
+- D1: sound speed and wavelength vocabulary;
+- D3: longer/slanted paths are acoustically more demanding, though D4 focuses on geometry rather than SNR.
 
 Passes forward:
-- `frequency -> absorption -> range margin` to D16;
-- `SL / noise / TL -> SNR -> detectability` to D8 Bottom Detection;
-- `slant range -> acoustic loss` to D6/D7/D9/D16 when steering/swath geometry is introduced.
+- `SVP -> ray path -> range/angle reconstruction -> sounding position` to D14 Sounding Formation;
+- `profile mismatch + beam angle -> outer-swath error` to D7/D9/D16/D17;
+- distinction between **surface SV** and **water-column SVP** to beam steering/multisector/sounding-formation labs;
+- operational diagnosis of coherent cross-track/refraction artifacts to the Acquisition Simulator.
 
 ## Current implementation delta
 
-The existing lab already provides a strong foundation: frequency, range, source level, noise, comparison frequency; fixed RL/SNR axes; a range marker; model-returned absorption and two-way loss; and a contribution breakdown.
+The current `RefractionLab.tsx` already has the correct scientific/pedagogical seed: constant, two-layer and wrong-processing-profile scenarios; launch angle; lower-layer and processing sound speeds; reference vs reconstructed ray; travel-time/path values; and explicit endpoint `Δx/Δz`.
 
 Next-version changes:
-- **retain** fixed axes, range marker and frequency comparison;
-- separate **spreading loss** and **absorption loss** visually, not only total TL;
-- add a clear **required-SNR / detection-margin** visual because the retired detection-fundamentals objective now belongs here;
-- make range the first/primary experiment and reduce emphasis on raw numeric cards;
-- keep source level scientifically labeled; if a future operator-facing `% power` control is desired, add only through a documented system model;
-- keep temperature/salinity/pH/depth used by the absorption model under advanced controls/presets rather than making D3 an oceanography form;
-- keep bottom scattering and beam gains fixed by default; expose only if the learner is explicitly studying their contribution;
-- consider an energy-budget path synchronized with the existing equation breakdown.
+- **retain** the three-step scenario progression and current endpoint-error comparison;
+- add an explicit **`c(z)` profile plot** synchronized with the water-column geometry;
+- draw a simple bottom/target reference so endpoint error is immediately recognizable as a sounding-position error;
+- keep Truth/reference and Processing visually distinct and semantically fixed;
+- add an optional **error-vs-angle / swath fan** using the same Scientific Core, because Beaudoin's hydrographic work shows that refraction uncertainty must be understood across the potential sounding space, not from one ray alone;
+- reduce prominence of `ray parameter` and per-layer numeric strips; they are useful derived diagnostics but not primary learner outcomes;
+- keep layer count small for the basic lab; progressive disclosure may later allow more realistic profiles/presets;
+- preserve common/fixed geometry scales across comparisons so profile-error growth cannot be hidden by autoscaling.
 
 ## Recognized references
 
-- **IHO S-5A, Ed. 2.0.0 (Aug 2026)** — current Category A competence standard; use H2 acoustic-system outcomes as the competence anchor: <https://iho.int/standards-and-specifications>
-- **MIT OpenCourseWare 2.682 Acoustical Oceanography, James Lynch** — propagation/acoustical-oceanography foundation and transmission-loss context: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
-- **Hughes Clarke, J.E. (2017), “Multibeam Echosounders”** — hydrographic MBES context tying range, signal quality and imaging geometry to usable bathymetry: <https://scholars.unh.edu/ccom/1370/>
-- **Schmidt, V.E.; Weber, T.C.; Lurton, X. (2012), “Optimizing Resolution and Uncertainty in Bathymetric Sonar Systems”** — explicitly relates usable bathymetric resolution/uncertainty to SNR, reinforcing that low-SNR soundings are operationally constrained rather than treating resolution as an isolated setting: <https://scholars.unh.edu/ccom/848/>
-- **Kongsberg EM 2040C/EM 2040 MkII official product documentation** — operational evidence that frequency is selected for the application, with lower frequencies used for deeper/longer-range work and higher frequencies for high-resolution inspection; use as system-specific evidence, not universal numerical law: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040C-MkII/> and <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
+- **IHO S-5A, Ed. 2.0.0 (Aug 2026)** — current competence standard. H2 includes sound-speed profile/gradient, ray-tracing theory and an applied outcome to use an SVP to compute the sound-ray path: <https://iho.int/standards-and-specifications>
+- **MIT OpenCourseWare 2.682 Acoustical Oceanography, James Lynch** — first-principles propagation/refraction foundation: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/>
+- **Beaudoin, J. (2010), “Real-time Monitoring of Uncertainty due to Refraction in Multibeam Echo Sounding”** — key pedagogical reference for showing refraction consequence across the potential sounding space and for linking profile-sampling regime to sounding uncertainty: <https://scholars.unh.edu/ccom/1050/>
+- **Beaudoin, J.; Calder, B.R.; Hiebert, J.; Imahori, G. (2009), “Estimation of Sounding Uncertainty from Measurements of Water Mass Variability”** — connects water-mass variability/SVP representativeness to potential sounding uncertainty: <https://scholars.unh.edu/ccom/481/>
+- **Hamilton, T.; Beaudoin, J. (2010), “Modeling the Effect of Oceanic Internal Waves on the Accuracy of Multibeam Echosounders”** — shows how spatial/temporal SV structure can create MBES error and interact with survey geometry: <https://scholars.unh.edu/ccom/784/>
+- **Beaudoin, J.D.; Hughes Clarke, J.E.; Bartlett, J.E. (2004), “Application of surface sound speed measurements in post-processing for multi-sector multibeam echosounders”** — supports the required distinction between transducer/surface sound speed and water-column propagation information: <https://scholars.unh.edu/ccom/1335/>
+- **Kongsberg EM 2040 instruction manual** — operational description: bottom detection supplies TWTT/angle; transducer-depth sound speed, water-column SVP and vessel attitude are then used to compute sounding coordinates, with refraction calculated using Snell's law through the SVP layers: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/346210_em2040_instruction_manual.pdf>
+- **Kongsberg EM 2040C MkII official documentation** — confirms water-column sound-speed profile as a real-time correction input and the separate transducer sound-speed sensor context: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040C-MkII/>
 
 ---
 
 ## 4. Review queue
 
-Continue D4 -> D17. For each lab record:
+Continue D5 -> D17. For each lab record:
 1. purpose + dominant discovery;
 2. primary/secondary inputs;
 3. outputs/visual response;
