@@ -5,11 +5,12 @@ from __future__ import annotations
 from math import floor
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from hydrosim.timing import PingTiming, SimulationTime
 
 D14StreamId = Literal["position", "attitude"]
+D14SynchronizationMode = Literal["ideal_common_time", "fixed_clock_offset"]
 
 
 class D14TimingRequest(BaseModel):
@@ -23,12 +24,21 @@ class D14TimingRequest(BaseModel):
     rx_duration_ms: float = Field(default=20.0, ge=0.0)
     sensor_sample_time_s: float = 0.0
     sensor_latency_ms: float = Field(default=0.0, ge=0.0)
+    synchronization_mode: D14SynchronizationMode = "ideal_common_time"
+    clock_offset_ms: float = 0.0
+    apply_clock_correction: bool = True
     selected_streams: tuple[D14StreamId, ...] = ("position", "attitude")
     position_update_rate_hz: float = Field(default=10.0, gt=0.0)
     attitude_update_rate_hz: float = Field(default=100.0, gt=0.0)
     position_latency_ms: float = Field(default=0.0, ge=0.0)
     attitude_latency_ms: float = Field(default=0.0, ge=0.0)
     vessel_speed_mps: float = Field(default=0.0, ge=0.0)
+
+    @model_validator(mode="after")
+    def _validate_clock_mode(self) -> "D14TimingRequest":
+        if self.synchronization_mode == "ideal_common_time" and abs(self.clock_offset_ms) > 1e-12:
+            raise ValueError("clock_offset_ms must be zero in ideal_common_time mode")
+        return self
 
 
 class D14TimelineEvent(BaseModel):
@@ -58,6 +68,23 @@ class D14StreamAssociation(BaseModel):
     along_track_timing_consequence_m: float | None = None
 
 
+class D14ClockSynchronization(BaseModel):
+    """Render-ready fixed-offset clock relation kept distinct from latency."""
+
+    model_config = ConfigDict(frozen=True)
+
+    synchronization_mode: D14SynchronizationMode
+    clock_offset_s: float
+    common_measurement_time_s: float
+    sensor_reported_time_s: float
+    availability_time_s: float
+    association_time_s: float
+    correction_applied: bool
+    corrected_common_time_s: float | None
+    interpreted_measurement_time_s: float
+    clock_epoch_error_s: float
+
+
 class D14TimingResponse(BaseModel):
     """Render-ready event timeline and causal position/attitude associations."""
 
@@ -73,6 +100,7 @@ class D14TimingResponse(BaseModel):
     sensor_available_time_s: float
     sensor_latency_ms: float
     vessel_speed_mps: float
+    clock_synchronization: D14ClockSynchronization
     associations: tuple[D14StreamAssociation, ...]
     timeline: tuple[D14TimelineEvent, ...]
     metadata: dict[str, str]
@@ -113,6 +141,35 @@ def _associate_stream(
     )
 
 
+def _clock_synchronization(
+    request: D14TimingRequest,
+    *,
+    common_measurement_time_s: float,
+    availability_time_s: float,
+    association_time_s: float,
+) -> D14ClockSynchronization:
+    offset_s = 0.0 if request.synchronization_mode == "ideal_common_time" else request.clock_offset_ms * 1e-3
+    sensor_reported_time_s = common_measurement_time_s + offset_s
+    corrected_common_time_s = (
+        sensor_reported_time_s - offset_s if request.apply_clock_correction else None
+    )
+    interpreted_measurement_time_s = (
+        corrected_common_time_s if corrected_common_time_s is not None else sensor_reported_time_s
+    )
+    return D14ClockSynchronization(
+        synchronization_mode=request.synchronization_mode,
+        clock_offset_s=offset_s,
+        common_measurement_time_s=common_measurement_time_s,
+        sensor_reported_time_s=sensor_reported_time_s,
+        availability_time_s=availability_time_s,
+        association_time_s=association_time_s,
+        correction_applied=request.apply_clock_correction,
+        corrected_common_time_s=corrected_common_time_s,
+        interpreted_measurement_time_s=interpreted_measurement_time_s,
+        clock_epoch_error_s=interpreted_measurement_time_s - common_measurement_time_s,
+    )
+
+
 def prepare_d14_timing_response(request: D14TimingRequest) -> D14TimingResponse:
     """Build canonical ping timing plus PED-D14 causal stream associations."""
 
@@ -144,6 +201,13 @@ def prepare_d14_timing_response(request: D14TimingRequest) -> D14TimingResponse:
         vessel_speed_mps=request.vessel_speed_mps,
     ) for stream_id in dict.fromkeys(request.selected_streams))
 
+    clock = _clock_synchronization(
+        request,
+        common_measurement_time_s=float(sensor_sample.seconds),
+        availability_time_s=float(sensor_available.seconds),
+        association_time_s=float(ping.tx_time.seconds),
+    )
+
     return D14TimingResponse(
         trigger_time_s=float(ping.trigger_time.seconds), tx_time_s=float(ping.tx_time.seconds),
         rx_start_time_s=float(ping.rx_start_time.seconds), rx_end_time_s=float(ping.rx_end_time.seconds),
@@ -151,13 +215,16 @@ def prepare_d14_timing_response(request: D14TimingRequest) -> D14TimingResponse:
         tx_to_rx_end_ms=ping.tx_to_rx_end_seconds * 1e3,
         sensor_sample_time_s=float(sensor_sample.seconds), sensor_available_time_s=float(sensor_available.seconds),
         sensor_latency_ms=request.sensor_latency_ms, vessel_speed_mps=request.vessel_speed_mps,
+        clock_synchronization=clock,
         associations=associations, timeline=timeline,
         metadata={
-            "time_basis": "scenario-relative simulation time",
+            "time_basis": "scenario/common simulation time for physical epochs",
             "association_epoch": "sonar tx_time",
             "association_rule": "latest sample with availability_time <= tx_time",
+            "clock_offset_definition": "t_sensor - t_common; positive means sensor clock ahead",
+            "clock_correction": "known fixed-offset algebra only; no drift, jitter or synchronization performance model",
             "position_consequence": "Derived along-track position-state timing consequence; not full sounding error",
             "attitude_consequence": "age only; no conversion to metres",
-            "state_semantics": "Configured cadence/latency/speed; Observed ideal samples; Derived association/consequence",
+            "state_semantics": "Truth physical epochs; Configured cadence/latency/clock offset/speed; Observed reported timestamp; Derived association/correction/consequence",
         },
     )
