@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from math import isfinite
+from typing import Literal
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
 from .wave_kinematics import monostatic_two_way_range_offset
-from .waveform import WaveformAutocorrelation
+from .waveform import ContinuousWavePulse, LinearFMPulse, WaveformAutocorrelation, WaveformPulse
 
 
 class AutocorrelationPowerFwhm(BaseModel):
@@ -26,6 +27,65 @@ class AutocorrelationPowerFwhm(BaseModel):
     right_half_power_lag_seconds: FiniteFloat
     temporal_width_seconds: FiniteFloat = Field(gt=0.0)
     equivalent_two_way_range_width_m: FiniteFloat | None = Field(default=None, gt=0.0)
+
+
+class D2WaveformReferenceMetrics(BaseModel):
+    """Authoritative PED-D2 ideal resolution and normalized pulse-energy reference."""
+
+    model_config = ConfigDict(frozen=True)
+
+    ideal_range_resolution_m: FiniteFloat = Field(gt=0.0)
+    range_resolution_basis: Literal["cw_pulse_duration", "lfm_swept_bandwidth"]
+    range_resolution_kind: Literal["ideal_analytical_reference"] = "ideal_analytical_reference"
+    relative_energy: FiniteFloat = Field(gt=0.0)
+    relative_energy_reference_duration_ms: FiniteFloat = Field(gt=0.0)
+    relative_energy_kind: Literal["normalized_waveform_energy_proxy"] = (
+        "normalized_waveform_energy_proxy"
+    )
+    sound_speed_mps: FiniteFloat = Field(gt=0.0)
+
+
+def d2_waveform_reference_metrics(
+    pulse: WaveformPulse,
+    *,
+    sound_speed_mps: float = 1500.0,
+    reference_duration_seconds: float = 1e-3,
+) -> D2WaveformReferenceMetrics:
+    """Return the scientific PED-D2 range-resolution and relative-energy references.
+
+    The energy ratio uses the analytic integral of the configured unit-amplitude
+    envelope squared. The common carrier-average factor of one half cancels against
+    the rectangular reference pulse, preserving the contract's normalized real-
+    passband energy comparison without tying the result to a display sampling rate.
+    """
+
+    if sound_speed_mps <= 0.0:
+        raise ValueError("sound_speed_mps must be positive")
+    if reference_duration_seconds <= 0.0:
+        raise ValueError("reference_duration_seconds must be positive")
+
+    duration = float(pulse.duration_seconds)
+    if isinstance(pulse, ContinuousWavePulse):
+        range_resolution = float(sound_speed_mps) * duration / 2.0
+        basis: Literal["cw_pulse_duration", "lfm_swept_bandwidth"] = "cw_pulse_duration"
+    elif isinstance(pulse, LinearFMPulse):
+        range_resolution = float(sound_speed_mps) / (2.0 * float(pulse.bandwidth_hz))
+        basis = "lfm_swept_bandwidth"
+    else:  # pragma: no cover - WaveformPulse exhaustiveness guard
+        raise TypeError(f"unsupported pulse type: {type(pulse)!r}")
+
+    envelope_energy_factor = 1.0
+    if pulse.envelope_model == "tukey" and float(pulse.tukey_alpha) > 0.0:
+        envelope_energy_factor = 1.0 - 5.0 * float(pulse.tukey_alpha) / 8.0
+    relative_energy = duration * envelope_energy_factor / float(reference_duration_seconds)
+
+    return D2WaveformReferenceMetrics(
+        ideal_range_resolution_m=range_resolution,
+        range_resolution_basis=basis,
+        relative_energy=relative_energy,
+        relative_energy_reference_duration_ms=float(reference_duration_seconds) * 1e3,
+        sound_speed_mps=float(sound_speed_mps),
+    )
 
 
 def _interpolated_crossing(x0: float, y0: float, x1: float, y1: float) -> float:
