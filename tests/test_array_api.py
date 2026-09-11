@@ -63,6 +63,36 @@ def test_d6_more_elements_at_fixed_spacing_increase_aperture_and_narrow_beam() -
     assert large.half_power_beamwidth_deg < small.half_power_beamwidth_deg
 
 
+def test_d6_rectangular_array_exposes_independent_orthogonal_directivity_cuts() -> None:
+    response = prepare_d6_array_response(
+        D6ArrayRequest(
+            frequency_khz=200.0,
+            sound_speed_mps=1500.0,
+            element_count=4,
+            element_spacing_m=0.00375,
+            longitudinal_element_count=16,
+            longitudinal_element_spacing_m=0.00375,
+            element_face_m=0.003,
+            sample_count=321,
+        )
+    )
+
+    assert response.physical_aperture_longitudinal_m > response.physical_aperture_transverse_m
+    assert len(response.along_track_pattern.angle_deg) == 321
+    assert len(response.across_track_pattern.angle_deg) == 321
+    assert max(response.along_track_pattern.normalized_power) == pytest.approx(1.0)
+    assert max(response.across_track_pattern.normalized_power) == pytest.approx(1.0)
+    assert response.along_track_half_power_beamwidth_deg is not None
+    assert response.across_track_half_power_beamwidth_deg is not None
+    assert response.along_track_half_power_beamwidth_deg < response.across_track_half_power_beamwidth_deg
+    assert response.combined_pattern == response.across_track_pattern
+    assert response.half_power_beamwidth_deg == pytest.approx(
+        response.across_track_half_power_beamwidth_deg
+    )
+    assert response.metadata["across_track_plane"].startswith("YZ")
+    assert response.metadata["along_track_plane"].startswith("XZ")
+
+
 def test_d6_rejects_zero_spacing_for_multi_element_array() -> None:
     with pytest.raises(ValueError, match="element_spacing_m"):
         D6ArrayRequest(element_count=2, element_spacing_m=0.0)
