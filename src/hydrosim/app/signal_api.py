@@ -22,6 +22,11 @@ from hydrosim.app.beamforming_api import (
     D7BeamformingResponse,
     prepare_d7_beamforming_response,
 )
+from hydrosim.app.beamforming_multibeam_api import (
+    D6SharedRxMultibeamRequest,
+    D6SharedRxMultibeamResponse,
+    prepare_d6_shared_rx_multibeam_response,
+)
 from hydrosim.app.bottom_detection_api import (
     D9BottomDetectionRequest,
     D9BottomDetectionResponse,
@@ -363,6 +368,15 @@ def create_fastapi_app():
     @app.post("/api/v1/pedagogical/beamforming", response_model=D7BeamformingResponse)
     def beamforming(request: D7BeamformingRequest) -> D7BeamformingResponse:
         return prepare_d7_beamforming_response(request)
+
+    @app.post(
+        "/api/v1/pedagogical/beamforming/multibeam",
+        response_model=D6SharedRxMultibeamResponse,
+    )
+    def beamforming_multibeam(
+        request: D6SharedRxMultibeamRequest,
+    ) -> D6SharedRxMultibeamResponse:
+        return prepare_d6_shared_rx_multibeam_response(request)
 
     @app.post("/api/v1/pedagogical/echosounders", response_model=D8EchosounderResponse)
     def echosounders(request: D8EchosounderRequest) -> D8EchosounderResponse:
