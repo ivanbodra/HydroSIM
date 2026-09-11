@@ -74,7 +74,7 @@ Rules:
 | D5 | Transducer & Array Construction | **Mapped** |
 | D6 | Beamforming & Electronic Steering | **Mapped** |
 | D7 | Echosounders — SBES vs MBES | **Mapped** |
-| D8 | Bottom Detection | Pending |
+| D8 | Bottom Detection | **Mapped** |
 | D9 | Multisector MBES | Pending |
 | D10 | Vessel & Sensor Configuration | Pending |
 | D11 | Vessel Motion | Pending |
@@ -662,9 +662,139 @@ Passes forward:
 
 ---
 
+# D8 — Bottom Detection
+
+**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Current:** `web/pedagogical-explorer/src/BottomDetectionLab.tsx`
+
+## Purpose
+Turn the echo and footprint context from D2/D3/D7 into a **time/range estimate that becomes a sounding candidate**. The learner must understand that the sonar does not measure “the bottom point” directly: it receives a finite, noisy/structured echo, applies a detection method within a search region, and selects one or more return times/angles that are then passed downstream.
+
+**Dominant discovery**
+```text
+received echo -> candidate response in time
+search window + threshold / quality rule -> eligible candidate(s)
+amplitude or phase method -> estimated bottom time / angle
+wrong gate / threshold / competing echo -> missed or false detection
+selected detection -> TWTT + direction passed to sounding formation
+```
+
+The lab succeeds when the learner can inspect a return trace, predict which echo will be selected, deliberately create a false or missed detection, and explain why amplitude and phase methods can behave differently across MBES geometry.
+
+## Inputs
+
+### Primary
+- **echo scenario / return trace**: clean, weak/noisy, competing/multiple echoes;
+- **detection window / range gate**;
+- **detection threshold or quality criterion**;
+- **detection method**: amplitude-based / phase-based when both are supported by the Scientific Core.
+
+### Secondary / advanced
+- retain single vs multiple detections;
+- beam/steering angle to connect D7 geometry to detection behavior;
+- phase-ramp/support length or equivalent validated quality/resolution parameter;
+- **High Density** mode only after ordinary one-detection-per-beam behavior is understood.
+
+TX delay is useful only as a timing reference/offset experiment; it must not distract from the detector itself.
+
+## Expected outputs / visual response
+
+Required:
+- received / matched-filter magnitude versus time or lag on a fixed scale;
+- highlighted detection/search window;
+- threshold/quality criterion drawn directly on the trace where meaningful;
+- all candidate returns, eligible candidates, retained detection(s), and rejected candidates visually distinct;
+- selected TWTT / lag and derived range proxy from the Scientific Core;
+- explicit classification against hidden/known scenario Truth for pedagogy: **true detection / false detection / missed detection**;
+- for phase detection, a visible split-aperture/differential-phase trace and the fitted/validated zero-crossing or equivalent estimator used by the registered model;
+- selected beam/direction and, when supported, the estimated angle of arrival;
+- downstream arrow: `detection -> TWTT + direction -> D14 sounding formation`.
+
+Recommended:
+- synchronized ordinary vs multiple/high-density detections over the same footprint;
+- confidence/quality indicator only if it has a defined Scientific-Core meaning;
+- a simple seafloor strip showing where retained detections fall relative to the D7 footprint, without turning D8 into a footprint lab.
+
+## Interaction contract
+
+1. Start with a **single clear echo** and amplitude detection. Show the received response, the selected peak/centroid according to the core method, and the resulting TWTT.
+2. Move the **detection window** so the true echo first remains inside, then falls outside. The learner should see a valid detection become a missed detection without changing the physical echo.
+3. Reset and increase the **threshold / quality criterion**. A weak candidate is rejected; lower it until weak/competing responses can become eligible. The benefit/cost is explicit: suppress weak false candidates vs risk missing the real bottom.
+4. Use a **competing-echo scenario**. Compare single-detection retention with multiple detections. Show that candidate generation and final retention are distinct stages.
+5. Switch to **phase detection** when implemented. Visualize the split-aperture phase relation and how the zero-crossing / fitted phase estimator determines bottom timing/direction under the registered method. Compare with amplitude detection on the same echo geometry rather than treating one as universally superior.
+6. Compare near-normal and oblique/outer-beam cases using a scientifically controlled scenario. Teach the common practical pattern that amplitude information is often effective near specular/nadir returns while phase methods are heavily used away from nadir, but let the Scientific Core/vendor-specific model determine actual transition behavior.
+7. Deliberately create a **false detection** with an eligible competing echo or gate choice; then create a **missed detection**. The learner must diagnose which control caused the failure.
+8. Advanced: enable **High Density**. Within one steered RX-beam footprint, use validated phase information to estimate additional bottom detections/points. Show ordinary detection count versus high-density point count and spacing. The learner should understand that this increases sounding density **inside the footprint**; it does not create a narrower physical beam or a new TX footprint.
+
+## Operational intuition / trade-offs
+
+| Control / condition | Gain | Cost / risk to retain |
+|---|---|---|
+| Narrower range gate / detection window | rejects unrelated echoes and can stabilize tracking | can miss the true bottom when range changes unexpectedly |
+| Higher threshold / stricter quality | suppresses weak/noisy false candidates | can reject weak true returns, especially at low SNR / outer swath |
+| Lower threshold / looser gate | retains weak true returns | admits more false/ambiguous candidates |
+| Amplitude detection | robust/simple timing from echo energy where the envelope is well defined | spatial/time averaging and footprint geometry can limit localization; behavior depends on incidence/echo shape |
+| Phase detection | can localize the centre/angle of arrival with high precision from split-aperture phase behavior | needs adequate coherent phase support/SNR and appropriate geometry; noise/support length affects stability |
+| Multiple detections | preserves more than one plausible return when the scene supports it | more ambiguity/data and downstream discrimination burden |
+| High Density phase processing | more bottom points within the receive-beam footprint; denser point cloud | does not shrink the physical footprint; neighboring detections are not automatically independent resolution cells |
+
+Desired operator intuition: **“bottom detection is an estimation decision made from the received echo. A sounding starts only after the system chooses a valid time/direction; gates, thresholds and the amplitude/phase method can change that choice.”**
+
+## Scope boundaries / scientific guardrails
+
+- D8 teaches **bottom detection**, not D3 acoustic-budget physics, D7 footprint formation, D9 sector sequencing, or D14 coordinate transformation. Reuse those results rather than duplicating them.
+- Keep **physical echo**, **candidate**, **eligible candidate**, **retained detection**, and **final sounding** as separate states.
+- Detection threshold is not the same quantity as D3 SNR margin unless the Scientific Core explicitly maps them.
+- Do not teach “amplitude = nadir, phase = outer beams” as a hard universal cutoff. IHO requires analysis of both methods and their relation to depth uncertainty; actual combination/transition is system and condition dependent.
+- For amplitude detection, display the actual estimator implemented by the Scientific Core (peak, centre of gravity, matched-filter peak, etc.). Do not label a simple max sample as a universal amplitude detector.
+- For phase detection, use the registered split-aperture/phase estimator. Do not draw a decorative zero crossing disconnected from computed phase data.
+- A range gate can reduce false detections but can also miss real bottom returns; it is an acquisition/tracking control, not a guarantee of correctness.
+- High Density is **not** “more beams.” It uses additional validated phase-supported detections within the footprint of a formed receive beam to increase bottom-point density. Keep physical footprint, sounding density and independent resolution distinct.
+- Truth labels are pedagogical/validation aids; operational systems do not know the true seabed echo label a priori.
+- Formal uncertainty propagation belongs to D17; D8 may expose detection quality/residual only when defined by the core.
+
+## Dependencies / concepts passed forward
+
+Consumes:
+- D2 matched filtering / pulse-compression and range-resolution intuition;
+- D3 SNR/detectability context;
+- D6 receive beamforming / split-aperture phase context where implemented;
+- D7 per-beam footprint, slant range and incidence geometry.
+
+Passes forward:
+- valid/invalid detection and TWTT/angle to D14 Sounding Formation;
+- detection method/quality contribution to D17 TPU;
+- multiple/high-density sounding density to D16 Acquisition Trade-offs;
+- sector-specific detection behavior to D9 Multisector MBES.
+
+## Current implementation delta
+
+`BottomDetectionLab.tsx` already has a strong causal scaffold: clear/late/competing echo scenarios, TX delay, steering angle, amplitude-peak vs phase-zero-crossing method selector, detection window, threshold, single/multiple retention, true/false/missed classification, TWTT, candidate separation and a High Density comparison that uses phase information to derive additional across-track bottom points.
+
+Next-version changes:
+- keep the current `echo -> candidate -> eligible -> retained -> timing` chain and make it the dominant visual story;
+- implement/enable the phase method only after the Scientific Core supports a validated phase estimator; until then do not present the selector as equivalent functionality;
+- visualize the **phase trace / split-aperture estimator** when phase detection is selected;
+- make the gate and threshold visible on the same trace rather than primarily as controls/readout cards;
+- add a weak/noisy echo scenario so threshold trade-offs are not demonstrated only with clean synthetic peaks;
+- connect selected TWTT/direction explicitly to D14 rather than implying the detection is already a georeferenced sounding;
+- retain true/false/missed labels as pedagogical Truth comparison;
+- retain single vs multiple detection as a separate retention decision;
+- keep **High Density** advanced and explicitly visualize additional phase-derived detections **inside one receive-beam footprint**, not as extra physical beams;
+- where possible, replace hard-coded pedagogical High Density support values with Scientific-Core-generated scenarios so the UI does not carry parallel physics.
+
+## Recognized references
+
+- **IHO S-5A Ed. 2.0.0, H2.2a** — bottom detection principles including matched filtering, thresholding and range resolution; **H2.4a** — amplitude and phase bottom detection, multiple signal returns, and requirement to analyze both methods in relation to depth uncertainty: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **Hughes Clarke (2017), “Multibeam Echosounders”** — integrated MBES treatment of bottom-detection method, projected footprint, pulse bandwidth and practical resolution: <https://scholars.unh.edu/ccom/1370/>
+- **Kongsberg EM 302 official data sheet / product documentation** — real-system evidence for split-beam/phase-based processing heritage, multiple/high-density soundings and operational MBES detection architecture: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/data-sheet---echosounder-multibeam-em-302/>
+- **IHO International Hydrographic Review, “Usability of multibeam echosounder for wreck investigations…”** — operational discussion of amplitude/phase bottom-detection combination in MBES: <https://ihr.iho.int/articles/usability-of-multibeam-echosounder-for-wreck-investigations-using-backscatter-and-water-column-data-in-shallow-waters/>
+
+---
+
 ## 4. Review queue
 
-Continue **D8 -> D17**. For each lab record:
+Continue **D9 -> D17**. For each lab record:
 1. purpose + dominant discovery;
 2. primary/secondary inputs;
 3. outputs/visual response;
