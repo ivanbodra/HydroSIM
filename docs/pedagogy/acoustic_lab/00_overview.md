@@ -92,7 +92,7 @@ Each active lab must receive fresh source research before final mapping. Referen
 | D10 | Vessel & Sensor Configuration | Mapped | `D10_vessel_sensor_configuration.md` |
 | D11 | Vessel Motion | Mapped | `D11_vessel_motion.md` |
 | D12 | PU & Sensor Integration | Mapped | `D12_pu_sensor_integration.md` |
-| D13 | Timing, Synchronization & Latency | Pending | `D13_timing_sync_latency.md` |
+| D13 | Timing, Synchronization & Latency | Mapped | `D13_timing_sync_latency.md` |
 | D14 | Sounding Formation | Pending | `D14_sounding_formation.md` |
 | D15 | Survey Planning | Pending | `D15_survey_planning.md` |
 | D16 | Survey Coverage & Acquisition Trade-offs | Pending | `D16_survey_coverage_tradeoffs.md` |
