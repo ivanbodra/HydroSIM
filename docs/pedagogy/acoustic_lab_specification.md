@@ -75,7 +75,7 @@ Rules:
 | D6 | Beamforming & Electronic Steering | **Mapped** |
 | D7 | Echosounders — SBES vs MBES | **Mapped** |
 | D8 | Bottom Detection | **Mapped** |
-| D9 | Multisector MBES | Pending |
+| D9 | Multisector MBES | **Mapped** |
 | D10 | Vessel & Sensor Configuration | Pending |
 | D11 | Vessel Motion | Pending |
 | D12 | PU & Sensor Integration | Pending |
@@ -792,9 +792,155 @@ Next-version changes:
 
 ---
 
+# D9 — Multisector MBES
+
+**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Current:** `web/pedagogical-explorer/src/MultisectorLab.tsx`  
+**Historical implementation alias:** `PED-D10` / `D10Multisector*` in current API naming; pedagogical numbering here is authoritative.
+
+## Purpose
+Teach why a modern MBES may divide one swath into **multiple transmit sectors** and why sector identity matters downstream. The learner must distinguish TX sectors from the many RX beams already learned in D6/D7: a sector is a transmit event/configuration with its own angular support, steering, timing and potentially frequency/pulse characteristics; RX beams/detections are later associated with the appropriate transmitted sector.
+
+**Dominant discovery**
+```text
+one swath / ping
+  -> one or more distinct TX sectors
+  -> sector-specific angle + TX epoch + signal configuration
+  -> RX beams/detections must reference the correct TX sector
+  -> sector design changes coverage / sounding distribution / interference behavior
+```
+
+The lab succeeds when the learner can look at a multi-sector ping and identify **which parts belong to transmit architecture versus receive beamforming**, predict what changes when sector timing/frequency/coverage changes, and explain why the correct sector TX epoch is required for a valid TWTT.
+
+## Inputs
+
+### Primary
+- **TX sector count/layout** using a simple one-sector baseline then a three-sector example;
+- each sector's **centre / angular support**;
+- **TX timing / delay / transmit group** so simultaneous and staggered events can be compared;
+- **per-sector frequency** where the selected registered architecture supports frequency-coded sectors.
+
+### Secondary / advanced
+- pulse duration per sector;
+- relative/source-level setting only when the Scientific Core maps it to an acoustic consequence;
+- along-track sector steering / yaw-pitch stabilization when later connected to D11;
+- sector focusing/range only if a validated near-field/focusing model exists;
+- surface sound speed as a steering input only as a bridge from D4, not as a new SVP lesson.
+
+Sound speed should not remain a primary D9 knob merely because wavelength is convenient to calculate; D1/D4 already own wavelength and steering sound-speed concepts.
+
+## Expected outputs / visual response
+
+Required synchronized views:
+
+### A. TX sector geometry
+- physical TX aperture/reference at the vessel;
+- each **TX sector** visibly distinct, with centre and angular support;
+- gaps and overlaps between sector supports made explicit;
+- a faint RX-beam/fan context may be overlaid only to reinforce `TX sectors ≠ RX beams`.
+
+### B. Transmit timeline
+- one ping shown as one or more TX epochs;
+- pulse start/end for every sector;
+- simultaneous sectors grouped explicitly;
+- staggered sectors visibly separated in time;
+- selected sector's TX epoch available for downstream TWTT reasoning.
+
+### C. Sector configuration / identity
+For each sector:
+- frequency and wavelength when physically configured;
+- pulse duration;
+- configured relative power/source-level quantity only with exact semantics;
+- sector identifier preserved so later receive detections can be associated with the correct TX event.
+
+Recommended:
+- selected RX beam/detection from D7/D8 mapped to its parent TX sector once the Scientific Core supports that association;
+- a small seafloor coverage strip showing how sector boundaries contribute to the total swath without re-teaching footprint;
+- current/baseline comparison for one-sector versus multi-sector architecture.
+
+## Interaction contract
+
+1. Start with a **single TX sector** covering a modest swath. Keep one TX epoch and one frequency so the learner has the D7 baseline.
+2. Split the same overall swath into **three TX sectors** while keeping the receive fan conceptually unchanged. This is the central distinction: more TX sectors do **not** mean more physical RX arrays or simply “three groups of beams”.
+3. Change the sector centres/widths to create a deliberate **gap**, then an **overlap**. Show coverage supports on the same angular scale and let the learner diagnose the geometry.
+4. Put all sectors at the same TX epoch and label them **simultaneous**. If the selected architecture is frequency-coded, assign different frequencies and show that the signal identity can separate concurrent sector transmissions; do not invent a crosstalk calculation unless the core has one.
+5. Stagger one sector with a TX delay. The water-column geometry need not change, but the timeline must. Show that a detection associated with that sector requires its own TX epoch to recover TWTT correctly.
+6. Vary frequency per sector in the registered architecture. Reuse D1/D3 intuition: wavelength and propagation behavior differ, but D9's discovery is **sector identity/configuration**, not a new frequency lesson.
+7. Vary pulse duration per sector and show only the timing/configuration consequence currently supported. Defer SNR/range-resolution consequences to the existing D2/D3 models unless the core explicitly integrates them here.
+8. Advanced: show sector-specific along-track steering/stabilization or focusing only when a validated Scientific-Core response is available. Use this to bridge toward D11 rather than silently encoding vendor behavior.
+
+## Operational intuition / trade-offs
+
+| Control / condition | Gain | Cost / risk to retain |
+|---|---|---|
+| Multiple TX sectors | allows different steering/signal treatment across the swath and can support stable, efficient wide-swath operation | sector boundaries, timing and identity must remain correct downstream |
+| Frequency-coded simultaneous sectors | permits near-simultaneous sector transmission with signal separation in architectures designed for it; can mitigate inter-sector/multipath interference | frequency-dependent propagation/response differs across sectors; architecture-specific filters/waveforms are required |
+| Staggered sector timing | separates TX events in time and supports architectures/modes that cannot or should not transmit them together | lengthens the transmit sequence and makes the correct sector TX epoch essential for TWTT |
+| Wider/moved sector support | reallocates transmit coverage toward a desired part of the swath | poor configuration can create gaps, excessive overlap or unfavorable steering |
+| Sector-specific pulse/frequency | adapts signal characteristics to sector/range objectives | creates nonuniform acoustic characteristics across the swath; exact benefit follows D2/D3 and the registered system model |
+| More sectors | finer control of transmit geometry/configuration | more scheduling/association complexity; sector count is not sounding density or RX beam count |
+
+Desired operator intuition: **“a multisector MBES is coordinating several transmit configurations inside one swath. Every sector has an identity and TX epoch; receive beams and detections are only physically meaningful when tied back to the correct sector.”**
+
+## Scope boundaries / scientific guardrails
+
+- A **TX sector is not an RX beam**. Keep sector count, receive-beam count and sounding count visually and conceptually separate.
+- Multisector does not universally mean “three sectors”, “different frequencies” or “simultaneous transmission”. Those are real architectures/modes, especially in Kongsberg EM systems, but HydroSIM must teach the general mechanism first.
+- The current Scientific Core slice computes configured angular supports, sector wavelength, TX start/end and transmit groups. It explicitly **does not** model vendor scheduling, crosstalk, interference suppression, source-level/SNR consequences or automatic sector-to-RX-beam association.
+- Do not infer acoustic power from UI opacity. A configured `relative_power` may be displayed as a setting, but visual brightness must not be interpreted as insonified intensity unless the Scientific Core computes that field.
+- Do not claim that different frequencies inherently improve coverage or resolution. Reuse D3/D5 trade-offs and the actual registered sonar model.
+- Sector TX delay is a timing reference. Any downstream TWTT must use the correct sector transmit epoch; D13/D14 later own general synchronization/latency and sounding formation.
+- Surface sound speed can affect electronic steering and sector geometry in real systems; water-column SVP controls propagation. Preserve D4's distinction and do not collapse them into one “sound speed” effect.
+- Along-track yaw/pitch stabilization and motion-driven sector steering belong primarily to D11. D9 may establish the sector structure that stabilization acts upon.
+- Near-field transmit focusing is advanced and should appear only if the Scientific Core has a validated focusing model.
+
+## Dependencies / concepts passed forward
+
+Consumes:
+- D1 frequency/wavelength;
+- D2 pulse duration/signal identity;
+- D3 frequency/range and source-level/SNR trade-offs;
+- D4 distinction between transducer/surface sound speed and water-column propagation profile;
+- D6 steering and virtual RX beams;
+- D7 TX×RX swath geometry;
+- D8 detection/TWTT and the need for the correct TX epoch.
+
+Passes forward:
+- sector installation/orientation context to D10;
+- sector steering/stabilization architecture to D11;
+- multiple TX epochs to D13 Timing, Synchronization & Latency;
+- correct sector TX epoch/identity to D14 Sounding Formation;
+- sector-dependent coverage/sounding distribution to D15/D16.
+
+## Current implementation delta
+
+`MultisectorLab.tsx` plus `multisector_api.py` already expose three configurable sectors, centre/width, per-sector frequency, pulse duration, TX delay and relative power; the Scientific Core returns angular coverage supports, wavelength, absolute TX start/end and simultaneous transmit groups. The API correctly labels this as a **vendor-neutral first slice** and keeps TX sectors distinct from RX beams.
+
+Next-version changes:
+- begin with a **one-sector baseline**, then reveal the three-sector configuration; do not start with the full parameter wall;
+- make `TX SECTORS ≠ RX BEAMS` the dominant visual distinction, ideally by overlaying a faint receive fan from D7 behind the colored TX sectors;
+- make gap/overlap consequences explicit when centre/width controls move;
+- make the timeline and **sector-specific TX epoch** equally prominent with the angular geometry;
+- reduce sound speed and relative power from primary controls; wavelength is a derived reminder, not the teaching objective;
+- do not use opacity as a physical proxy for power unless an acoustic-level model is integrated;
+- add a visible one-sector ↔ multisector comparison and preserve fixed angular/time scales;
+- if sector-to-RX/detection association is added, implement it in the Scientific Core/API rather than assigning sectors heuristically in React;
+- keep simultaneous/different-frequency operation as a labelled real-system example, not the universal default rule;
+- defer yaw/pitch stabilization and transmit focusing until D11 or until a validated integrated core slice is available.
+
+## Recognized references
+
+- **IHO S-5A Ed. 2.0.0, H2.4a/H2.4b** — MBES content explicitly includes **beam sectors** and beam shading; learners must explain/assess the impact of beam sectors on sounding distribution: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **Beaudoin, Hughes Clarke & Bartlett (2004), “Application of surface sound speed measurements in post-processing for multi-sector multibeam echosounders”** — demonstrates why changing sector timing/boundaries and associating receive beams with the correct transmit sector matter to sounding reconstruction: <https://scholars.unh.edu/ccom/1335/>
+- **Beaudoin, Weber et al. (2013), “Multibeam Echosounder System Optimization for Water Column Mapping of Undersea Gas Seeps”** — institutional evidence that frequency-encoded multi-sector systems are used to stabilize bathymetric imaging geometry and sounding spacing/density: <https://scholars.unh.edu/ccom/693/>
+- **Kongsberg EM 2040 Instruction Manual, System overview** — architecture-specific example: three TX sectors per swath, normally separate frequencies and simultaneous transmission, sector steering/focusing and filtering to reduce crosstalk; use as real-system evidence rather than universal behavior: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/346210_em2040_instruction_manual.pdf>
+- **Kongsberg EM 2040 MKII current product documentation** — current evidence for a three-sector broadband transmitter with sectors transmitted simultaneously at separate frequencies: <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
+
+---
+
 ## 4. Review queue
 
-Continue **D9 -> D17**. For each lab record:
+Continue **D10 -> D17**. For each lab record:
 1. purpose + dominant discovery;
 2. primary/secondary inputs;
 3. outputs/visual response;
