@@ -1,5 +1,7 @@
 # D8 — Bottom Detection
 
+Status: **Mapped**
+
 **Decision:** `KEEP + REFINE + EXPAND PHASE-DETECTION EXPERIENCE`  
 **Current:** `web/pedagogical-explorer/src/BottomDetectionLab.tsx`
 
@@ -126,7 +128,7 @@ Optional/teaching-only Truth overlay classifies retained detections as true/fals
 | BDI | exploits cross-beam spatial/intensity structure | depends on coherent multi-beam structure and algorithmic interpretation |
 | PDI | exploits amplitude/phase as an angle-series at fixed time | requires valid spatial/phase support; complements but does not guarantee detection in every scene |
 
-Desired learner intuition: **the bottom detector decides how much of the amplitude, phase, temporal and angular information available in the received field can be trusted and converted into valid bottom detections.**
+Desired learner message: **the bottom detector decides how much of the amplitude, phase, temporal and angular information available in the received field can be trusted and converted into valid bottom detections.**
 
 ## Scientific guardrails
 
@@ -161,9 +163,9 @@ The current `BottomDetectionLab.tsx` already has echo scenarios, gate, threshold
 - add BDI/PDI method comparison over the same Truth scene;
 - keep UI free of parallel hard-coded physics.
 
-## References
-- IHO S-5A Ed. 2.0.0 H2.2a/H2.4a — bottom detection, thresholding, amplitude and phase methods, multiple returns.
-- Hughes Clarke (2017), *Multibeam Echosounders*.
-- Kongsberg MBES documentation for split-beam/phase processing and high-density sounding architectures, used as system evidence rather than universal law.
-- Leonardo Gomes de Araujo (UNH, 2020), *Potential for Non-Conventional Use of Split-Beam Phase Data in Bottom Detection* — PDI / angle-series phase exploitation.
-- Hamel (UNH thesis, 2020) — phase-ramp noise/support and bottom-detection implications.
+## Recognized references
+- **IHO S-5A Ed. 2.0.0 (Aug 2026), H2.2a/H2.4a** — bottom detection, matched filtering, thresholding, amplitude/phase methods and multiple returns: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **Hughes Clarke, John E. (2017), “Multibeam Echosounders”** — hydrographic bottom-detection and resolution context: <https://scholars.unh.edu/ccom/1370/>
+- **Kongsberg (2013), “Sector coverage and beam spacing modes for multibeam echosounders”** — architecture-specific evidence for High Density Equidistant operation with several soundings per beam: <https://www.kongsberg.com/contentassets/058cd4fb2f1d417dab5f444f8f5cbf9a/em-sector-coverage-beam-spacing-modes.pdf>
+- **Gomes de Araujo, Leonardo (2020), “Potential for Non-Conventional Use of Split-Beam Phase Data in Bottom Detection”**, University of New Hampshire M.S. thesis — PDI, angle-series analysis and complementary time-angle detections: <https://scholars.unh.edu/thesis/1421/>
+- **Hamel, Jonathan (2020), “Effects of Transmission Side Lobe Interference on Multibeam Echosounder Phase Ramps”**, University of New Hampshire M.S. thesis — phase-ramp noise/support and direct coupling to bottom-detection uncertainty: <https://scholars.unh.edu/thesis/1425/>
