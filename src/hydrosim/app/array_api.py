@@ -13,7 +13,10 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from hydrosim.acquisition.aperture_weights import deterministic_aperture_weights
-from hydrosim.acquisition.beam_pattern import scan_across_track_beam_pattern
+from hydrosim.acquisition.beam_pattern import (
+    scan_across_track_beam_pattern,
+    scan_along_track_beam_pattern,
+)
 from hydrosim.geometry import TransducerArray, Vector3, make_reference_mills_cross
 
 
@@ -99,9 +102,13 @@ class D6ArrayResponse(BaseModel):
     element_factor: D6PatternSeries
     array_factor: D6PatternSeries
     combined_pattern: D6PatternSeries
+    across_track_pattern: D6PatternSeries
+    along_track_pattern: D6PatternSeries
     peak_angle_deg: float
     peak_normalized_power: float
     half_power_beamwidth_deg: float | None
+    across_track_half_power_beamwidth_deg: float | None
+    along_track_half_power_beamwidth_deg: float | None
     mills_cross: D6MillsCrossGeometry | None
     tx_reference_position_m: tuple[float, float, float]
     rx_reference_position_m: tuple[float, float, float]
@@ -177,12 +184,27 @@ def _eccentricity_geometry(
     return tx, rx, eccentricity, magnitude_m
 
 
+def _series(scan) -> D6PatternSeries:
+    return D6PatternSeries(
+        angle_deg=tuple(degrees(float(sample.angle_rad)) for sample in scan.samples),
+        normalized_power=tuple(float(sample.normalized_power) for sample in scan.samples),
+    )
+
+
+def _beamwidth_deg(scan) -> float | None:
+    return (
+        None
+        if scan.half_power_beamwidth_rad is None
+        else degrees(float(scan.half_power_beamwidth_rad))
+    )
+
+
 def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
     """Evaluate the PED-D6 learner controls through canonical Core models."""
 
     array = _build_array(request)
     weights = deterministic_aperture_weights(array.element_count, request.weighting)
-    scan = scan_across_track_beam_pattern(
+    scan_kwargs = dict(
         array=array,
         steering_angle_rad=0.0,
         start_angle_rad=radians(request.scan_min_deg),
@@ -192,21 +214,23 @@ def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
         sound_speed_mps=request.sound_speed_mps,
         weights=weights,
     )
+    across_scan = scan_across_track_beam_pattern(**scan_kwargs)
+    along_scan = scan_along_track_beam_pattern(**scan_kwargs)
 
-    angle_deg = tuple(degrees(float(sample.angle_rad)) for sample in scan.samples)
-    element_power = tuple(float(sample.element_factor_power) for sample in scan.samples)
-    array_power = tuple(float(sample.array_factor_power) for sample in scan.samples)
-    combined_power = tuple(float(sample.normalized_power) for sample in scan.samples)
-    beamwidth = (
-        None
-        if scan.half_power_beamwidth_rad is None
-        else degrees(float(scan.half_power_beamwidth_rad))
-    )
+    angle_deg = tuple(degrees(float(sample.angle_rad)) for sample in across_scan.samples)
+    element_power = tuple(float(sample.element_factor_power) for sample in across_scan.samples)
+    array_power = tuple(float(sample.array_factor_power) for sample in across_scan.samples)
+    combined_power = tuple(float(sample.normalized_power) for sample in across_scan.samples)
+    across_beamwidth = _beamwidth_deg(across_scan)
+    along_beamwidth = _beamwidth_deg(along_scan)
     elements = array.elements()
     tx, rx, eccentricity, eccentricity_magnitude_m = _eccentricity_geometry(request)
 
+    across_series = _series(across_scan)
+    along_series = _series(along_scan)
+
     return D6ArrayResponse(
-        wavelength_m=float(scan.wavelength_m),
+        wavelength_m=float(across_scan.wavelength_m),
         physical_aperture_m=float(array.aperture_transverse),
         physical_aperture_longitudinal_m=float(array.aperture_longitudinal),
         physical_aperture_transverse_m=float(array.aperture_transverse),
@@ -216,9 +240,13 @@ def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
         element_factor=D6PatternSeries(angle_deg=angle_deg, normalized_power=element_power),
         array_factor=D6PatternSeries(angle_deg=angle_deg, normalized_power=array_power),
         combined_pattern=D6PatternSeries(angle_deg=angle_deg, normalized_power=combined_power),
-        peak_angle_deg=degrees(float(scan.peak_angle_rad)),
-        peak_normalized_power=float(scan.peak_power),
-        half_power_beamwidth_deg=beamwidth,
+        across_track_pattern=across_series,
+        along_track_pattern=along_series,
+        peak_angle_deg=degrees(float(across_scan.peak_angle_rad)),
+        peak_normalized_power=float(across_scan.peak_power),
+        half_power_beamwidth_deg=across_beamwidth,
+        across_track_half_power_beamwidth_deg=across_beamwidth,
+        along_track_half_power_beamwidth_deg=along_beamwidth,
         mills_cross=_mills_cross_geometry(request.mills_cross),
         tx_reference_position_m=_xyz(tx),
         rx_reference_position_m=_xyz(rx),
@@ -234,6 +262,8 @@ def prepare_d6_array_response(request: D6ArrayRequest) -> D6ArrayResponse:
             "angle_unit": "deg",
             "pattern_quantity": "normalized one-way power re peak",
             "array_axis": "across-track Y",
+            "across_track_plane": "YZ; positive angle Port (-Y), zero +Z",
+            "along_track_plane": "XZ; positive angle Forward (+X), zero +Z",
             "positive_angle_direction": "Port (-Y)",
             "negative_angle_direction": "Starboard (+Y)",
             "steering": "fixed broadside",
