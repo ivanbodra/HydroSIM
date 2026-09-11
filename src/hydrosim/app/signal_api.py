@@ -15,6 +15,7 @@ from hydrosim.acquisition.wave_kinematics import (
     AcousticWaveKinematics,
     monostatic_two_way_range_offset,
 )
+from hydrosim.acquisition.waveform_metrics import d2_waveform_reference_metrics
 from hydrosim.app.array_api import D6ArrayRequest, D6ArrayResponse, prepare_d6_array_response
 from hydrosim.app.beamforming_api import (
     D7BeamformingRequest,
@@ -108,6 +109,7 @@ class SignalRequest(BaseModel):
     bandwidth_khz: float = Field(default=100.0, gt=0.0)
     chirp_direction: Literal["up", "down"] = "up"
     envelope_model: Literal["rectangular", "tukey"] = "rectangular"
+    sound_speed_mps: float = Field(default=1500.0, gt=0.0)
 
 
 class WaveKinematicsRequest(BaseModel):
@@ -143,6 +145,13 @@ class SignalResponse(BaseModel):
     waveform: TraceSeries
     instantaneous_frequency: TraceSeries
     matched_filter: TraceSeries
+    ideal_range_resolution_m: float
+    range_resolution_basis: Literal["cw_pulse_duration", "lfm_swept_bandwidth"]
+    range_resolution_kind: Literal["ideal_analytical_reference"]
+    relative_energy: float
+    relative_energy_reference_duration_ms: float
+    relative_energy_kind: Literal["normalized_waveform_energy_proxy"]
+    sound_speed_mps: float
     metadata: dict[str, float | str]
 
 
@@ -248,6 +257,8 @@ def prepare_signal_response(request: SignalRequest) -> SignalResponse:
             chirp_direction=request.chirp_direction,
         )
 
+    metrics = d2_waveform_reference_metrics(pulse, sound_speed_mps=request.sound_speed_mps)
+
     highest_hz = max(
         float(pulse.center_frequency_hz),
         float(getattr(pulse, "start_frequency_hz", pulse.center_frequency_hz)),
@@ -281,6 +292,13 @@ def prepare_signal_response(request: SignalRequest) -> SignalResponse:
             x_unit="us",
             y_unit="normalized amplitude",
         ),
+        ideal_range_resolution_m=float(metrics.ideal_range_resolution_m),
+        range_resolution_basis=metrics.range_resolution_basis,
+        range_resolution_kind=metrics.range_resolution_kind,
+        relative_energy=float(metrics.relative_energy),
+        relative_energy_reference_duration_ms=float(metrics.relative_energy_reference_duration_ms),
+        relative_energy_kind=metrics.relative_energy_kind,
+        sound_speed_mps=float(metrics.sound_speed_mps),
         metadata={
             "center_frequency_khz": request.center_frequency_khz,
             "duration_ms": request.duration_ms,
@@ -289,6 +307,8 @@ def prepare_signal_response(request: SignalRequest) -> SignalResponse:
             "envelope_model": request.envelope_model,
             "waveform_representation": display.representation,
             "processing_representation": processing.representation,
+            "energy_scope": "single normalized pulse; PRF/cadence excluded",
+            "state_semantics": "Configured pulse/sound speed; Derived resolution/energy",
         },
     )
 
