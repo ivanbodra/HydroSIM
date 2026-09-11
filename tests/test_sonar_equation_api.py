@@ -23,9 +23,11 @@ def test_d3_response_exposes_render_ready_canonical_outputs():
     assert response.received_level_vs_range.x_unit == "m"
     assert response.received_level_vs_range.y_unit == "dB re 1 µPa"
     assert response.snr_vs_range.y_unit == "dB"
+    assert response.snr_margin_vs_range.y_unit == "dB"
     assert len(response.received_level_vs_range.x) == 10
     assert len(response.received_level_vs_range.y) == 10
     assert len(response.snr_vs_range.y) == 10
+    assert len(response.snr_margin_vs_range.y) == 10
     assert response.snr_db == pytest.approx(
         response.received_level_db_re_1upa - 60.0
     )
@@ -63,6 +65,7 @@ def test_d3_source_and_noise_controls_preserve_level_domain_relationships():
     assert louder.snr_db - baseline.snr_db == pytest.approx(6.0)
     assert noisier.received_level_db_re_1upa == pytest.approx(baseline.received_level_db_re_1upa)
     assert noisier.snr_db - baseline.snr_db == pytest.approx(-6.0)
+    assert noisier.snr_margin_db - baseline.snr_margin_db == pytest.approx(-6.0)
 
 
 def test_d3_frequency_comparison_comes_from_canonical_absorption_and_loss():
@@ -75,3 +78,39 @@ def test_d3_frequency_comparison_comes_from_canonical_absorption_and_loss():
     assert high.frequency_khz == 400.0
     assert high.absorption_db_per_km > low.absorption_db_per_km
     assert high.two_way_transmission_loss_db > low.two_way_transmission_loss_db
+
+
+def test_d3_snr_reference_changes_only_margin():
+    baseline = prepare_d3_sonar_equation_response(
+        D3SonarEquationRequest(snr_reference_db=10.0)
+    )
+    raised = prepare_d3_sonar_equation_response(
+        D3SonarEquationRequest(snr_reference_db=16.0)
+    )
+
+    assert raised.received_level_db_re_1upa == pytest.approx(baseline.received_level_db_re_1upa)
+    assert raised.snr_db == pytest.approx(baseline.snr_db)
+    assert raised.two_way_transmission_loss_db == pytest.approx(baseline.two_way_transmission_loss_db)
+    assert raised.snr_margin_db - baseline.snr_margin_db == pytest.approx(-6.0)
+    assert raised.contribution_breakdown.snr_reference_db == pytest.approx(16.0)
+    assert raised.contribution_breakdown.snr_margin_db == pytest.approx(raised.snr_margin_db)
+
+
+def test_d3_margin_curve_is_exactly_snr_minus_reference():
+    response = prepare_d3_sonar_equation_response(
+        D3SonarEquationRequest(
+            snr_reference_db=12.5,
+            curve_min_range_m=25.0,
+            curve_max_range_m=250.0,
+            curve_sample_count=20,
+        )
+    )
+
+    assert response.snr_margin_db == pytest.approx(response.snr_db - 12.5)
+    assert response.snr_margin_vs_range.x == response.snr_vs_range.x
+    assert response.snr_margin_vs_range.y == pytest.approx(
+        tuple(value - 12.5 for value in response.snr_vs_range.y)
+    )
+    assert response.metadata["snr_reference_semantics"] == (
+        "configured pedagogical acoustic-budget reference; not a detector threshold"
+    )
