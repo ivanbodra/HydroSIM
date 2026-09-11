@@ -664,131 +664,391 @@ Passes forward:
 
 # D8 — Bottom Detection
 
-**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Decision:** `KEEP + REFINE + EXPAND PHASE-DETECTION EXPERIENCE`  
 **Current:** `web/pedagogical-explorer/src/BottomDetectionLab.tsx`
 
 ## Purpose
-Turn the echo and footprint context from D2/D3/D7 into a **time/range estimate that becomes a sounding candidate**. The learner must understand that the sonar does not measure “the bottom point” directly: it receives a finite, noisy/structured echo, applies a detection method within a search region, and selects one or more return times/angles that are then passed downstream.
+Teach how an MBES turns the received acoustic return into one or more **bottom detections**. The learner must understand that the sonar does not receive a bathymetric point directly: it receives time-varying amplitude and, where coherent split-aperture information exists, differential phase. A detection algorithm interprets those observables and estimates one or more valid `(t, θ)` pairs that are passed downstream to sounding formation.
+
+D8 deliberately separates two levels of processing:
+
+```text
+CONVENTIONAL DETECTION
+  amplitude OR phase estimator
+  -> one retained detection for that beam / direction
+```
+
+and
+
+```text
+ADVANCED INFORMATION EXPLOITATION
+  richer phase / inter-beam structure
+  -> additional valid (t, θ) detections
+  -> denser / more complete seafloor representation
+```
 
 **Dominant discovery**
 ```text
-received echo -> candidate response in time
-search window + threshold / quality rule -> eligible candidate(s)
-amplitude or phase method -> estimated bottom time / angle
-wrong gate / threshold / competing echo -> missed or false detection
-selected detection -> TWTT + direction passed to sounding formation
+physical return
+  -> received amplitude + phase information
+  -> is a usable phase ramp available?
+  -> amplitude OR conventional phase estimator
+  -> one retained conventional detection
+  -> optional advanced exploitation of phase / inter-beam structure
+  -> additional valid (t, θ) detections
+  -> more complete bottom sampling
 ```
 
-The lab succeeds when the learner can inspect a return trace, predict which echo will be selected, deliberately create a false or missed detection, and explain why amplitude and phase methods can behave differently across MBES geometry.
+The lab succeeds when the learner can explain **why amplitude and conventional phase are alternative/competing estimators of the same conventional detection**, identify when phase information is or is not sufficiently defined, explain how a phase ramp can carry angular information beyond its zero crossing, and distinguish conventional phase, High Density/enhanced phase exploitation, BDI and PDI.
 
 ## Inputs
 
-### Primary
-- **echo scenario / return trace**: clean, weak/noisy, competing/multiple echoes;
-- **detection window / range gate**;
-- **detection threshold or quality criterion**;
-- **detection method**: amplitude-based / phase-based when both are supported by the Scientific Core.
+Inputs use progressive disclosure; the learner must not begin with the complete parameter wall.
 
-### Secondary / advanced
-- retain single vs multiple detections;
-- beam/steering angle to connect D7 geometry to detection behavior;
-- phase-ramp/support length or equivalent validated quality/resolution parameter;
-- **High Density** mode only after ordinary one-detection-per-beam behavior is understood.
+### Primary — conventional bottom detection
+- **scene / echo scenario** tied to physical geometry rather than only arbitrary traces: flat bottom, slope, weak return, noisy return, competing returns, small discontinuity, narrow/vertical target, good phase-ramp geometry and degraded phase-ramp geometry;
+- **detection method**: `Amplitude` / `Phase`; later `Automatic / Combined` only if a validated Scientific-Core selection algorithm exists;
+- **detection window / range gate**: start and end;
+- **detection threshold / quality criterion**, with exact Scientific-Core semantics.
 
-TX delay is useful only as a timing reference/offset experiment; it must not distract from the detector itself.
+Amplitude and phase are initially treated as **alternative estimators of one conventional bottom detection**, not as two soundings to retain simultaneously merely because both produced candidates.
+
+### Phase-specific
+Reveal only after amplitude detection is understood:
+- selected RX beam / steering direction;
+- split-aperture geometry or baseline, normally fixed in the guided lesson;
+- minimum phase-support / coherence / quality criterion from the Scientific Core;
+- phase-ramp fit/support interval where the registered model uses one;
+- frequency and sound speed only where required by the validated phase-to-angle mapping, preferably inherited rather than exposed as new primary controls.
+
+### Advanced
+After conventional amplitude/phase behavior is understood:
+- `Conventional` / `Enhanced phase or High Density` / `BDI` / `PDI` comparison mode;
+- single vs multiple retained detections where scientifically appropriate;
+- optional integrated-detector view showing which method proposed each candidate and which detections were finally accepted.
+
+TX delay is a timing reference/offset experiment, not the teaching centre of D8.
 
 ## Expected outputs / visual response
 
-Required:
-- received / matched-filter magnitude versus time or lag on a fixed scale;
-- highlighted detection/search window;
-- threshold/quality criterion drawn directly on the trace where meaningful;
-- all candidate returns, eligible candidates, retained detection(s), and rejected candidates visually distinct;
-- selected TWTT / lag and derived range proxy from the Scientific Core;
-- explicit classification against hidden/known scenario Truth for pedagogy: **true detection / false detection / missed detection**;
-- for phase detection, a visible split-aperture/differential-phase trace and the fitted/validated zero-crossing or equivalent estimator used by the registered model;
-- selected beam/direction and, when supported, the estimated angle of arrival;
-- downstream arrow: `detection -> TWTT + direction -> D14 sounding formation`.
+All principal views must be synchronized to the **same physical return**.
 
-Recommended:
-- synchronized ordinary vs multiple/high-density detections over the same footprint;
-- confidence/quality indicator only if it has a defined Scientific-Core meaning;
-- a simple seafloor strip showing where retained detections fall relative to the D7 footprint, without turning D8 into a footprint lab.
+### A. Received amplitude / envelope
+Show `A(t)` on a fixed time/range scale with:
+- received or matched-filter magnitude;
+- detection gate;
+- threshold/quality criterion where meaningful;
+- amplitude candidates;
+- actual amplitude estimator used by the Scientific Core: peak, centroid, matched-filter maximum, etc.;
+- conventional amplitude estimate `t_A`;
+- accepted / rejected / false / missed state against pedagogical Truth.
+
+The learner must be able to point to the signal and see **where the amplitude estimator put the detection**.
+
+### B. Differential phase
+Show split-aperture differential phase `Δφ(t)` on the same temporal support with:
+- phase samples computed by the Scientific Core;
+- usable/coherent support interval;
+- visibly degraded or unsupported regions;
+- phase ramp;
+- fitted phase ramp where the registered estimator uses one;
+- zero crossing or equivalent registered conventional phase estimator;
+- conventional phase estimate `t_φ`;
+- a visible phase-quality/support measure with defined scientific meaning.
+
+If the phase ramp becomes insufficiently defined, the failure must be visible in the data. The UI must not merely disable the method without showing why.
+
+### C. Phase -> physical angle
+This output is required for the advanced lesson. For every valid phase sample used by the model, expose the Scientific-Core mapping:
+
+```text
+Δφ_i -> θ_i
+```
+
+and therefore:
+
+```text
+(t_i, Δφ_i) -> (t_i, θ_i)
+```
+
+The learner must see that the zero crossing is one particular use of the phase structure, while other valid parts of a sufficiently coherent ramp may carry direction information when a validated phase-to-angle relation exists.
+
+### D. Conventional-method comparison
+On the same echo and the same axes show:
+- amplitude candidate `t_A`;
+- phase candidate `t_φ` when valid;
+- **one retained conventional detection** after the method/selection rule is applied.
+
+Required visual logic:
+
+```text
+Amplitude candidate --\
+                      > selection -> ONE conventional detection
+Phase candidate ------/
+```
+
+Do not plot two final soundings merely because both estimators produced candidates.
+
+### E. Seafloor / footprint view
+Reuse D7 geometry without re-teaching footprint formation. Show:
+- selected beam footprint / observation support;
+- conventional retained detection;
+- when enhanced phase is enabled, additional phase-supported `(t, θ)` detections projected inside the same physical observation support;
+- footprint boundary kept visible so `more detections != more physical beams` and `more detections != smaller footprint` remain explicit.
+
+### F. Beam × time matrix for advanced detection
+Provide a matrix or equivalent water-column representation:
+- horizontal axis: beam / angle;
+- vertical axis: time / range;
+- amplitude layer `A(beam,t)`;
+- phase layer `Δφ(beam,t)` where available.
+
+The same matrix must support two pedagogical cuts:
+
+```text
+fixed beam -> inspect time-series
+```
+
+and
+
+```text
+fixed time -> inspect angle-series
+```
+
+This is the required bridge to BDI/PDI.
+
+### G. Downstream handoff
+Every accepted result remains a detection candidate expressed as `(t, θ)` or equivalent Scientific-Core representation, with an explicit arrow:
+
+```text
+detection(s) -> TWTT + direction -> D14 Sounding Formation
+```
+
+D8 does not silently turn these detections into fully georeferenced soundings.
 
 ## Interaction contract
 
-1. Start with a **single clear echo** and amplitude detection. Show the received response, the selected peak/centroid according to the core method, and the resulting TWTT.
-2. Move the **detection window** so the true echo first remains inside, then falls outside. The learner should see a valid detection become a missed detection without changing the physical echo.
-3. Reset and increase the **threshold / quality criterion**. A weak candidate is rejected; lower it until weak/competing responses can become eligible. The benefit/cost is explicit: suppress weak false candidates vs risk missing the real bottom.
-4. Use a **competing-echo scenario**. Compare single-detection retention with multiple detections. Show that candidate generation and final retention are distinct stages.
-5. Switch to **phase detection** when implemented. Visualize the split-aperture phase relation and how the zero-crossing / fitted phase estimator determines bottom timing/direction under the registered method. Compare with amplitude detection on the same echo geometry rather than treating one as universally superior.
-6. Compare near-normal and oblique/outer-beam cases using a scientifically controlled scenario. Teach the common practical pattern that amplitude information is often effective near specular/nadir returns while phase methods are heavily used away from nadir, but let the Scientific Core/vendor-specific model determine actual transition behavior.
-7. Deliberately create a **false detection** with an eligible competing echo or gate choice; then create a **missed detection**. The learner must diagnose which control caused the failure.
-8. Advanced: enable **High Density**. Within one steered RX-beam footprint, use validated phase information to estimate additional bottom detections/points. Show ordinary detection count versus high-density point count and spacing. The learner should understand that this increases sounding density **inside the footprint**; it does not create a narrower physical beam or a new TX footprint.
+### Stage 1 — What is a bottom detection?
+Start with one beam, one simple physical scene and one clear echo. Show the received information before activating an estimator. The learner must first confront the question: **where, in this return, is the bottom?**
+
+### Stage 2 — Amplitude detection
+Activate the amplitude estimator:
+
+```text
+A(t) -> amplitude estimator -> t_A -> one conventional detection
+```
+
+Move from a clean return to a slightly distorted/weak return so the learner sees that the estimated time is a processing result, not Truth itself. Then introduce gate and threshold.
+
+### Stage 3 — False and missed detections
+Use weak, competing and gated scenarios to create:
+- true detection;
+- false detection;
+- missed detection.
+
+The learner must distinguish **physical echo -> candidate -> eligible candidate -> retained detection**.
+
+### Stage 4 — Conventional phase detection
+On the same physical return show `A(t)` and `Δφ(t)` simultaneously. Highlight the coherent phase ramp and the conventional zero crossing / registered estimator:
+
+```text
+usable phase ramp -> zero crossing / fitted estimator -> t_φ
+```
+
+Compare `t_A` and `t_φ`, but retain only the solution selected by the conventional detector. The intended lesson is **Amplitude OR Phase -> one conventional detection**, not amplitude plus phase equals two soundings.
+
+### Stage 5 — When phase works and when it does not
+Provide at least one controlled scenario with a well-defined phase ramp and one in which coherence/support deteriorates.
+
+Expected causal response:
+
+```text
+good coherent phase support
+  -> stable phase ramp
+  -> phase solution available
+```
+
+versus
+
+```text
+insufficient / noisy / decorrelated phase support
+  -> unstable or absent usable ramp
+  -> phase solution rejected / unavailable
+  -> amplitude may still provide a conventional solution if its information is adequate
+```
+
+Do not encode a universal hard rule such as `nadir = amplitude` and `outer = phase`; the usable information and the registered detector determine availability/selection.
+
+### Stage 6 — Reveal that the phase ramp contains more than the zero crossing
+Freeze a good phase ramp. First show only its conventional zero-crossing use, producing one detection. Then reveal additional valid phase samples and their physical-angle mapping:
+
+```text
+Δφ_1 -> θ_1
+Δφ_2 -> θ_2
+Δφ_3 -> θ_3
+...
+```
+
+so that:
+
+```text
+(t_1, θ_1), (t_2, θ_2), (t_3, θ_3), ...
+```
+
+can be projected onto the seafloor where the Scientific Core supports those solutions.
+
+This is the conceptual transition from **using the phase ramp to choose one conventional point** to **using more of the phase information to recover additional valid directions from the same ping support**.
+
+### Stage 7 — High Density / enhanced phase exploitation
+Enable an advanced phase mode only after Stage 6 is understood. Compare, for the same pulse and receive-beam support:
+
+```text
+Conventional phase: one retained point
+Enhanced / High Density: multiple validated phase-supported points
+```
+
+Show:
+- ordinary detection count;
+- enhanced detection count;
+- angular and seafloor spacing;
+- phase-support region;
+- physical footprint boundary.
+
+The learner must understand the mechanism as:
+
+```text
+usable phase structure
+  -> phase-to-angle mapping
+  -> additional (t, θ) solutions
+  -> denser bottom sampling
+```
+
+not as `more beams` or an automatically smaller acoustic resolution cell.
+
+### Stage 8 — BDI
+Introduce the `beam × time` data field. Show that independent one-detection-per-beam processing does not exhaust the spatial structure of the received data. Use a scientifically registered BDI implementation/example to demonstrate how inter-beam structure can support additional or better-localized bottom interpretation.
+
+The learner need not memorize implementation details; the retained concept is:
+
+> information distributed across adjacent beams can contain bottom geometry that independent conventional picks do not fully express.
+
+### Stage 9 — PDI / angle-series analysis
+Use the same `beam × time` matrix and explicitly contrast:
+
+```text
+conventional / beam-centric:
+fixed beam -> inspect signal through time
+```
+
+with:
+
+```text
+PDI / angle-series:
+fixed time slice -> inspect amplitude + phase across beams / angles
+```
+
+For a selected time slice, show the candidate amplitude envelope across directions, the phase behavior across beams, and the phase zero crossing(s) or registered PDI criterion that produce angle estimates. Each accepted solution yields a `(t, θ)` pair.
+
+Use scenes where this distinction is visible: narrow/vertical targets, discontinuities, small angular features or water-column returns. PDI is presented as an additional way to interrogate the same data, not as a universal replacement for conventional detection.
+
+### Stage 10 — Integrated comparison on one Truth scene
+Close D8 with one scene containing a smooth bottom plus at least one discontinuity or narrow/vertical feature. Run the same received dataset through:
+- amplitude conventional detection;
+- conventional phase detection where valid;
+- enhanced phase / High Density;
+- BDI;
+- PDI.
+
+Overlay each method's detections against optionally revealed Truth. The learner should see which structures each method recovers, misses or represents differently, and why a suitable integrated algorithm can increase detection density/completeness by exploiting the strengths of the available information.
+
+The final visual message is:
+
+```text
+more usable information + appropriate processing
+  -> more valid detections
+  -> denser / more complete representation of the terrain
+```
+
+without implying that the physical beam or footprint itself became narrower.
 
 ## Operational intuition / trade-offs
 
-| Control / condition | Gain | Cost / risk to retain |
+| Method / control | Strength / gain | Limitation / risk to retain |
 |---|---|---|
-| Narrower range gate / detection window | rejects unrelated echoes and can stabilize tracking | can miss the true bottom when range changes unexpectedly |
-| Higher threshold / stricter quality | suppresses weak/noisy false candidates | can reject weak true returns, especially at low SNR / outer swath |
-| Lower threshold / looser gate | retains weak true returns | admits more false/ambiguous candidates |
-| Amplitude detection | robust/simple timing from echo energy where the envelope is well defined | spatial/time averaging and footprint geometry can limit localization; behavior depends on incidence/echo shape |
-| Phase detection | can localize the centre/angle of arrival with high precision from split-aperture phase behavior | needs adequate coherent phase support/SNR and appropriate geometry; noise/support length affects stability |
-| Multiple detections | preserves more than one plausible return when the scene supports it | more ambiguity/data and downstream discrimination burden |
-| High Density phase processing | more bottom points within the receive-beam footprint; denser point cloud | does not shrink the physical footprint; neighboring detections are not automatically independent resolution cells |
+| Amplitude detection | provides a conventional solution from echo-energy structure even when usable phase information is absent | localization depends on echo shape, footprint and estimator; can be ambiguous or spatially averaged |
+| Conventional phase detection | uses a coherent phase ramp to localize the detection in time/direction with high precision under suitable geometry | requires a minimally defined/coherent phase ramp, adequate support/SNR and a valid split-aperture model |
+| Gate / threshold | rejects unrelated or weak candidates and can stabilize tracking | can exclude the true return and create missed detections |
+| Enhanced phase / High Density | exploits more of the usable phase ramp to derive additional directions/detections from the same ping support | depends on valid `Δφ -> θ` mapping and phase quality; more points are not automatically independent resolution cells |
+| BDI | exploits spatial structure distributed across beams rather than treating each conventional pick in isolation | requires a validated inter-beam model/algorithm and adequate support across beams |
+| PDI | interrogates amplitude/phase as an angle-series at fixed time and can recover detections that beam-centric time-series processing may under-represent | requires sufficient angular/phase support; not every scene produces additional valid detections |
+| Integrated detector | can select/combine the strengths of available estimators and advanced treatments | selection logic must remain scientifically traceable; more candidates can increase ambiguity and QC burden |
 
-Desired operator intuition: **“bottom detection is an estimation decision made from the received echo. A sounding starts only after the system chooses a valid time/direction; gates, thresholds and the amplitude/phase method can change that choice.”**
+Desired operator intuition:
+
+> **A bottom detector does not merely find an echo peak. It decides which amplitude, phase, temporal and angular information is trustworthy enough to convert into one or more valid bottom detections. Conventional amplitude and phase compete to provide a single beam/direction solution; advanced processing can exploit more of the available structure to increase bottom-detection density and completeness.**
 
 ## Scope boundaries / scientific guardrails
 
-- D8 teaches **bottom detection**, not D3 acoustic-budget physics, D7 footprint formation, D9 sector sequencing, or D14 coordinate transformation. Reuse those results rather than duplicating them.
-- Keep **physical echo**, **candidate**, **eligible candidate**, **retained detection**, and **final sounding** as separate states.
-- Detection threshold is not the same quantity as D3 SNR margin unless the Scientific Core explicitly maps them.
-- Do not teach “amplitude = nadir, phase = outer beams” as a hard universal cutoff. IHO requires analysis of both methods and their relation to depth uncertainty; actual combination/transition is system and condition dependent.
-- For amplitude detection, display the actual estimator implemented by the Scientific Core (peak, centre of gravity, matched-filter peak, etc.). Do not label a simple max sample as a universal amplitude detector.
-- For phase detection, use the registered split-aperture/phase estimator. Do not draw a decorative zero crossing disconnected from computed phase data.
-- A range gate can reduce false detections but can also miss real bottom returns; it is an acquisition/tracking control, not a guarantee of correctness.
-- High Density is **not** “more beams.” It uses additional validated phase-supported detections within the footprint of a formed receive beam to increase bottom-point density. Keep physical footprint, sounding density and independent resolution distinct.
-- Truth labels are pedagogical/validation aids; operational systems do not know the true seabed echo label a priori.
-- Formal uncertainty propagation belongs to D17; D8 may expose detection quality/residual only when defined by the core.
+- D8 teaches **bottom detection**, not D3 acoustic-budget physics, D7 footprint formation, D9 sector sequencing or D14 coordinate transformation.
+- Keep **physical echo**, **candidate**, **eligible candidate**, **retained detection**, and **final sounding** as distinct states.
+- **Amplitude and conventional phase are alternative/competing estimators for a conventional detection.** Do not retain two final conventional soundings solely because both estimators returned candidates.
+- A phase solution requires a **minimally defined/coherent phase ramp or equivalent validated phase support**. Phase detection must visibly fail/degrade when that support is insufficient.
+- Do not teach `amplitude = nadir` and `phase = outer beams` as a universal hard cutoff. Actual method selection depends on signal/geometry and the registered detector.
+- For amplitude detection, display the estimator actually implemented by the Scientific Core. Do not silently equate all amplitude detection with the single largest raw sample.
+- For phase detection, use the registered split-aperture/phase estimator. Never draw a decorative zero crossing disconnected from computed phase data.
+- The mapping `Δφ -> θ` must live in the Scientific Core and respect baseline geometry, wavelength/frequency, sound speed where applicable, steering convention, sign/frame convention, ambiguity limits and calibration assumptions.
+- **The conventional zero crossing is one use of the phase ramp, not proof that every phase sample is an independent valid sounding.** Additional detections require explicit validation/support criteria.
+- High Density/enhanced phase is **not more physical beams** and does not automatically shrink the acoustic footprint.
+- Higher point density/detail is not identical to increased independent acoustic resolution. Preserve footprint, sounding density, detection completeness and independent resolution as separate concepts.
+- BDI/PDI are advanced treatments that exploit more of the available data; do not portray them as generic enhancement filters or guaranteed bottom finders.
+- Preserve PDI's key distinction between **time-series / fixed-beam analysis** and **angle-series / fixed-time analysis**.
+- Truth labels are pedagogical/validation aids. Operational detectors do not know the true seabed echo a priori.
+- Formal uncertainty propagation belongs to D17; D8 may expose phase residual/coherence/detection quality only when scientifically defined.
+- D8 outputs `(t, θ)` detections or the registered equivalent. D14 remains responsible for full sounding formation/georeferencing.
 
 ## Dependencies / concepts passed forward
 
 Consumes:
-- D2 matched filtering / pulse-compression and range-resolution intuition;
+- D2 matched filtering, pulse compression and range-resolution intuition;
 - D3 SNR/detectability context;
-- D6 receive beamforming / split-aperture phase context where implemented;
-- D7 per-beam footprint, slant range and incidence geometry.
+- D5 array/sidelobe context where it affects received phase/amplitude structure;
+- D6 receive beamforming, steering and split-aperture/phase context;
+- D7 per-beam footprint, slant range, incidence and swath geometry.
 
 Passes forward:
-- valid/invalid detection and TWTT/angle to D14 Sounding Formation;
-- detection method/quality contribution to D17 TPU;
-- multiple/high-density sounding density to D16 Acquisition Trade-offs;
-- sector-specific detection behavior to D9 Multisector MBES.
+- accepted `(t, θ)` / TWTT-direction detections to D14 Sounding Formation;
+- detection-method quality/residual/coherence contribution to D17 TPU;
+- additional detection density/completeness to D16 Acquisition Trade-offs;
+- sector-specific detection/TX-epoch association to D9 Multisector MBES.
 
 ## Current implementation delta
 
-`BottomDetectionLab.tsx` already has a strong causal scaffold: clear/late/competing echo scenarios, TX delay, steering angle, amplitude-peak vs phase-zero-crossing method selector, detection window, threshold, single/multiple retention, true/false/missed classification, TWTT, candidate separation and a High Density comparison that uses phase information to derive additional across-track bottom points.
+`BottomDetectionLab.tsx` already provides a useful scaffold: clean/late/competing echo scenarios, TX delay, steering angle, amplitude-peak vs phase-zero-crossing method selector, detection window, threshold, single/multiple retention, true/false/missed classification, TWTT, candidate separation and a first High Density comparison.
 
-Next-version changes:
-- keep the current `echo -> candidate -> eligible -> retained -> timing` chain and make it the dominant visual story;
-- implement/enable the phase method only after the Scientific Core supports a validated phase estimator; until then do not present the selector as equivalent functionality;
-- visualize the **phase trace / split-aperture estimator** when phase detection is selected;
-- make the gate and threshold visible on the same trace rather than primarily as controls/readout cards;
-- add a weak/noisy echo scenario so threshold trade-offs are not demonstrated only with clean synthetic peaks;
-- connect selected TWTT/direction explicitly to D14 rather than implying the detection is already a georeferenced sounding;
-- retain true/false/missed labels as pedagogical Truth comparison;
-- retain single vs multiple detection as a separate retention decision;
-- keep **High Density** advanced and explicitly visualize additional phase-derived detections **inside one receive-beam footprint**, not as extra physical beams;
-- where possible, replace hard-coded pedagogical High Density support values with Scientific-Core-generated scenarios so the UI does not carry parallel physics.
+Next-version changes required by this specification:
+- preserve the existing `echo -> candidate -> eligible -> retained -> timing` chain, but place it inside the broader `received amplitude + phase -> estimator -> detection(s)` story;
+- show **synchronized amplitude and differential-phase traces** from the same Scientific-Core return;
+- implement a validated conventional phase estimator and visibly mark its coherent support, phase ramp and zero crossing / fitted solution;
+- compare `t_A` and `t_φ` while retaining **one conventional detection** according to the active/registered selection rule;
+- add a phase-quality/support indicator and scenarios in which the phase ramp is good, degraded and unusable;
+- implement/expose the Scientific-Core **phase-to-physical-angle mapping `Δφ -> θ`**;
+- make the transition `zero crossing -> one point` to `usable ramp -> multiple validated (t, θ) points` explicit;
+- retain High Density as an advanced mode but replace hard-coded UI-side support with Scientific-Core-generated phase scenarios/solutions;
+- keep the D7 footprint visible while plotting additional detections so that density is never confused with additional beams or a smaller footprint;
+- add a `beam × time` amplitude/phase matrix or equivalent water-column representation;
+- add fixed-beam/time-series and fixed-time/angle-series views;
+- implement BDI/PDI only through scientifically registered core algorithms or clearly labelled validated pedagogical slices; do not approximate them heuristically in React;
+- add a common Truth scene for side-by-side method comparison and optional Truth reveal;
+- connect all accepted detections explicitly to D14 as `(t, θ)` / TWTT-direction outputs rather than implying they are already georeferenced soundings.
 
 ## Recognized references
 
-- **IHO S-5A Ed. 2.0.0, H2.2a** — bottom detection principles including matched filtering, thresholding and range resolution; **H2.4a** — amplitude and phase bottom detection, multiple signal returns, and requirement to analyze both methods in relation to depth uncertainty: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
-- **Hughes Clarke (2017), “Multibeam Echosounders”** — integrated MBES treatment of bottom-detection method, projected footprint, pulse bandwidth and practical resolution: <https://scholars.unh.edu/ccom/1370/>
+- **IHO S-5A Ed. 2.0.0, H2.2a and H2.4a** — bottom detection, matched filtering, thresholding, range resolution, amplitude and phase bottom detection, multiple returns and relation to depth uncertainty: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **Hughes Clarke (2017), “Multibeam Echosounders”** — integrated MBES treatment of phase/amplitude bottom detection, projected footprint, pulse bandwidth and practical sounding resolution: <https://scholars.unh.edu/ccom/1370/>
+- **Araujo, Leonardo Gomes (2020), “Potential for Non-Conventional Use of Split-Beam Phase Data in Bottom Detection”** — UNH thesis; develops PDI from prior beam-deviation concepts, contrasts time-series and angle-series interrogation, and demonstrates non-conventional use of split-beam phase information to increase detection capability in difficult geometries: <https://scholars.unh.edu/thesis/1421/>
+- **Hamel (UNH thesis, 2020)** — split-aperture phase-ramp behavior and propagation of phase noise into bottom-detection uncertainty: <https://scholars.unh.edu/thesis/1425/>
 - **Kongsberg EM 302 official data sheet / product documentation** — real-system evidence for split-beam/phase-based processing heritage, multiple/high-density soundings and operational MBES detection architecture: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/data-sheet---echosounder-multibeam-em-302/>
-- **IHO International Hydrographic Review, “Usability of multibeam echosounder for wreck investigations…”** — operational discussion of amplitude/phase bottom-detection combination in MBES: <https://ihr.iho.int/articles/usability-of-multibeam-echosounder-for-wreck-investigations-using-backscatter-and-water-column-data-in-shallow-waters/>
+- **IHO International Hydrographic Review, “Usability of multibeam echosounder for wreck investigations…”** — operational discussion of amplitude/phase bottom-detection combination and water-column use in MBES: <https://ihr.iho.int/articles/usability-of-multibeam-echosounder-for-wreck-investigations-using-backscatter-and-water-column-data-in-shallow-waters/>
 
 ---
 
