@@ -1,6 +1,10 @@
 import pytest
 
-from hydrosim.app.vessel_api import D11VesselRequest, prepare_d11_vessel_response
+from hydrosim.app.vessel_api import (
+    D10MountingOrientation,
+    D11VesselRequest,
+    prepare_d11_vessel_response,
+)
 from hydrosim.geometry.models import Vector3
 
 
@@ -22,6 +26,67 @@ def test_d11_vessel_bridge_uses_canonical_vertical_geometry() -> None:
     assert response.keel_z_from_vrp_m == pytest.approx(3.4)
     assert response.transducer_depth_below_waterline_m == pytest.approx(2.0)
     assert response.water_level_m_relative_to_datum == pytest.approx(1.2)
+
+
+def test_d10_aligned_mounting_matches_vessel_axes() -> None:
+    response = prepare_d11_vessel_response(
+        D11VesselRequest(
+            transducer_lever_arm_m=Vector3(x=1.0, y=2.0, z=3.0),
+            waterline_z_from_vrp_m=0.0,
+            static_draft_m=4.0,
+            water_level_m_relative_to_datum=0.0,
+        )
+    )
+
+    assert response.imu_body_axes.x_axis_in_vessel_frame == Vector3(x=1.0, y=0.0, z=0.0)
+    assert response.imu_body_axes.y_axis_in_vessel_frame == Vector3(x=0.0, y=1.0, z=0.0)
+    assert response.imu_body_axes.z_axis_in_vessel_frame == Vector3(x=0.0, y=0.0, z=1.0)
+    assert response.transducer_body_axes.x_axis_in_vessel_frame == Vector3(x=1.0, y=0.0, z=0.0)
+
+
+def test_d10_mounting_yaw_rotates_body_axes_without_moving_sensor_centre() -> None:
+    common = dict(
+        transducer_lever_arm_m=Vector3(x=4.0, y=-1.0, z=2.0),
+        imu_lever_arm_m=Vector3(x=-0.5, y=0.5, z=-1.0),
+        waterline_z_from_vrp_m=0.5,
+        static_draft_m=3.0,
+        water_level_m_relative_to_datum=1.2,
+    )
+    aligned = prepare_d11_vessel_response(D11VesselRequest(**common))
+    rotated = prepare_d11_vessel_response(
+        D11VesselRequest(
+            **common,
+            transducer_mounting_orientation=D10MountingOrientation(yaw_deg=90.0),
+        )
+    )
+
+    assert rotated.transducer_position_m == aligned.transducer_position_m
+    assert rotated.transducer_body_axes.x_axis_in_vessel_frame.x == pytest.approx(0.0, abs=1e-12)
+    assert rotated.transducer_body_axes.x_axis_in_vessel_frame.y == pytest.approx(1.0)
+    assert rotated.transducer_body_axes.x_axis_in_vessel_frame.z == pytest.approx(0.0, abs=1e-12)
+    assert rotated.transducer_body_axes.y_axis_in_vessel_frame.x == pytest.approx(-1.0)
+    assert rotated.transducer_body_axes.y_axis_in_vessel_frame.y == pytest.approx(0.0, abs=1e-12)
+    assert rotated.metadata["mounting_orientation_semantics"].endswith(
+        "sensor centre position invariant"
+    )
+
+
+def test_d10_mounting_roll_uses_project_right_hand_rotation() -> None:
+    response = prepare_d11_vessel_response(
+        D11VesselRequest(
+            transducer_lever_arm_m=Vector3(x=0.0, y=0.0, z=1.0),
+            waterline_z_from_vrp_m=0.0,
+            static_draft_m=2.0,
+            water_level_m_relative_to_datum=0.0,
+            imu_mounting_orientation=D10MountingOrientation(roll_deg=90.0),
+        )
+    )
+
+    assert response.imu_body_axes.y_axis_in_vessel_frame.x == pytest.approx(0.0, abs=1e-12)
+    assert response.imu_body_axes.y_axis_in_vessel_frame.y == pytest.approx(0.0, abs=1e-12)
+    assert response.imu_body_axes.y_axis_in_vessel_frame.z == pytest.approx(1.0)
+    assert response.imu_body_axes.z_axis_in_vessel_frame.y == pytest.approx(-1.0)
+    assert response.imu_body_axes.z_axis_in_vessel_frame.z == pytest.approx(0.0, abs=1e-12)
 
 
 def test_d11_reference_change_preserves_physical_sensor_positions() -> None:
