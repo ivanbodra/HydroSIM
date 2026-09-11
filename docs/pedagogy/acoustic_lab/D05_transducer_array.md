@@ -1,5 +1,7 @@
 # D5 — Transducer & Array Construction
 
+Status: **Mapped**
+
 **Decision:** `KEEP + REFINE + MOVE + ADD 2-D EXPERIENCE`  
 **Current:** `web/pedagogical-explorer/src/ArrayDirectivityLab.tsx`
 
@@ -54,7 +56,9 @@ Recommended: physically reshape the array while the 3-D beam reshapes immediatel
 - larger spacing can create grating/ambiguous lobes;
 - taper lowers sidelobes at cost of broader main lobe/changed gain.
 
-## Guardrails
+Desired learner message: **beam shape is a physical consequence of array geometry measured in wavelengths; changing one physical aperture changes the corresponding angular plane, while spacing and weighting reshape sidelobes as well as the main lobe.**
+
+## Scientific guardrails
 D5 is array construction/directivity, not steering. Use Scientific-Core element factor, array factor and weighting. Preserve physical aperture vs effective aperture vs beamwidth vs final seafloor resolution. `beamwidth ≈ λ/L` is intuition, not a universal exact formula. Follow project frame conventions. Typical MBES complementary TX/RX apertures are examples, not universal architecture. Distinguish one-way TX/RX directivity from two-way combination in D7.
 
 ## Dependencies / forward reuse
@@ -63,10 +67,10 @@ Consumes D1 wavelength and D3 frequency/range trade-off. Passes 2-D geometry/dir
 ## Implementation delta
 Keep the linear array as first experiment, then make independent along/across aperture a required 2-D experiment. Label vessel axes unambiguously. Synchronize plan-view geometry, orthogonal cuts and 3-D response. Preserve fixed scales. Remove installation eccentricity from D5.
 
-## References
-- IHO S-5A Ed. 2.0.0 H2.1a/H2.4a.
-- MIT OCW 2.682 Lecture 11.
-- Hughes Clarke (2017), *Multibeam Echosounders*.
-- de Moustier, Kraft & McGillicuddy (2008), *Multibeam Sonar Calibration Techniques*.
-- Lanzoni & Weber (2010), *High Resolution Calibration of a Multibeam Echo Sounder*.
-- Kongsberg EM 2040 MkII documentation.
+## Recognized references
+- **IHO S-5A Ed. 2.0.0 (Aug 2026), H2.1a/H2.4a** — transducer arrays, beam characteristics, sidelobes, aperture size, element spacing and multibeam array concepts: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **MIT OpenCourseWare, 2.682 Acoustical Oceanography, Lecture 11 (James Lynch, Spring 2012)** — line-array beamforming and grating-lobe fundamentals: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/resources/mit2_682s12_lec11/>
+- **Hughes Clarke, John E. (2017), “Multibeam Echosounders”**: <https://scholars.unh.edu/ccom/1370/>
+- **de Moustier, Christian; Kraft, Barbara J.; McGillicuddy, Glenn (2008), “Multibeam Sonar Calibration Techniques”** — measured TX/RX array patterns, element spacing and beam pointing: <https://scholars.unh.edu/ccom/610/>
+- **Lanzoni, Carlo; Weber, Thomas C. (2010), “High Resolution Calibration of a Multibeam Echo Sounder”** — measured 3-D transmit/receive patterns and sidelobe behaviour: <https://scholars.unh.edu/ccom/789/>
+- **Kongsberg EM 2040 MKII product documentation** — architecture-specific evidence for separate TX/RX arrays and narrow receive/transmit apertures: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040-Mk2/>
