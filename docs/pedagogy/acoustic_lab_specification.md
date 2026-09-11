@@ -29,6 +29,20 @@ CONTROL
   -> ACQUISITION DECISION
 ```
 
+A recurring spatial chain must also be preserved across D5-D7:
+
+```text
+PHYSICAL ARRAY GEOMETRY
+  -> 2-D / 3-D DIRECTIVITY
+  -> BEAMFORMING
+  -> STEERING / MULTIPLE RX LOOK DIRECTIONS
+  -> TX × RX TWO-WAY RESPONSE
+  -> SEAFLOOR FOOTPRINT / SAMPLING CELL
+  -> SOUNDING / SWATH CONSEQUENCE
+```
+
+The learner must not leave with the impression that a beam is a 2-D decorative cone or that all MBES beams sample the bottom with the same geometry. Array dimensions in the vessel longitudinal and transverse axes create different beamwidths in orthogonal planes; TX and RX patterns have distinct roles; and each steered receive direction produces a different slant range, incidence geometry and projected footprint across the swath.
+
 Rules:
 - one dominant discovery per lab;
 - few primary controls; secondary controls use progressive disclosure;
@@ -37,6 +51,7 @@ Rules:
 - mechanism before operational rule;
 - show benefit and cost of tunable parameters;
 - permit poor configurations when their consequence is useful;
+- prefer connected 3-D geometry when a 2-D section would hide an essential mechanism;
 - UI consumes the Scientific Core; no parallel physics;
 - vendor behavior is evidence, not universal law.
 
@@ -274,117 +289,115 @@ Retain current scenario progression and endpoint-error comparison. Add `c(z)` pl
 
 # D5 — Transducer & Array Construction
 
-**Decision:** `KEEP + REFINE + MOVE`  
+**Decision:** `KEEP + REFINE + MOVE + ADD 2-D EXPERIENCE`  
 **Current:** `web/pedagogical-explorer/src/ArrayDirectivityLab.tsx`
 
 ## Purpose
-Build physical intuition for how **wavelength, aperture, number/spacing of elements and aperture weighting create directivity**. The learner should understand that narrow MBES beams do not come from an abstract software setting: they arise from coherent radiation/reception by a finite array.
+Build physical intuition for how **wavelength, aperture, element distribution and weighting in two physical axes create a three-dimensional directional response**. The learner must understand that a sonar beam has both along-track and across-track beamwidths and that each is rooted in the corresponding physical/effective aperture.
 
 **Dominant discovery**
 ```text
-larger aperture in wavelengths -> narrower main lobe
-frequency ↑ at fixed physical aperture -> aperture/λ ↑ -> narrower beam
-poor / excessive element spacing -> unwanted lobes / ambiguous angular response
-aperture weighting -> lower sidelobes ↔ broader main lobe / reduced effective gain
+larger aperture in one array axis -> narrower beam in that angular plane
+frequency ↑ at fixed physical aperture -> aperture/λ ↑ -> beam narrows
+longitudinal and transverse aperture can be different -> beam is anisotropic in 3-D
+poor / excessive element spacing -> unwanted / ambiguous lobes
+aperture weighting -> lower sidelobes ↔ broader main lobe / changed gain
 ```
 
-The lab succeeds when the learner can inspect a physical array and predict the qualitative beam-pattern consequence before changing it.
+The lab succeeds when the learner can inspect the element layout in plan view and qualitatively predict the beam shape in both orthogonal planes before changing a parameter.
 
 ## Inputs
 
-### Primary
-- **frequency `f`** (reuses D1 wavelength intuition);
-- **element count `N`**;
-- **element spacing `d`**;
-- or, preferably as an alternate construction mode, **physical aperture `L`** with `N`/`d` visibly derived so the learner can reason in both metres and wavelengths.
+### Primary — guided progression
+1. **frequency `f`**;
+2. **linear-array element count `N` and spacing `d`** for the first-principles 1-D experiment;
+3. after that is understood, **longitudinal aperture `L_along`** and **transverse aperture `L_across`** or equivalent 2-D element counts/spacings.
+
+Always expose the derived ratios `L_along/λ`, `L_across/λ`, `d_along/λ`, `d_across/λ` where applicable.
 
 ### Secondary / advanced
-- element face/element factor;
-- aperture weighting/shading (`uniform` vs one registered taper such as Hann);
-- rectangular 2-D array dimensions;
-- Mills Cross architecture as a named advanced construction example.
+- element face / element factor;
+- aperture weighting/shading;
+- rectangular 2-D element grid;
+- orthogonal TX/RX or Mills-Cross-like construction as a named architecture example.
 
 ### Move out of the core D5 interaction
-- TX↔RX eccentricity/lever-arm controls (`rxX`, `rxY`, `rxZ`) belong to **D10 Vessel & Sensor Configuration**. D5 may show TX/RX arrays spatially separated only as a fixed schematic when explaining Mills Cross; do not make installation offsets an array-directivity control.
-- steering/delay/phase belongs to **D6 Beamforming & Electronic Steering**.
+- TX↔RX eccentricity/lever-arm controls belong to **D10 Vessel & Sensor Configuration**;
+- learner-controlled steering/delay/phase belongs to **D6**.
 
 ## Expected outputs / visual response
 
 Required:
-- physical element layout on a **fixed spatial scale**;
-- wavelength `λ` and spacing explicitly shown both as distance and `d/λ`;
-- physical/effective aperture shown as distance and `L/λ`;
-- one-way angular response on a fixed dB/angle scale;
-- main-lobe peak and **−3 dB beamwidth**;
-- sidelobes visibly identified; if a grating lobe exists within the visible field, make it unmistakable rather than merely another peak;
-- optional separate `element factor`, `array factor`, and combined response, but combined response is the principal learner view.
+- element layout in plan view on a fixed spatial scale;
+- explicit vessel **along-track** and **across-track** axes;
+- wavelength and element spacing in metres and wavelengths;
+- physical/effective aperture in both axes;
+- synchronized directivity cuts in the along-track and across-track planes;
+- 3-D or pseudo-3-D main-lobe visualization derived from the same Scientific Core;
+- −3 dB beamwidth in both orthogonal planes;
+- sidelobes/grating lobes identified from computed response.
 
 Recommended:
-- a compact far-field polar view synchronized with the Cartesian dB plot;
-- baseline/current overlay when changing one variable;
-- 2-D footprint/directivity preview only as a bridge to D7; full seafloor footprint belongs later.
+- physically reshape the array while the 3-D beam reshapes immediately;
+- baseline/current overlay for one-axis changes;
+- simple conceptual bottom plane only to preview how an anisotropic beam can create an anisotropic footprint; full footprint belongs to D7.
 
 ## Interaction contract
 
-1. Start with a **simple uniform linear array** at fixed sound speed and broadside, with sensible spacing near `λ/2`.
-2. Increase element count while holding spacing/frequency fixed: physical aperture grows and the main lobe narrows.
-3. Reset. Increase frequency while physical geometry stays fixed: `λ` shrinks, `L/λ` grows and directivity changes. This explicitly reuses D1.
-4. Reset. Increase element spacing through the scientifically valid range until the response develops unwanted/grating lobes; keep the same angle/dB axes.
-5. Return to a valid spacing and compare **uniform vs tapered weighting**: sidelobes fall while the main lobe broadens / effective sensitivity changes. This is the principal trade-off experiment.
-6. Only after the 1-D concept is understood, expose rectangular-array and Mills-Cross construction as advanced views. Do not require the learner to understand steering here.
+1. Start with a simple broadside **linear array** and reproduce the established `aperture/λ -> beamwidth` intuition.
+2. Introduce a **rectangular 2-D array** with independent along/across apertures.
+3. Increase **longitudinal aperture only**: only the corresponding angular cut should narrow according to the Scientific Core. Keep the other aperture fixed.
+4. Reset; increase **transverse aperture only** and observe the orthogonal change.
+5. Make one aperture much larger than the other. The learner should see a beam that is narrow in one plane and broad in the other rather than a symmetric cone.
+6. Change frequency while physical geometry remains fixed; both aperture-in-wavelength ratios change.
+7. Change element spacing to expose sidelobe/grating-lobe consequences without losing the 2-D orientation.
+8. Compare weighting only after aperture intuition is established.
+9. Advanced: show orthogonal TX/RX arrays / Mills-Cross-like construction as preparation for D7, emphasizing complementary directional patterns rather than installation offsets.
 
 ## Operational intuition / trade-offs
 
 | Design / condition | Gain | Cost / risk to retain |
 |---|---|---|
-| Larger aperture | narrower angular response; potentially smaller projected footprint / better angular discrimination | larger physical transducer; installation constraints |
-| Higher frequency with same geometry | smaller `λ`, therefore larger aperture in wavelengths and typically narrower beam | propagation range is reduced by absorption (D3); frequency is not a free resolution control |
-| More elements at fixed spacing | larger aperture and narrower beam | greater hardware/channel complexity; do not imply element count alone matters independently of aperture |
-| Larger spacing | can increase aperture for fixed `N` | excessive spacing permits grating/ambiguous lobes; exact condition depends on steering and model |
-| Stronger aperture taper/shading | lower sidelobes; less response to off-axis energy | broader main lobe and changed array gain/effective aperture |
-| Narrow beam | better angular discrimination / smaller footprint at a given range | actual seafloor resolution still depends on range, pulse bandwidth, geometry, beam spacing and detection; defer integrated resolution to D7/D16 |
+| Larger aperture in one axis | narrower response in the associated angular plane | larger physical installation / array complexity |
+| Unequal along/across apertures | intentionally different beamwidths in orthogonal planes | footprint becomes anisotropic; orientation matters |
+| Higher frequency at same geometry | greater aperture in wavelengths; typically narrower beams | greater absorption / less range from D3 |
+| More elements at fixed spacing | larger aperture if physical extent grows | hardware/channel complexity; `N` alone is not the causal variable |
+| Larger spacing | larger physical aperture for fixed `N` | grating/ambiguous lobes depending on `d/λ` and steering |
+| Stronger taper | lower sidelobes | broader main lobe / changed gain |
 
-Desired operator intuition: **“beamwidth and sidelobes are consequences of physical/acoustic array design. Frequency, aperture and weighting interact; a narrow nominal beam is not an isolated software parameter.”**
+Desired operator intuition: **“the beam shape is a consequence of the physical array in both vessel axes. A long aperture in one direction makes the beam narrow in that plane; the other axis can remain broad. The MBES TX and RX patterns later exploit this deliberately.”**
 
 ## Scope boundaries / scientific guardrails
 
-- D5 is **array construction/directivity**, not D6 steering. Keep the default beam at broadside; no learner-controlled phase/delay steering in the core sequence.
-- Use Scientific-Core element factor, array factor and weighting definitions. UI must not draw a decorative beam independent of computed response.
-- Grating-lobe statements must respect actual `d/λ`, scan/steering angle and the registered array model. Do not teach a universal threshold detached from steering conditions; broadside `λ/2` is a safe pedagogical starting point, not the only physically valid spacing.
-- `beamwidth ≈ λ/L` is useful intuition, not a universal exact formula. Display exact/core-derived −3 dB beamwidth.
-- Distinguish one-way TX/RX directivity from two-way combined sonar response. D5 should label exactly which pattern is plotted.
-- Do not equate narrow beam directly with final bathymetric resolution. Hughes Clarke shows practical resolution also depends on pulse bandwidth, projected beam widths/spacing, stabilization and platform altitude.
-- Element face size may affect the element factor but should remain secondary unless its consequence is visible.
-- Piezoelectric material/device physics may be mentioned as context but should not expand D5 into transducer electrical design.
-- Mills Cross explains orthogonal TX/RX apertures; its installation geometry/lever arms are deferred to D10.
+- D5 is array construction/directivity, not D6 steering.
+- Use Scientific-Core element factor, array factor and weighting definitions. Do not draw an arbitrary 3-D cone disconnected from computed orthogonal responses.
+- Preserve the distinction among **physical aperture**, **effective aperture**, **beamwidth** and **final seafloor resolution**.
+- `beamwidth ≈ λ/L` is intuition, not a universal exact formula; display the core-derived response and −3 dB widths.
+- The mapping between physical array axis and angular cut must follow the project coordinate/frame conventions. Avoid ambiguous “horizontal/vertical beamwidth” labels when along/across is intended.
+- A typical MBES may use complementary TX/RX apertures, often yielding a TX pattern narrow along-track and broad across-track and RX beams narrow across-track, but this is an architecture pattern, not a universal geometry for every sonar.
+- Distinguish one-way TX/RX directivity from the two-way combined response used in D7.
+- Mills Cross explains orthogonal apertures; installation lever arms remain D10.
 
 ## Dependencies / concepts passed forward
 
-Consumes:
-- D1: `λ=c/f` and frequency/wavelength intuition;
-- D3: frequency has a propagation-range cost, preventing “higher frequency is always better” reasoning.
-
+Consumes D1 wavelength and D3 frequency/range trade-off.  
 Passes forward:
-- `array geometry -> directivity -> beamwidth/sidelobes` to D6 Beamforming & Steering;
-- TX/RX array roles and Mills Cross concept to D7 SBES vs MBES and D9 Multisector MBES;
-- beamwidth as one contributor to seafloor footprint/spatial resolution in D7/D16;
-- shading trade-off to D6/D9;
-- array/directivity contribution to acoustic gain/SNR when later integrated with D3.
+- `2-D array geometry -> 3-D directivity -> along/across beamwidth` to D6;
+- distinct TX and RX directional patterns to D7;
+- beamwidth/footprint contributors to D16;
+- array gain/directivity context back into SNR reasoning.
 
 ## Current implementation delta
 
-`ArrayDirectivityLab.tsx` already exposes linear/rectangular/Mills modes, frequency, sound speed, element count/spacing/face size, uniform/Hann weighting, physical layout, wavelength, aperture, beamwidth, element factor, array factor and combined pattern. This is a strong scientific base.
-
-Next-version changes:
-- **make linear array the dominant guided experience**; hide rectangular/Mills under advanced progression;
-- expose `d/λ` and `L/λ` directly next to the physical dimensions;
-- keep array geometry and directivity plots on fixed/shared scales so aperture/frequency comparisons remain perceptible;
-- explicitly classify/label main lobe, sidelobes and grating lobes from Scientific-Core results;
-- add baseline/current overlay for one-control experiments if simple;
-- retain weighting comparison but show the main-lobe-width ↔ sidelobe suppression trade-off explicitly;
-- **remove interactive TX↔RX eccentricity (`rxX/rxY/rxZ`) from D5** and transfer that concept to D10 Vessel & Sensor Configuration;
-- avoid presenting rectangular-array weighting as arbitrarily disabled unless that restriction is scientific/model-driven; either support the registered model or state the scope;
-- preserve `element factor -> array factor -> combined pattern`, but make the combined response visually primary and the factor decomposition explanatory.
+Retain the strong existing linear/rectangular/Mills scientific base. Next version must:
+- keep the linear array as the first guided experiment;
+- then make **independent along-track and across-track aperture** a required 2-D experiment;
+- label the vessel axes unambiguously;
+- synchronize plan-view element geometry, orthogonal beam cuts and a core-derived 3-D/pseudo-3-D response;
+- expose `d/λ` and `L/λ` for each relevant axis;
+- preserve fixed/shared angular and spatial scales;
+- remove installation eccentricity from D5;
+- prepare, but do not yet fully teach, the TX×RX combination used in D7.
 
 ## Recognized references
 
@@ -403,124 +416,108 @@ Next-version changes:
 **Current:** `web/pedagogical-explorer/src/BeamformingLab.tsx`
 
 ## Purpose
-Build first-principles intuition for **how an array forms and electronically points a beam by compensating relative arrival/transmission timing or phase across fixed elements**, then show that steering away from broadside changes usable array response and can introduce penalties.
+Build first-principles intuition for **beamforming as coherent spatial combination** and **beam steering as the specific act of changing the formed beam's look direction electronically**. Then show how one physical RX array can form many simultaneous virtual receive directions from the same element-channel data.
 
 **Dominant discovery**
 ```text
 oblique wavefront -> different arrival time / phase at each element
-matched relative delay / phase -> channels align -> coherent sum increases
-change delay gradient -> beam direction changes without moving the array
-larger steering angle -> usable response generally degrades / beam geometry changes
+beamforming: compensate + weight + sum channels -> directional sensitivity
+beam steering: change the compensation pattern -> move that sensitivity direction
+same RX element data + many delay/weight sets -> many simultaneous receive beams
 ```
 
-The learner should finish able to predict which channel needs relatively more/less delay for a chosen arrival direction and understand steering as **electronic compensation**, not physical rotation of the transducer.
+The learner must not leave treating beamforming and beam steering as synonyms.
 
 ## Inputs
 
 ### Primary
-- **arrival/source angle `θsource`** for RX experiment;
-- **steering angle `θsteer`** or equivalent relative-delay gradient;
-- **RX / TX view** only after the receive-side mechanism is understood.
+- **arrival/source angle `θsource`**;
+- **steering angle `θsteer`** or equivalent delay gradient;
+- RX first, then TX reciprocal view.
 
-The array geometry, frequency and sound speed should remain fixed in the core experiment so the learner isolates beamforming from D5 array construction.
+Keep array geometry/frequency fixed in the core experiment so D6 isolates processing from D5 construction.
 
 ### Secondary / advanced
-- delay-gradient versus angle control mode;
-- aperture weighting/apodization, reusing D5 only when its steering consequence is shown;
-- frequency for a narrowband phase-steering comparison, only if the Scientific Core explicitly distinguishes phase steering from true time-delay steering;
-- near-field/dynamic focusing as an advanced concept, not a primary control.
+- delay-gradient vs angle control;
+- aperture weighting;
+- number of simultaneously demonstrated RX steering directions;
+- phase-only vs true-time-delay comparison only if explicitly supported by the Scientific Core;
+- near-field/dynamic focusing only as advanced validated material.
 
 ## Expected outputs / visual response
 
 Required:
-- fixed physical array and incoming wavefront/arrival direction;
-- per-channel **relative arrival offset**;
-- per-channel **applied compensation delay/phase**;
-- residual timing/phase after compensation;
-- aligned/misaligned channel representation before summation;
-- coherent-sum magnitude or normalized response at the tested direction;
-- one-way array/physical beam pattern on a fixed angle scale;
-- requested/effective steering direction and actual beam peak;
-- −3 dB beamwidth where defined;
-- explicit warning/markers for grating/ambiguous lobes when the registered model predicts them.
+- fixed physical array and incoming wavefront;
+- per-channel relative arrival offsets;
+- applied compensation delays/phases and residuals;
+- aligned/misaligned channel traces before summation;
+- coherent summed response;
+- actual directional beam pattern with requested/effective peak;
+- broadside/current overlay and steering penalty where computed.
 
-Recommended:
-- baseline broadside pattern overlaid with current steered pattern;
-- a simple seafloor/target bridge showing that larger steering angle also implies more oblique look/slant range, without duplicating D7 footprint geometry;
-- a compact **steering penalty** indicator derived from the Scientific Core (for example relative peak response/gain versus broadside), rather than a generic warning.
+Required bridge to D7:
+- a mode that takes the **same captured RX channel data** and shows several parallel beamforming paths, each using a different delay/weight set;
+- each path yields a different virtual receive look direction;
+- do not represent these as physically separate receivers.
 
 ## Interaction contract
 
-1. **RX broadside baseline:** set source=0°, steer=0°. All arrival offsets/compensation offsets are zero or symmetric by convention; channels sum coherently.
-2. Move **source angle only** while keeping steering at 0°. Arrival offsets appear across the fixed array; residuals grow and coherent response at that direction falls.
-3. Set **steering angle equal to source angle**. Applied counter-delays cancel relative arrival offsets; channels realign and coherent response returns toward the modelled steered maximum. This is the central discovery.
-4. Move steering away from source. Residual timing/phase reappears and coherent sum decreases. The learner should be able to predict the sign/direction before moving the control.
-5. Keep source matched to steering and progressively increase absolute steering angle. Overlay broadside/current patterns and expose modelled changes in peak response, beamwidth and sidelobes/grating behavior. This introduces the operational cost of large steering.
-6. Only after RX is clear, switch to **TX** and show the reciprocal concept: programmed relative timing/phase causes constructive interference in a selected direction. Do not require a separate new mathematical model in the UI.
-7. Advanced: compare angle control with equivalent relative-delay gradient. Phase-only versus true-time-delay and dynamic focusing are optional only when explicitly supported and pedagogically visible.
+1. RX broadside baseline: source=steer=0°.
+2. Move source while steering remains fixed; arrival offsets and residuals appear, coherent response falls.
+3. Steer to source; compensation closes the residuals and coherent sum recovers.
+4. Mis-steer deliberately; learner predicts the loss before moving the control.
+5. Increase steering magnitude while source follows it; show actual pattern/gain/beam-shape changes.
+6. Duplicate the same RX channel snapshot into **multiple delay sets** and display several simultaneous virtual RX beams. This is the conceptual bridge to the MBES fan.
+7. Only then show TX reciprocity: programmed relative timing/phase produces constructive radiation in a chosen direction.
 
 ## Operational intuition / trade-offs
 
 | Control / condition | Gain | Cost / risk to retain |
 |---|---|---|
-| Steering away from broadside | directs TX/RX sensitivity to off-nadir portions of the swath without rotating hardware | effective aperture/element response and gain can degrade; beam shape/sidelobes can change; slant range and projected footprint grow later in D7 |
-| Correct RX compensation for arrival angle | coherent channel summation and strong directional response | requires correct geometry/timing and steering convention |
-| Steering mismatch | none | residual phase/timing lowers coherent response and can weaken detection margin |
-| True time delay | steering relationship can remain valid over broader bandwidth | implementation complexity; do not conflate with narrowband phase shifts |
-| Phase steering at one frequency | simpler narrowband representation | phase settings are frequency-dependent; not broadband-equivalent to time delay |
-| Stronger apodization | can suppress sidelobes | broadens main lobe / changes effective gain, as already established in D5 |
+| Beamforming | directional sensitivity / coherent array gain | depends on correct channel geometry/timing/weights |
+| Steering | moves that directional sensitivity electronically | beam shape/gain/element response can degrade away from broadside |
+| Multiple RX beamformers | many simultaneous look directions from one physical receive aperture | more processing; each direction has different seafloor geometry later |
+| True time delay | broadband-consistent steering behavior | implementation complexity |
+| Phase-only steering | simple narrowband representation | frequency dependent; not broadband-equivalent |
+| Apodization | lower sidelobes | broader main lobe / changed gain |
 
-Desired operator intuition: **“steering lets the system look away from broadside electronically, but outer beams are not free: the array response and later the seafloor geometry become less favorable as steering/obliquity increases.”**
+Desired operator intuition: **“beamforming creates directional sensitivity from the array; steering tells that formed beam where to look. An MBES receiver can apply many steering solutions to the same element data and therefore observe many directions simultaneously.”**
 
 ## Scope boundaries / scientific guardrails
 
-- D6 explains **beam formation/steering**, not physical array design (D5), footprint/swath geometry (D7), multisector sequencing (D9), or motion stabilization (D11).
-- Use the Scientific Core for delay, phase, coherent sum, array factor, physical element response, beam peak, beamwidth and aliasing/grating-lobe conditions. UI must not infer steering penalties from angle alone if the core does not compute them.
-- Follow the registered sign convention for port/starboard, element indexing, delay sign and reference channel. Never teach a universal “left channel delayed first” statement without that convention.
-- MIT distinguishes **time-delay beamforming**, which can support broadband signals, from fixed phase-shift beamforming, which is inherently frequency-specific. Do not present the two as interchangeable across bandwidth.
-- A steered beam is not guaranteed to have exactly the broadside shape. MIT's simple derivation uses that as an approximation; the HydroSIM physical beam should show the actual registered element × array response.
-- Grating-lobe behavior depends on `d/λ`, steering and scan geometry; reuse D5's scientifically computed conditions.
-- Do not claim steering intrinsically changes pulse/range resolution. Its dominant penalties are directional response and later projected spatial geometry/SNR consequences.
-- “Dynamic focusing” is not required for the core D6 learning objective. Keep it advanced until the Scientific Core can show a distinct, validated consequence.
+- Beamforming is broader than steering; keep the vocabulary explicit in UI and code.
+- Multiple RX beams are separate processing outputs from shared physical channels, not separate physical transducers.
+- Use the Scientific Core for delays, weights, coherent sum, array response, peak, beamwidth and grating-lobe behavior.
+- Follow registered sign, port/starboard, element-index and delay conventions.
+- Do not claim steering intrinsically changes range resolution.
+- Do not yet compute the full seafloor footprint from decorative beam cones; that belongs to D7.
 
 ## Dependencies / concepts passed forward
 
-Consumes:
-- D1: frequency, wavelength and phase;
-- D5: element spacing, aperture, array factor, beamwidth, sidelobes and grating lobes.
-
+Consumes D1 phase/wavelength and D5 2-D array/directivity.  
 Passes forward:
-- electronic TX/RX beam direction to D7 SBES vs MBES geometry;
-- steering angle and steering penalty to D7 footprint/outer-beam resolution and D16 trade-offs;
-- TX/RX directional formation to D8 bottom detection;
-- sector-specific TX steering to D9 multisector MBES;
-- stabilization as time-varying steering correction to D11 Vessel Motion;
-- coherent-response consequences to D3/D16 SNR intuition.
+- multiple virtual RX look directions to D7 MBES fan;
+- steering penalties/outer-angle geometry to D7/D16;
+- sector-specific steering to D9;
+- stabilization as time-varying steering correction to D11.
 
 ## Current implementation delta
 
-`BeamformingLab.tsx` already has a scientifically useful causal chain: fixed six-element array; RX/TX view; steering by angle or delay gradient; source angle; per-channel arrival offsets, compensation delays and residuals; coherent sum; physical beam and array factor; peak angle; −3 dB beamwidth; aliasing regime and grating-lobe angles.
-
-Next-version changes:
-- preserve the **fixed array**: D6 should not reopen D5 geometry controls in the primary experience;
-- make the guided order explicit: `source moves -> residual appears -> steer to source -> residual closes -> coherent sum recovers`;
-- visualize the incoming wavefront/channel alignment more strongly than numeric tables alone;
-- make **RX the default first experience**; TX follows as reciprocal application;
-- add broadside/current beam-pattern overlay and a Scientific-Core-derived steering-loss/relative-peak indicator if available;
-- show beam response on a dB scale or another representation that makes sidelobe/steering degradation perceptible; normalized linear power alone can hide penalties;
-- keep angle and delay-gradient modes, but treat delay-gradient as the explanatory/advanced representation after steering-by-angle intuition;
-- retain aliasing/grating diagnostics, but do not let them dominate the normal valid-spacing experiment;
-- remove or defer dynamic focusing unless a distinct validated near-field interaction exists;
-- add only a lightweight bridge to oblique slant range/footprint; the full geometric consequence belongs to D7.
+Preserve the existing causal chain and fixed array. Next version must:
+- make `beamforming ≠ steering` explicit;
+- make RX the first experience;
+- strengthen wavefront/channel alignment visualization;
+- add the **same channels -> multiple delay sets -> multiple RX beams** bridge;
+- retain angle/delay-gradient modes and broadside/current pattern comparison;
+- keep full footprint geometry in D7.
 
 ## Recognized references
 
-- **IHO S-5A Ed. 2.0.0, H2.4** — multibeam transducers/arrays, beam characteristics, beam steering and hydrographic use: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
-- **MIT OCW 2.682 Acoustical Oceanography, Lecture 11 Notes — Simple Beamformer Equations** — plane-wave arrival offset across a line array, electronic counter-delay/time-delay beamforming, phase beamforming, focused beamforming and grating-lobe equation: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/resources/mit2_682s12_lec11/>
-- **Hughes Clarke (2017), “Multibeam Echosounders”** — integrated interpretation of projected beamwidth, beam spacing, stabilization and bathymetric resolution: <https://scholars.unh.edu/ccom/1370/>
-- **de Moustier, Kraft & McGillicuddy (2008), “Multibeam Sonar Calibration Techniques”** — evaluates beamforming gain over steering angles in a multibeam context: <https://scholars.unh.edu/ccom/610/>
-- **Kongsberg EM 304 official documentation** — operational evidence of transmit beam steering stabilized for roll/pitch/yaw and receive beam steering stabilized for roll; shows steering is an active MBES mechanism rather than a purely theoretical array topic: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/427620_em304_installation_manual_en.pdf>
-- **Kongsberg ME70 official product description** — configurable beam directions/opening angles within explicit steering limits, demonstrating real-system steering constraints: <https://www.kongsberg.com/what-we-do/ocean-space/ocean-science/me70/>
+- **IHO S-5A Ed. 2.0.0, H2.4** — multibeam arrays, beam characteristics and steering: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **MIT OCW 2.682 Acoustical Oceanography, Lecture 11** — time-delay/phase beamforming, focused beamforming and grating lobes: <https://ocw.mit.edu/courses/2-682-acoustical-oceanography-spring-2012/resources/mit2_682s12_lec11/>
+- **Hughes Clarke (2017), “Multibeam Echosounders”**: <https://scholars.unh.edu/ccom/1370/>
+- **de Moustier, Kraft & McGillicuddy (2008), “Multibeam Sonar Calibration Techniques”**: <https://scholars.unh.edu/ccom/610/>
+- **Kongsberg EM 304 official documentation**: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/427620_em304_installation_manual_en.pdf>
 
 ---
 
@@ -530,134 +527,138 @@ Next-version changes:
 **Current:** `web/pedagogical-explorer/src/EchosounderLab.tsx`
 
 ## Purpose
-Turn the beam concepts from D5/D6 into **seafloor sampling geometry**. The learner must understand the essential difference between a single-beam depth observation and a multibeam swath, and why depth, beam angle, beamwidth and beam spacing change footprint, sounding spacing and practical seafloor detail.
+Turn D5/D6 into **actual MBES observation geometry**. The learner must understand that a characteristic multibeam fan is not simply a set of identical rays: a transmitted acoustic pulse insonifies a region, the receiver forms many look directions from one physical aperture, and each TX×RX combination has its own two-way directional response and projected seafloor footprint.
 
 **Dominant discovery**
 ```text
-SBES -> one principal bottom observation per ping
-MBES -> many electronically directed receive directions / soundings across a swath
-range/depth ↑ -> projected footprint and spacing generally ↑
-outer-beam obliquity ↑ -> slant range and projected footprint generally ↑
-beam-spacing rule -> different distribution of soundings across the same angular sector
+TX pulse / TX directional pattern -> insonified sector
+same RX array -> many simultaneous steered receive directions
+TX response × RX response -> one two-way directional sampling cell per RX direction
+many TX×RX cells -> MBES fan
+beam angle changes across fan -> slant range + incidence + projected footprint change
 ```
 
-The lab succeeds when the learner can look at a given depth/sector/beam pattern and predict where the bottom observations will fall and which portions of the swath will have larger footprints or spacing.
+The lab succeeds when the learner can select nadir, intermediate and outer beams and explain why they do **not** sample identical areas of seafloor.
 
 ## Inputs
 
 ### Primary
-- **system:** SBES / MBES;
-- **water depth / sonar-to-bottom vertical separation**;
-- **MBES angular sector / maximum steering angle**;
-- **MBES beam count** or equivalent number of receive directions;
-- **beam-spacing mode:** equiangular / equidistant.
+- system: SBES / MBES;
+- depth / sonar-to-bottom separation;
+- TX along-track and across-track beamwidths or a registered representative TX pattern;
+- RX beamwidth and number of formed RX directions;
+- MBES angular sector / steering limit;
+- beam-spacing mode.
 
 ### Secondary / advanced
-- RX across-track beamwidth;
-- TX along-track beamwidth;
-- pulse duration, only where the registered footprint model explicitly shows pulse-limited versus beam-limited footprint behavior;
-- flat-bottom slope/incidence example only if needed to show geometry; keep the default bottom flat so one variable is isolated.
-
-Frequency is inherited through beamwidth/range intuition but should not become a primary D7 control unless the Scientific Core couples it to the same physical transducer. Frequency trade-offs were already introduced in D3/D5.
+- pulse duration when the registered footprint model includes pulse-limited extent;
+- bottom slope/incidence;
+- frequency only through a physically linked transducer model, not as an isolated footprint knob.
 
 ## Expected outputs / visual response
 
-Required:
-- synchronized **SBES × MBES** cross-section over the same bottom/depth;
-- sonar/transducer location, nadir, beam centre lines and bottom intersections;
-- per-beam steering/incidence angle and slant range on demand;
-- seafloor **footprint** for each represented beam, with larger/changed outer-beam geometry visible where the model predicts it;
-- geometric swath width;
-- adjacent across-track sounding/beam-centre spacing;
-- top-down footprint/sounding field synchronized with the cross-section;
-- clear visual comparison of **equiangular vs equidistant** spacing on the same fixed bottom scale;
-- selected-beam readout rather than only one generic “representative footprint”.
+Required views must be synchronized:
 
-Recommended:
-- fixed/common horizontal scale when comparing depth or spacing modes;
-- a simple density/spacing strip across-track;
-- current/baseline overlay for one-control comparisons;
-- visual distinction between beam footprint and sounding point: a sounding is a detection/estimate associated with an insonified/reception region, not a zero-area pencil ray.
+### A. Water-column / array view
+- physical TX and RX apertures with vessel axes;
+- one TX pulse / transmit directional envelope;
+- multiple RX look directions generated from the same RX aperture;
+- selected receive direction highlighted.
+
+### B. Directional-response view for selected beam
+- TX one-way directional response;
+- selected RX one-way directional response;
+- **combined two-way TX×RX response** computed by the Scientific Core under its defined amplitude/power convention;
+- do not imply hard-edged geometric intersection when the model is a continuous directional response.
+
+### C. Seafloor view
+For every represented beam, and especially the selected one:
+- beam centre / steering angle;
+- slant range;
+- incidence angle;
+- along-track and across-track footprint dimensions or footprint polygon/ellipse from the registered model;
+- sounding/detection location kept distinct from footprint area;
+- top-down footprint field showing how shape and size vary across the fan.
+
+The user must be able to compare **nadir vs intermediate vs outer beam** on the same physical scale.
 
 ## Interaction contract
 
-1. Start with **SBES** over a flat bottom: one central observation/footprint. Change depth and observe the geometry/footprint consequence while all other parameters stay fixed.
-2. Switch to **MBES at the same depth**. Keep a modest symmetric sector and small beam count so individual beams are visible. The key change is from one bottom sample to a cross-track swath in a single ping.
-3. Increase **sector angle** while beam count stays fixed. Swath widens, outer beams become more oblique, slant ranges grow, and across-track spacing/footprints become less favorable according to the core model. This is the first coverage ↔ quality trade-off.
-4. Reset sector. Increase **depth** while all angular settings remain fixed. Keep plot scale common or use baseline overlay so widening footprint/swath/spacing is perceptible rather than hidden by autoscaling.
-5. Compare **equiangular vs equidistant** at identical depth, sector and beam count. Equiangular produces equal angular separation but unequal seafloor spacing; equidistant adjusts beam directions so bottom spacing is approximately uniform under the modelled reference geometry. This should be a direct visual experiment, not a text hint.
-6. Vary **beam count** at fixed depth/sector. More formed beams reduce beam-centre spacing, but do not imply narrower physical beams or better independent physical resolution. Keep footprint width visible so sampling density and acoustic footprint remain distinct concepts.
-7. Advanced: vary RX beamwidth and pulse duration and let the Scientific Core identify whether across-track/along-track footprint is beam-limited or pulse-limited. Do not reopen the full pulse-processing lesson.
+1. Start with SBES and finite footprint; establish that even one beam samples an area, not a mathematical point.
+2. Switch to MBES. Show a **single TX event** and multiple virtual RX directions simultaneously. The learner should recognize D6's `same RX channels -> many beamformers` mechanism.
+3. Select the nadir RX beam. Show TX pattern, RX pattern and resulting two-way directional response; project its footprint on the bottom.
+4. Select progressively more oblique RX beams **without changing the TX event**. Show steering, slant range, incidence and footprint changing.
+5. Display the whole fan and footprint field. The learner should now see that the fan is a set of different TX×RX observation geometries, not copies of one beam shifted sideways.
+6. Increase sector angle at fixed depth/beam count: coverage grows, but outer-beam geometry becomes more expensive.
+7. Increase depth on fixed/shared axes: slant ranges and projected footprints grow.
+8. Compare equiangular vs equidistant spacing while keeping the physical beam/footprint widths visible.
+9. Increase beam count at fixed sector: centre spacing becomes denser, but the underlying physical TX/RX response does not automatically become narrower.
+10. Advanced: alter pulse duration/beamwidth and let the Scientific Core identify beam-limited versus pulse-limited footprint contributions.
 
 ## Operational intuition / trade-offs
 
 | Control / condition | Gain | Cost / risk to retain |
 |---|---|---|
-| MBES vs SBES | many bottom observations across a swath per ping; much greater area coverage | more complex geometry, steering, ancillary-sensor dependence and outer-beam limitations |
-| Wider angular sector | wider swath / greater coverage per line | larger slant range and obliquity at the edges; generally larger projected footprint/spacing and lower detection margin |
-| Greater depth/range | same angular sector covers more metres | larger projected footprint and wider sounding spacing for unchanged angular configuration; practical detail degrades with altitude/range |
-| More beams at same sector | denser beam-centre/sounding sampling | does **not** independently narrow the acoustic footprint or guarantee more independent resolution |
-| Equiangular spacing | simple equal angular separation; dense central sampling on flat bottom | seafloor spacing grows toward outer beams |
-| Equidistant spacing | more uniform bottom sampling on the reference geometry | requires nonuniform beam angles; “equidistant” is geometry/model dependent, not globally uniform on arbitrary terrain |
-| Narrower beamwidth | smaller beam-limited footprint / better angular discrimination | array/frequency/hardware trade-offs already established in D5; resolution still depends on bandwidth, spacing, range and detection |
-| Longer pulse | more energy potential (D2) | can enlarge pulse-limited footprint/range-resolution contribution where applicable; do not use D7 to re-teach signal processing |
+| Many RX beams | many simultaneous bottom look directions / swath coverage | each direction has different projection, slant range and incidence |
+| Wider TX across-track insonified sector | more of the swath can be illuminated | energy/directivity and sector architecture constraints; not all systems use one identical TX sector |
+| Narrow TX along-track response | smaller along-track sampling extent | requires adequate physical aperture/frequency; inherited from D5 |
+| Narrow RX across-track response | finer directional discrimination across swath | array/steering/sidelobe trade-offs from D5/D6 |
+| Wider angular sector | greater coverage | larger outer-beam slant range, footprint projection and generally less favorable detection geometry |
+| Greater depth/range | larger covered width for same angles | larger projected footprints and spacing; less practical seafloor detail |
+| More formed RX beams | denser directional sampling | does not independently reduce the physical resolution cell |
+| Equidistant spacing | more uniform centre spacing over reference geometry | requires nonuniform angles and is terrain/model dependent |
 
-Desired operator intuition: **“MBES gains coverage by forming many directional observations across a swath, but the outer swath and deeper water are geometrically more expensive. More soundings are not the same thing as more independent resolution.”**
+Desired operator intuition: **“the MBES fan comes from one or more transmitted insonified sectors combined with many receive look directions. Each sounding has its own TX×RX geometry; nadir and outer beams therefore have different slant range, incidence and footprint.”**
 
 ## Scope boundaries / scientific guardrails
 
-- D7 teaches **sampling/footprint geometry**, not bottom detection algorithms (D8), multisector timing/frequency sequencing (D9), motion stabilization (D11), or full coverage planning (D15/D16).
-- Use Scientific-Core geometry for beam endpoints, slant ranges, incidence angles, footprint and spacing. UI must not scale footprint ellipses decoratively independent of computed dimensions.
-- Keep **beam centre**, **acoustic footprint** and **accepted sounding/detection** conceptually distinct. D8 will explain how the bottom detection is obtained from the return.
-- SBES is not universally “one mathematical ray”; it has a finite beam/footprint and a bottom-detection process. The one-centre comparison is pedagogical geometry, not a claim that real SBES insonifies a point.
-- “Beam count” means formed beam directions/detections under the selected model. It must not be equated with independent resolution cells. Modern high-density modes may produce multiple detections/soundings per beam and belong primarily to D8/D16.
-- Equidistant/equiangular definitions must follow the Scientific Core/reference surface. Kongsberg documentation defines equiangular as equal angular spacing and equidistant as adjusted beam angles for approximately equal metre spacing on the seafloor; do not promise equal spacing over arbitrary sloped/irregular terrain.
-- Footprint depends on two-way TX/RX geometry, pulse length, incidence and bottom geometry. A single scalar width is insufficient as the final visualization; show footprint area/shape or both principal dimensions where supported.
-- Do not state that outer beams intrinsically have worse **range resolution**. Their projected spatial footprint, slant range, SNR and incidence geometry can be worse; range resolution remains governed by the signal/detection mechanism established in D2/D8.
-- Hughes Clarke explicitly treats practical seafloor resolution as a combination of pulse bandwidth, projected beamwidths, beam spacing, stabilization and platform altitude. Preserve that multi-factor view.
+- **Do not model TX×RX as literal multiplication of two hard-edged polygons.** The Scientific Core must define the one-way patterns and two-way combination convention; visualization may show an intuitive overlap only when clearly labeled conceptual.
+- Typical MBES architecture often uses a TX response narrow in the fore-aft plane and broad across-track plus RX responses narrow across-track, but actual transducer/sector architecture varies. Teach the mechanism, not one vendor geometry as universal.
+- Multisector TX timing/frequency sequencing belongs to D9; D7 may state “one or more TX sectors” but use a single-sector case first.
+- Keep beam centre, footprint and accepted bottom detection distinct. Detection mechanics belong to D8.
+- Footprint depends on TX/RX beam shapes, slant range, incidence, pulse duration/bandwidth where applicable and bottom geometry. Do not collapse it to one generic constant ellipse.
+- Outer beams do not intrinsically have worse **range resolution**; their projected spatial geometry, range, SNR and incidence are what usually become less favorable.
+- Beam count/sounding density is not equivalent to independent acoustic resolution.
+- Use 3-D or linked orthogonal views whenever a 2-D cross-section would hide the TX-along-track × RX-across-track mechanism.
 
 ## Dependencies / concepts passed forward
 
 Consumes:
-- D2: pulse duration/bandwidth and range-resolution distinction;
-- D3: longer/slanted range reduces acoustic margin;
-- D5: beamwidth, TX/RX directivity and footprint origin;
-- D6: electronically formed/steered beam directions.
+- D2 pulse duration/bandwidth;
+- D3 range/SNR intuition;
+- D5 2-D TX/RX aperture and directivity;
+- D6 beamforming, steering and multiple virtual RX directions.
 
 Passes forward:
-- per-beam echo/footprint context to **D8 Bottom Detection**;
-- swath/beam spacing and outer-beam geometry to **D9 Multisector MBES**;
-- sonar installation/orientation geometry to D10;
-- motion/stabilization consequence to D11;
-- beam angle + range as inputs to D14 Sounding Formation;
-- swath width, footprint and spacing intuition to D15 Survey Planning and D16 Acquisition Trade-offs;
-- across-track geometry to D17 Uncertainty/TPU.
+- per-beam echo/footprint context to D8 Bottom Detection;
+- sector architecture to D9 Multisector MBES;
+- installation orientation to D10;
+- stabilization consequence to D11;
+- range + beam angle to D14 Sounding Formation;
+- footprint/spacing/swath intuition to D15/D16;
+- across-track geometry to D17 TPU.
 
 ## Current implementation delta
 
-`EchosounderLab.tsx` already provides a strong canonical base: SBES/MBES toggle, depth, beam count, angular sector, equiangular/equidistant spacing, pulse duration, TX/RX beamwidths, beam endpoints/incidence angles, geometric swath, adjacent spacing, footprint outputs and a top-down footprint field.
+`EchosounderLab.tsx` already provides SBES/MBES, depth, beam count, angular sector, spacing mode, pulse duration, TX/RX beamwidths, beam endpoints/incidence, swath and footprint outputs. Next version must add the missing causal bridge:
 
-Next-version changes:
-- make the **synchronized SBES × MBES comparison the primary visual**, not mainly separate readout cards;
-- preserve the same depth/bottom geometry across both systems so the conceptual difference is immediate;
-- guide the sequence `SBES -> MBES -> sector -> depth -> spacing mode -> beam count`;
-- make outer-beam slant range/incidence/footprint visible by selecting/hovering individual beams;
-- replace the single middle-beam “representative footprint” emphasis with **per-beam footprint** and cross-track footprint/spacing trend;
-- ensure footprint patches use core-derived dimensions rather than visually rescaled pseudo-size when scientific interpretation is intended; normalization is acceptable only as a clearly labeled qualitative overview;
-- keep a fixed/shared bottom scale or baseline overlay during controlled comparisons;
-- distinguish sounding points from footprints visually;
-- move pulse duration and beamwidth controls under an advanced/“what sets footprint?” step after SBES/MBES geometry is understood;
-- add a compact cross-track spacing plot/strip so equiangular ↔ equidistant differences are immediately visible;
-- retain current invalid-domain handling and canonical solver boundary.
+- show **one TX pulse / TX response and many RX receive directions simultaneously**;
+- connect the RX directions explicitly to D6's shared-array beamforming mechanism;
+- for a selected beam, show `TX one-way -> RX one-way -> two-way combined response -> seafloor footprint`;
+- make independent along/across footprint geometry visible;
+- compare nadir/intermediate/outer footprints on a fixed physical scale;
+- retain top-down footprint field and cross-section as synchronized views;
+- make per-beam variation primary, not a single representative footprint;
+- preserve core-derived footprint dimensions and clearly label any qualitative normalization.
 
 ## Recognized references
 
-- **IHO S-5A Ed. 2.0.0, H2 hydrographic acoustics / echo sounding / multibeam competence** — competence anchor for single-beam/multibeam principles, transducer/beam geometry, footprint, sounding spacing and tuning of acoustic parameters: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
-- **Hughes Clarke (2017), “Multibeam Echosounders”** — fan of narrow beams, swath/corridor acquisition, and practical resolution dependence on pulse bandwidth, projected beamwidth, beam spacing, stabilization and altitude: <https://scholars.unh.edu/ccom/1370/>
-- **UNB Ocean Mapping Group — Publications / Multibeam Sonar Theory class reports** — established hydrographic teaching context connecting MBES theory to target detection and operational geometry: <https://www.omg.unb.ca/publications/>
-- **Kongsberg EM beam-spacing technical note, “Sector Coverage / Beam Spacing Modes”** — operational definitions of equiangular, equidistant and high-density equidistant spacing: <https://www.kongsberg.com/contentassets/058cd4fb2f1d417dab5f444f8f5cbf9a/em-sector-coverage-beam-spacing-modes.pdf>
-- **Kongsberg EM 710 Mk2 product specification** — operational evidence that beam spacing may be equiangular/equidistant and swath may be limited by angle or width: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/390849-em710mk2_product_specification.pdf>
-- **Kongsberg EM 2040 MkII** — modern shallow-water MBES reference for wide angular coverage, multiple operating frequencies and high-density sounding modes: <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
+- **IHO S-5A Ed. 2.0.0, H2 hydrographic acoustics / echo sounding / multibeam competence** — SBES/MBES principles, transducer/beam geometry, footprint, spacing and acoustic tuning: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **Hughes Clarke (2017), “Multibeam Echosounders”** — MBES beam/swath geometry and practical resolution dependence on pulse bandwidth, projected beamwidth, beam spacing, stabilization and altitude: <https://scholars.unh.edu/ccom/1370/>
+- **UNB Ocean Mapping Group — Publications / Multibeam Sonar Theory class reports**: <https://www.omg.unb.ca/publications/>
+- **Kongsberg EM beam-spacing technical note, “Sector Coverage / Beam Spacing Modes”**: <https://www.kongsberg.com/contentassets/058cd4fb2f1d417dab5f444f8f5cbf9a/em-sector-coverage-beam-spacing-modes.pdf>
+- **Kongsberg EM 710 Mk2 product specification**: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/390849-em710mk2_product_specification.pdf>
+- **Kongsberg EM 2040 MkII**: <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
 
 ---
 
