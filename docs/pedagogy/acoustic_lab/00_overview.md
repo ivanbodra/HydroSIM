@@ -6,6 +6,8 @@ This directory is the canonical editable pedagogical specification for the Acous
 
 The former monolithic specification is retained only as an archive snapshot and must not be treated as the active source of truth.
 
+The consolidated cross-lab bibliography is maintained separately in `99_bibliography.md`. It is an index for provenance, deduplication and source maintenance; it is **not** required reading for routine work on one lab. Individual lab files remain self-contained and retain the references that directly support their implementation.
+
 ## Teaching contract
 
 HydroSIM is a hydrographic acquisition simulator. The Acoustic Lab develops the physical, signal-processing, geometric and operational intuition required to understand, tune and diagnose hydrographic acquisition.
@@ -66,7 +68,7 @@ A lab may be marked **Mapped** only when its own modular file contains enough in
 10. **Current implementation delta**;
 11. **Recognized references** with author/institution, title, year/edition where available, and stable URL.
 
-Each active lab must receive fresh source research before final mapping. References are recorded locally in that lab file. A consolidated bibliography is intentionally deferred until D1–D17 are mapped so routine editing does not repeatedly load/update a global reference list.
+Each active lab must receive fresh source research before final mapping. References remain recorded locally in that lab file. The consolidated bibliography in `99_bibliography.md` is maintained only as a cross-lab index after mapping and must not replace local references.
 
 ## Source hierarchy
 
@@ -102,4 +104,4 @@ The retired standalone `Acoustic Detection Fundamentals` lesson must not be rein
 
 ## Editing rule
 
-For work on a specific lab, read this overview plus that lab file. Read neighboring labs only when a dependency requires it. Do not reconstruct a monolithic working document during active development.
+For work on a specific lab, read this overview plus that lab file. Read neighboring labs only when a dependency requires it. Read `99_bibliography.md` only for cross-lab provenance, source reuse or bibliography maintenance. Do not reconstruct a monolithic working document during active development.
