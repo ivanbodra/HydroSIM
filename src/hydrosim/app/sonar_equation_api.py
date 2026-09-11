@@ -23,6 +23,7 @@ class D3SonarEquationRequest(BaseModel):
     range_m: float = Field(default=100.0, gt=0.0)
     source_level_db_re_1upa_at_1m: float = 210.0
     noise_level_db_re_1upa: float = 60.0
+    snr_reference_db: float = 10.0
     comparison_frequency_khz: float = Field(default=400.0, gt=0.0)
     curve_min_range_m: float = Field(default=10.0, gt=0.0)
     curve_max_range_m: float = Field(default=500.0, gt=0.0)
@@ -60,6 +61,8 @@ class D3ContributionBreakdown(BaseModel):
     inbound_total_loss_db: float
     rx_relative_beam_gain_db: float
     noise_level_db: float
+    snr_reference_db: float
+    snr_margin_db: float
 
 
 class D3FrequencyComparison(BaseModel):
@@ -77,10 +80,13 @@ class D3SonarEquationResponse(BaseModel):
 
     received_level_db_re_1upa: float
     snr_db: float
+    snr_reference_db: float
+    snr_margin_db: float
     absorption_db_per_km: float
     two_way_transmission_loss_db: float
     received_level_vs_range: D3TraceSeries
     snr_vs_range: D3TraceSeries
+    snr_margin_vs_range: D3TraceSeries
     frequency_loss_comparison: tuple[D3FrequencyComparison, D3FrequencyComparison]
     contribution_breakdown: D3ContributionBreakdown
     metadata: dict[str, float | str]
@@ -147,9 +153,14 @@ def prepare_d3_sonar_equation_response(
     if two_way is None:  # equal reciprocal paths are enforced by this application adapter
         raise RuntimeError("canonical D3 result did not provide reciprocal two-way loss")
 
+    snr_margin_db = configured.snr_db - request.snr_reference_db
+    margin_curve = tuple(result.snr_db - request.snr_reference_db for result in curve_results)
+
     return D3SonarEquationResponse(
         received_level_db_re_1upa=configured.received_level_db_re_1upa,
         snr_db=configured.snr_db,
+        snr_reference_db=request.snr_reference_db,
+        snr_margin_db=snr_margin_db,
         absorption_db_per_km=configured.absorption_db_per_km,
         two_way_transmission_loss_db=two_way,
         received_level_vs_range=D3TraceSeries(
@@ -161,6 +172,12 @@ def prepare_d3_sonar_equation_response(
         snr_vs_range=D3TraceSeries(
             x=ranges,
             y=tuple(result.snr_db for result in curve_results),
+            x_unit="m",
+            y_unit="dB",
+        ),
+        snr_margin_vs_range=D3TraceSeries(
+            x=ranges,
+            y=margin_curve,
             x_unit="m",
             y_unit="dB",
         ),
@@ -188,12 +205,17 @@ def prepare_d3_sonar_equation_response(
             inbound_total_loss_db=configured.inbound_total_loss_db,
             rx_relative_beam_gain_db=configured.rx_relative_beam_gain_db,
             noise_level_db=configured.noise_level_db_re_1upa,
+            snr_reference_db=request.snr_reference_db,
+            snr_margin_db=snr_margin_db,
         ),
         metadata={
             "frequency_khz": request.frequency_khz,
             "range_m": request.range_m,
             "source_level_db_re_1upa_at_1m": request.source_level_db_re_1upa_at_1m,
             "noise_level_db_re_1upa": request.noise_level_db_re_1upa,
+            "snr_reference_db": request.snr_reference_db,
+            "snr_margin_sign": "positive above reference; zero equal to reference; negative below reference",
+            "snr_reference_semantics": "configured pedagogical acoustic-budget reference; not a detector threshold",
             "scattering_strength_db_per_m2": request.scattering_strength_db_per_m2,
             "contributing_area_m2": request.contributing_area_m2,
             "temperature_c": request.temperature_c,
