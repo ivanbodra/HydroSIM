@@ -58,7 +58,7 @@ Rules:
 | D4 | Sound Speed & Refraction | **Mapped** |
 | D5 | Transducer & Array Construction | **Mapped** |
 | D6 | Beamforming & Electronic Steering | **Mapped** |
-| D7 | Echosounders — SBES vs MBES | Pending |
+| D7 | Echosounders — SBES vs MBES | **Mapped** |
 | D8 | Bottom Detection | Pending |
 | D9 | Multisector MBES | Pending |
 | D10 | Vessel & Sensor Configuration | Pending |
@@ -524,9 +524,146 @@ Next-version changes:
 
 ---
 
+# D7 — Echosounders: SBES vs MBES
+
+**Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
+**Current:** `web/pedagogical-explorer/src/EchosounderLab.tsx`
+
+## Purpose
+Turn the beam concepts from D5/D6 into **seafloor sampling geometry**. The learner must understand the essential difference between a single-beam depth observation and a multibeam swath, and why depth, beam angle, beamwidth and beam spacing change footprint, sounding spacing and practical seafloor detail.
+
+**Dominant discovery**
+```text
+SBES -> one principal bottom observation per ping
+MBES -> many electronically directed receive directions / soundings across a swath
+range/depth ↑ -> projected footprint and spacing generally ↑
+outer-beam obliquity ↑ -> slant range and projected footprint generally ↑
+beam-spacing rule -> different distribution of soundings across the same angular sector
+```
+
+The lab succeeds when the learner can look at a given depth/sector/beam pattern and predict where the bottom observations will fall and which portions of the swath will have larger footprints or spacing.
+
+## Inputs
+
+### Primary
+- **system:** SBES / MBES;
+- **water depth / sonar-to-bottom vertical separation**;
+- **MBES angular sector / maximum steering angle**;
+- **MBES beam count** or equivalent number of receive directions;
+- **beam-spacing mode:** equiangular / equidistant.
+
+### Secondary / advanced
+- RX across-track beamwidth;
+- TX along-track beamwidth;
+- pulse duration, only where the registered footprint model explicitly shows pulse-limited versus beam-limited footprint behavior;
+- flat-bottom slope/incidence example only if needed to show geometry; keep the default bottom flat so one variable is isolated.
+
+Frequency is inherited through beamwidth/range intuition but should not become a primary D7 control unless the Scientific Core couples it to the same physical transducer. Frequency trade-offs were already introduced in D3/D5.
+
+## Expected outputs / visual response
+
+Required:
+- synchronized **SBES × MBES** cross-section over the same bottom/depth;
+- sonar/transducer location, nadir, beam centre lines and bottom intersections;
+- per-beam steering/incidence angle and slant range on demand;
+- seafloor **footprint** for each represented beam, with larger/changed outer-beam geometry visible where the model predicts it;
+- geometric swath width;
+- adjacent across-track sounding/beam-centre spacing;
+- top-down footprint/sounding field synchronized with the cross-section;
+- clear visual comparison of **equiangular vs equidistant** spacing on the same fixed bottom scale;
+- selected-beam readout rather than only one generic “representative footprint”.
+
+Recommended:
+- fixed/common horizontal scale when comparing depth or spacing modes;
+- a simple density/spacing strip across-track;
+- current/baseline overlay for one-control comparisons;
+- visual distinction between beam footprint and sounding point: a sounding is a detection/estimate associated with an insonified/reception region, not a zero-area pencil ray.
+
+## Interaction contract
+
+1. Start with **SBES** over a flat bottom: one central observation/footprint. Change depth and observe the geometry/footprint consequence while all other parameters stay fixed.
+2. Switch to **MBES at the same depth**. Keep a modest symmetric sector and small beam count so individual beams are visible. The key change is from one bottom sample to a cross-track swath in a single ping.
+3. Increase **sector angle** while beam count stays fixed. Swath widens, outer beams become more oblique, slant ranges grow, and across-track spacing/footprints become less favorable according to the core model. This is the first coverage ↔ quality trade-off.
+4. Reset sector. Increase **depth** while all angular settings remain fixed. Keep plot scale common or use baseline overlay so widening footprint/swath/spacing is perceptible rather than hidden by autoscaling.
+5. Compare **equiangular vs equidistant** at identical depth, sector and beam count. Equiangular produces equal angular separation but unequal seafloor spacing; equidistant adjusts beam directions so bottom spacing is approximately uniform under the modelled reference geometry. This should be a direct visual experiment, not a text hint.
+6. Vary **beam count** at fixed depth/sector. More formed beams reduce beam-centre spacing, but do not imply narrower physical beams or better independent physical resolution. Keep footprint width visible so sampling density and acoustic footprint remain distinct concepts.
+7. Advanced: vary RX beamwidth and pulse duration and let the Scientific Core identify whether across-track/along-track footprint is beam-limited or pulse-limited. Do not reopen the full pulse-processing lesson.
+
+## Operational intuition / trade-offs
+
+| Control / condition | Gain | Cost / risk to retain |
+|---|---|---|
+| MBES vs SBES | many bottom observations across a swath per ping; much greater area coverage | more complex geometry, steering, ancillary-sensor dependence and outer-beam limitations |
+| Wider angular sector | wider swath / greater coverage per line | larger slant range and obliquity at the edges; generally larger projected footprint/spacing and lower detection margin |
+| Greater depth/range | same angular sector covers more metres | larger projected footprint and wider sounding spacing for unchanged angular configuration; practical detail degrades with altitude/range |
+| More beams at same sector | denser beam-centre/sounding sampling | does **not** independently narrow the acoustic footprint or guarantee more independent resolution |
+| Equiangular spacing | simple equal angular separation; dense central sampling on flat bottom | seafloor spacing grows toward outer beams |
+| Equidistant spacing | more uniform bottom sampling on the reference geometry | requires nonuniform beam angles; “equidistant” is geometry/model dependent, not globally uniform on arbitrary terrain |
+| Narrower beamwidth | smaller beam-limited footprint / better angular discrimination | array/frequency/hardware trade-offs already established in D5; resolution still depends on bandwidth, spacing, range and detection |
+| Longer pulse | more energy potential (D2) | can enlarge pulse-limited footprint/range-resolution contribution where applicable; do not use D7 to re-teach signal processing |
+
+Desired operator intuition: **“MBES gains coverage by forming many directional observations across a swath, but the outer swath and deeper water are geometrically more expensive. More soundings are not the same thing as more independent resolution.”**
+
+## Scope boundaries / scientific guardrails
+
+- D7 teaches **sampling/footprint geometry**, not bottom detection algorithms (D8), multisector timing/frequency sequencing (D9), motion stabilization (D11), or full coverage planning (D15/D16).
+- Use Scientific-Core geometry for beam endpoints, slant ranges, incidence angles, footprint and spacing. UI must not scale footprint ellipses decoratively independent of computed dimensions.
+- Keep **beam centre**, **acoustic footprint** and **accepted sounding/detection** conceptually distinct. D8 will explain how the bottom detection is obtained from the return.
+- SBES is not universally “one mathematical ray”; it has a finite beam/footprint and a bottom-detection process. The one-centre comparison is pedagogical geometry, not a claim that real SBES insonifies a point.
+- “Beam count” means formed beam directions/detections under the selected model. It must not be equated with independent resolution cells. Modern high-density modes may produce multiple detections/soundings per beam and belong primarily to D8/D16.
+- Equidistant/equiangular definitions must follow the Scientific Core/reference surface. Kongsberg documentation defines equiangular as equal angular spacing and equidistant as adjusted beam angles for approximately equal metre spacing on the seafloor; do not promise equal spacing over arbitrary sloped/irregular terrain.
+- Footprint depends on two-way TX/RX geometry, pulse length, incidence and bottom geometry. A single scalar width is insufficient as the final visualization; show footprint area/shape or both principal dimensions where supported.
+- Do not state that outer beams intrinsically have worse **range resolution**. Their projected spatial footprint, slant range, SNR and incidence geometry can be worse; range resolution remains governed by the signal/detection mechanism established in D2/D8.
+- Hughes Clarke explicitly treats practical seafloor resolution as a combination of pulse bandwidth, projected beamwidths, beam spacing, stabilization and platform altitude. Preserve that multi-factor view.
+
+## Dependencies / concepts passed forward
+
+Consumes:
+- D2: pulse duration/bandwidth and range-resolution distinction;
+- D3: longer/slanted range reduces acoustic margin;
+- D5: beamwidth, TX/RX directivity and footprint origin;
+- D6: electronically formed/steered beam directions.
+
+Passes forward:
+- per-beam echo/footprint context to **D8 Bottom Detection**;
+- swath/beam spacing and outer-beam geometry to **D9 Multisector MBES**;
+- sonar installation/orientation geometry to D10;
+- motion/stabilization consequence to D11;
+- beam angle + range as inputs to D14 Sounding Formation;
+- swath width, footprint and spacing intuition to D15 Survey Planning and D16 Acquisition Trade-offs;
+- across-track geometry to D17 Uncertainty/TPU.
+
+## Current implementation delta
+
+`EchosounderLab.tsx` already provides a strong canonical base: SBES/MBES toggle, depth, beam count, angular sector, equiangular/equidistant spacing, pulse duration, TX/RX beamwidths, beam endpoints/incidence angles, geometric swath, adjacent spacing, footprint outputs and a top-down footprint field.
+
+Next-version changes:
+- make the **synchronized SBES × MBES comparison the primary visual**, not mainly separate readout cards;
+- preserve the same depth/bottom geometry across both systems so the conceptual difference is immediate;
+- guide the sequence `SBES -> MBES -> sector -> depth -> spacing mode -> beam count`;
+- make outer-beam slant range/incidence/footprint visible by selecting/hovering individual beams;
+- replace the single middle-beam “representative footprint” emphasis with **per-beam footprint** and cross-track footprint/spacing trend;
+- ensure footprint patches use core-derived dimensions rather than visually rescaled pseudo-size when scientific interpretation is intended; normalization is acceptable only as a clearly labeled qualitative overview;
+- keep a fixed/shared bottom scale or baseline overlay during controlled comparisons;
+- distinguish sounding points from footprints visually;
+- move pulse duration and beamwidth controls under an advanced/“what sets footprint?” step after SBES/MBES geometry is understood;
+- add a compact cross-track spacing plot/strip so equiangular ↔ equidistant differences are immediately visible;
+- retain current invalid-domain handling and canonical solver boundary.
+
+## Recognized references
+
+- **IHO S-5A Ed. 2.0.0, H2 hydrographic acoustics / echo sounding / multibeam competence** — competence anchor for single-beam/multibeam principles, transducer/beam geometry, footprint, sounding spacing and tuning of acoustic parameters: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **Hughes Clarke (2017), “Multibeam Echosounders”** — fan of narrow beams, swath/corridor acquisition, and practical resolution dependence on pulse bandwidth, projected beamwidth, beam spacing, stabilization and altitude: <https://scholars.unh.edu/ccom/1370/>
+- **UNB Ocean Mapping Group — Publications / Multibeam Sonar Theory class reports** — established hydrographic teaching context connecting MBES theory to target detection and operational geometry: <https://www.omg.unb.ca/publications/>
+- **Kongsberg EM beam-spacing technical note, “Sector Coverage / Beam Spacing Modes”** — operational definitions of equiangular, equidistant and high-density equidistant spacing: <https://www.kongsberg.com/contentassets/058cd4fb2f1d417dab5f444f8f5cbf9a/em-sector-coverage-beam-spacing-modes.pdf>
+- **Kongsberg EM 710 Mk2 product specification** — operational evidence that beam spacing may be equiangular/equidistant and swath may be limited by angle or width: <https://www.kongsberg.com/globalassets/kongsberg-maritime/km-products/product-documents/390849-em710mk2_product_specification.pdf>
+- **Kongsberg EM 2040 MkII** — modern shallow-water MBES reference for wide angular coverage, multiple operating frequencies and high-density sounding modes: <https://www.kongsberg.com/discovery/seafloor-mapping/em/EM2040-Mk2/>
+
+---
+
 ## 4. Review queue
 
-Continue **D7 -> D17**. For each lab record:
+Continue **D8 -> D17**. For each lab record:
 1. purpose + dominant discovery;
 2. primary/secondary inputs;
 3. outputs/visual response;
