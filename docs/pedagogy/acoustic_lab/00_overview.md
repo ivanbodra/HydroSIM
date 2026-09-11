@@ -72,7 +72,7 @@ PHYSICAL ARRAY GEOMETRY
 | D8 | Bottom Detection | Mapped | `D08_bottom_detection.md` |
 | D9 | Multisector MBES | Mapped | `D09_multisector_mbes.md` |
 | D10 | Vessel & Sensor Configuration | Mapped | `D10_vessel_sensor_configuration.md` |
-| D11 | Vessel Motion | Pending | `D11_vessel_motion.md` |
+| D11 | Vessel Motion | Mapped | `D11_vessel_motion.md` |
 | D12 | PU & Sensor Integration | Pending | `D12_pu_sensor_integration.md` |
 | D13 | Timing, Synchronization & Latency | Pending | `D13_timing_sync_latency.md` |
 | D14 | Sounding Formation | Pending | `D14_sounding_formation.md` |
