@@ -11,7 +11,7 @@ test('D6 makes fixed-array beamforming causal and shows shared RX virtual beams'
  await page.route('**/api/v1/pedagogical/beamforming',async route=>{const req=route.request().postDataJSON() as Record<string,unknown>;requests.push(req);await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(response(req))})});
  await page.goto('/#beamforming-lab');
  await expect(page.locator('.lesson-location').getByText('D6',{exact:true})).toBeVisible();
- await expect(page.getByText('Fixed 6-element array',{exact:true})).toBeVisible();
+ await expect(page.getByRole('complementary').getByText('Fixed 6-element array',{exact:true})).toBeVisible();
  await expect(page.getByTestId('d6-wavefront-scene')).toBeVisible();
  await expect(page.locator('.scene-element')).toHaveCount(6);
  await expect(page.getByTestId('d6-channel-alignment')).toBeVisible();
