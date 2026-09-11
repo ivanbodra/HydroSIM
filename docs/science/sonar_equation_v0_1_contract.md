@@ -6,9 +6,9 @@ Status: implementation-ready scientific contract for the first Didactic Explorer
 
 The first D3 experience answers one question:
 
-> How do source level, propagation loss, seabed area backscatter, beam-pattern response and noise combine to determine received echo level and SNR?
+> How do source level, propagation loss, seabed area backscatter, beam-pattern response and noise combine to determine received echo level, SNR and a transparent SNR margin relative to a configured reference requirement?
 
-It is not a calibrated manufacturer receiver model and does not yet model electronics, reverberation, detection probability, thresholding or bottom-type prediction.
+It is not a calibrated manufacturer receiver model and does not model electronics, reverberation, probability of detection, false-alarm probability, or bottom-type prediction.
 
 ## Reference active-sonar equation
 
@@ -38,7 +38,7 @@ and therefore
 RL = SL + G_{tx} + BS + G_{rx} - TL_{2w}.
 \]
 
-The sign convention is explicit: source, backscatter and beam-pattern terms are added; propagation losses and noise reduce the resulting margin.
+The sign convention is explicit: source, backscatter and beam-pattern terms are added; propagation losses and noise reduce the resulting SNR.
 
 ## Source level
 
@@ -162,17 +162,52 @@ Do not accept a noise spectral density in dB re 1 µPa²/Hz as though it were al
 
 The first slice does not split ambient, self-noise and electronics noise.
 
-## SNR and detection boundary
+## SNR reference and margin boundary
 
-The first D3 output is
+The requalified D3 lesson introduces one additional **Configured pedagogical criterion**:
+
+`snr_reference_db`
+
+in dB. It represents the SNR level the current didactic scenario asks the learner to compare against. It is not automatically a manufacturer detection threshold and is not inferred from probability-of-detection or false-alarm requirements.
+
+The Derived SNR margin is
 
 \[
-SNR=RL-NL.
+M_{SNR}=SNR-SNR_{ref}.
 \]
 
-No detection threshold, probability of detection, false-alarm probability or detection index is defined in v0.1. Therefore the UI should not label SNR as a probability or binary detection result.
+where `SNR_ref = snr_reference_db`.
 
-A future documented detector may define a detection margin such as `SNR - threshold`; that is outside this contract.
+Interpretation:
+
+- `M_SNR > 0`: the modeled SNR is above the configured reference by that many dB;
+- `M_SNR = 0`: the modeled SNR equals the configured reference;
+- `M_SNR < 0`: the modeled SNR is below the configured reference by `|M_SNR|` dB.
+
+The learner-facing label should be **SNR reference**, **required/reference SNR**, or **SNR margin**, not simply **detector threshold** unless a later detector-specific contract provides that interpretation.
+
+This criterion exists to teach acoustic-budget margin. It must remain scientifically distinct from D9 bottom-detection thresholding and from any detector decision rule.
+
+Therefore D3 must not infer or display from `M_SNR` alone:
+
+- probability of detection (`P_d`);
+- probability of false alarm (`P_fa`);
+- detection index;
+- receiver operating characteristic;
+- a claim that the echo is physically or operationally `detected` / `not detected`;
+- a manufacturer performance guarantee.
+
+A later explicit detector model may consume SNR together with detector/processing assumptions and define those quantities separately.
+
+### Margin versus range
+
+For a range curve, use the same configured `SNR_ref` at every sampled range unless the scenario explicitly supplies a range-dependent requirement. The render-ready margin curve is
+
+\[
+M_{SNR}(r)=SNR(r)-SNR_{ref}.
+\]
+
+Crossings of zero are mathematically the ranges where modeled SNR equals the configured reference. They may be shown as **reference crossings** or **zero-margin crossings**. They must not be labelled maximum detection range without a detector-performance contract.
 
 ## Required contribution breakdown
 
@@ -190,9 +225,23 @@ The D3 adapter should expose at least:
 - `rx_relative_beam_gain_db`;
 - `received_level_db_re_1upa`;
 - `noise_level_db_re_1upa`;
-- `snr_db`.
+- `snr_db`;
+- `snr_reference_db`;
+- `snr_margin_db`.
 
 For a reciprocal case it may additionally expose `two_way_transmission_loss_db`.
+
+For a sampled range curve, the application/API may also expose render-ready `snr_margin_db` values aligned one-to-one with the existing range/SNR samples.
+
+## State semantics
+
+Configured:
+- `SL`, `NL`, backscatter/scenario terms, environmental absorption context, and `snr_reference_db`.
+
+Derived:
+- transmission-loss components, `RL`, `SNR`, `snr_margin_db`, and zero-margin/reference-crossing ranges when computed.
+
+No new Truth, Observed or Estimated state is introduced by the SNR-reference lesson.
 
 ## First-slice boundaries
 
@@ -206,7 +255,9 @@ Explicitly out of scope for D3 v0.1:
 - stochastic noise realization;
 - frequency-dependent bottom scattering;
 - uncertainty propagation;
-- detection probability and threshold models;
+- probability-of-detection / probability-of-false-alarm models;
+- detector ROC / detection-index models;
+- D9 bottom-detection threshold behavior;
 - multipath and non-reciprocal propagation.
 
 ## Implementation invariants
@@ -217,7 +268,11 @@ Explicitly out of scope for D3 v0.1:
 4. With normalized boresight beam responses, `G_tx = G_rx = 0 dB`.
 5. A lower normalized beam amplitude must not increase `G_rel`.
 6. `SNR = RL - NL` exactly in the level-domain model.
-7. The D3 adapter must consume `AreaBackscatterResult.backscatter_strength_db`; it must not rederive or reinterpret sediment type.
+7. `snr_margin_db = snr_db - snr_reference_db` exactly.
+8. Raising only `snr_reference_db` by `x` dB lowers margin by exactly `x` dB and leaves `RL`, `NL`, `SNR` and propagation terms unchanged.
+9. Changing only `NL` changes `SNR` and margin equally while leaving `RL` unchanged.
+10. The D3 adapter must consume `AreaBackscatterResult.backscatter_strength_db`; it must not rederive or reinterpret sediment type.
+11. A zero-margin crossing must not be serialized or labelled as a detector decision or maximum detection range unless a separate detector contract is explicitly active.
 
 ## References
 
@@ -226,6 +281,8 @@ Ainslie, M. A., & McColm, J. G. (1998). *A simplified formula for viscous and ch
 Francois, R. E., & Garrison, G. R. (1982). *Sound absorption based on ocean measurements*. Journal of the Acoustical Society of America. The Ainslie–McColm simplification is based on the established relaxation-process treatment represented by this work.
 
 Waite, A. D. (2002). *Sonar for Practising Engineers*, 3rd ed. Wiley. General level-domain active-sonar equation and source/propagation terminology.
+
+The configurable SNR-reference margin is a HydroSIM pedagogical comparison quantity derived directly from the level-domain identity `SNR = RL - NL`. It is not presented as a literature-derived universal detector threshold.
 
 HydroSIM implementation sources:
 - `src/hydrosim/acquisition/transmission_loss.py`
