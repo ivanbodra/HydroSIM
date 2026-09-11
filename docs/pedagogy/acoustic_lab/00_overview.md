@@ -94,7 +94,7 @@ Each active lab must receive fresh source research before final mapping. Referen
 | D12 | PU & Sensor Integration | Mapped | `D12_pu_sensor_integration.md` |
 | D13 | Timing, Synchronization & Latency | Mapped | `D13_timing_sync_latency.md` |
 | D14 | Sounding Formation | Mapped | `D14_sounding_formation.md` |
-| D15 | Survey Planning | Pending | `D15_survey_planning.md` |
+| D15 | Survey Planning | Mapped | `D15_survey_planning.md` |
 | D16 | Survey Coverage & Acquisition Trade-offs | Pending | `D16_survey_coverage_tradeoffs.md` |
 | D17 | Uncertainty / TPU | Pending | `D17_uncertainty_tpu.md` |
 
