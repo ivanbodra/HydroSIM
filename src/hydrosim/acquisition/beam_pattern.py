@@ -11,7 +11,7 @@ source level, receive sensitivity, or two-way sonar response.
 from __future__ import annotations
 
 from math import cos, sin
-from typing import Sequence
+from typing import Callable, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
@@ -40,7 +40,7 @@ class OneWayBeamPatternResponse(BaseModel):
 
 
 class AcrossTrackBeamPatternSample(BaseModel):
-    """One angular sample of an across-track beam-pattern scan."""
+    """One angular sample of an orthogonal beam-pattern scan."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -52,7 +52,7 @@ class AcrossTrackBeamPatternSample(BaseModel):
 
 
 class AcrossTrackBeamPatternScan(BaseModel):
-    """Deterministic across-track scan of a one-way beam pattern."""
+    """Deterministic angular scan of a one-way beam pattern."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -74,6 +74,13 @@ def across_track_direction(angle_rad: float) -> Vector3:
 
     angle = float(angle_rad)
     return Vector3(x=0.0, y=-sin(angle), z=cos(angle))
+
+
+def along_track_direction(angle_rad: float) -> Vector3:
+    """Return HydroSIM along-track unit direction: +angle is Forward (+X)."""
+
+    angle = float(angle_rad)
+    return Vector3(x=sin(angle), y=0.0, z=cos(angle))
 
 
 def one_way_beam_pattern(
@@ -138,7 +145,7 @@ def _crossing_angle(a0: float, p0: float, a1: float, p1: float, target: float) -
     return a0 + fraction * (a1 - a0)
 
 
-def scan_across_track_beam_pattern(
+def _scan_beam_pattern(
     *,
     array: TransducerArray,
     steering_angle_rad: float,
@@ -147,16 +154,9 @@ def scan_across_track_beam_pattern(
     sample_count: int,
     frequency_hz: float,
     sound_speed_mps: float,
+    direction_factory: Callable[[float], Vector3],
     weights: Sequence[complex] | None = None,
 ) -> AcrossTrackBeamPatternScan:
-    """Scan a one-way beam pattern and estimate the local -3 dB beamwidth.
-
-    The scan keeps the element-factor and array-factor powers needed by learner
-    views, while suppressing per-element contribution objects that are not consumed
-    by an angular scan. The underlying coherent sum and physical response are
-    unchanged.
-    """
-
     if sample_count < 3:
         raise ValueError("sample_count must be >= 3")
     start = float(start_angle_rad)
@@ -164,7 +164,7 @@ def scan_across_track_beam_pattern(
     if end <= start:
         raise ValueError("end_angle_rad must be greater than start_angle_rad")
 
-    steering = across_track_direction(steering_angle_rad)
+    steering = direction_factory(steering_angle_rad)
     step = (end - start) / (sample_count - 1)
     samples: list[AcrossTrackBeamPatternSample] = []
     wavelength_m: float | None = None
@@ -172,7 +172,7 @@ def scan_across_track_beam_pattern(
         angle = start + index * step
         response = one_way_beam_pattern(
             array=array,
-            source_direction_array_frame=across_track_direction(angle),
+            source_direction_array_frame=direction_factory(angle),
             steering_direction_array_frame=steering,
             frequency_hz=frequency_hz,
             sound_speed_mps=sound_speed_mps,
@@ -231,4 +231,56 @@ def scan_across_track_beam_pattern(
         half_power_left_angle_rad=left,
         half_power_right_angle_rad=right,
         half_power_beamwidth_rad=width,
+    )
+
+
+def scan_across_track_beam_pattern(
+    *,
+    array: TransducerArray,
+    steering_angle_rad: float,
+    start_angle_rad: float,
+    end_angle_rad: float,
+    sample_count: int,
+    frequency_hz: float,
+    sound_speed_mps: float,
+    weights: Sequence[complex] | None = None,
+) -> AcrossTrackBeamPatternScan:
+    """Scan the across-track plane and estimate the local -3 dB beamwidth."""
+
+    return _scan_beam_pattern(
+        array=array,
+        steering_angle_rad=steering_angle_rad,
+        start_angle_rad=start_angle_rad,
+        end_angle_rad=end_angle_rad,
+        sample_count=sample_count,
+        frequency_hz=frequency_hz,
+        sound_speed_mps=sound_speed_mps,
+        direction_factory=across_track_direction,
+        weights=weights,
+    )
+
+
+def scan_along_track_beam_pattern(
+    *,
+    array: TransducerArray,
+    steering_angle_rad: float,
+    start_angle_rad: float,
+    end_angle_rad: float,
+    sample_count: int,
+    frequency_hz: float,
+    sound_speed_mps: float,
+    weights: Sequence[complex] | None = None,
+) -> AcrossTrackBeamPatternScan:
+    """Scan the along-track plane and estimate the local -3 dB beamwidth."""
+
+    return _scan_beam_pattern(
+        array=array,
+        steering_angle_rad=steering_angle_rad,
+        start_angle_rad=start_angle_rad,
+        end_angle_rad=end_angle_rad,
+        sample_count=sample_count,
+        frequency_hz=frequency_hz,
+        sound_speed_mps=sound_speed_mps,
+        direction_factory=along_track_direction,
+        weights=weights,
     )
