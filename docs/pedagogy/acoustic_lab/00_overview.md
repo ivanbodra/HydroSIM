@@ -95,7 +95,7 @@ Each active lab must receive fresh source research before final mapping. Referen
 | D13 | Timing, Synchronization & Latency | Mapped | `D13_timing_sync_latency.md` |
 | D14 | Sounding Formation | Mapped | `D14_sounding_formation.md` |
 | D15 | Survey Planning | Mapped | `D15_survey_planning.md` |
-| D16 | Survey Coverage & Acquisition Trade-offs | Pending | `D16_survey_coverage_tradeoffs.md` |
+| D16 | Survey Coverage & Acquisition Trade-offs | Mapped | `D16_survey_coverage_tradeoffs.md` |
 | D17 | Uncertainty / TPU | Pending | `D17_uncertainty_tpu.md` |
 
 The retired standalone `Acoustic Detection Fundamentals` lesson must not be reintroduced. Its SNR/detectability objective belongs to D3; threshold-driven bottom detection belongs to D8.
