@@ -1,209 +1,44 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Rotate3D, RotateCcw, Ship, Waves } from 'lucide-react';
 
-type Lang = 'en' | 'pt';
-type Harmonic = { amplitude_deg: number; period_seconds: number; phase_deg: number };
-type Sample = { time_seconds: number; north_m: number; east_m: number; down_m: number; roll_deg: number; pitch_deg: number; heading_deg: number; yaw_deviation_deg: number; heave_up_m: number };
-type Vector = { north_m: number; east_m: number; down_m: number };
-type BeamConsequence = {
-  beam: 'port' | 'nadir' | 'starboard';
-  steering_angle_deg: number;
-  reference_direction: Vector;
-  moved_direction: Vector;
-  reference_intersection: Vector | null;
-  moved_intersection: Vector | null;
-  displacement: Vector | null;
-};
-type MotionConsequence = {
-  time_seconds: number;
-  beams: BeamConsequence[];
-  swath: { reference_width_m: number | null; moved_width_m: number | null; width_change_m: number | null };
-};
-type Response = { samples: Sample[]; consequences: MotionConsequence[]; metadata: Record<string, string> };
-
-const DEFAULTS = {
-  heading: 20,
-  speed: 3,
-  duration: 12,
-  roll: { amplitude_deg: 8, period_seconds: 6, phase_deg: 0 },
-  pitch: { amplitude_deg: 4, period_seconds: 8, phase_deg: 30 },
-  yaw: { amplitude_deg: 6, period_seconds: 10, phase_deg: 0 },
-  heaveAmp: 1.2,
-  heavePeriod: 7,
-};
+type Lang='en'|'pt';
+type Dof='heave'|'roll'|'pitch'|'yaw';
+type Sample={time_seconds:number;north_m:number;east_m:number;down_m:number;roll_deg:number;pitch_deg:number;heading_deg:number;yaw_deviation_deg:number;heave_up_m:number};
+type Vector={north_m:number;east_m:number;down_m:number};
+type Beam={beam:'port'|'nadir'|'starboard';reference_intersection:Vector|null;moved_intersection:Vector|null;displacement:Vector|null};
+type Consequence={time_seconds:number;beams:Beam[];swath:{reference_width_m:number|null;moved_width_m:number|null;width_change_m:number|null}};
+type Response={samples:Sample[];consequences:Consequence[];metadata:Record<string,string>};
 
 const initialLanguage=():Lang=>sessionStorage.getItem('hydrosim-language')==='pt'?'pt':'en';
-const copy = {
-  en: {
-    reset: 'Reset', heading: 'Heading', speed: 'Speed', duration: 'Duration', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Period',
-    trajectory: 'Vessel trajectory', attitude: 'Attitude through time', north: 'North', east: 'East', up: 'Up', current: 'Final sample', attitudeScale: 'Shared scale: ±20°', heaveScale: 'Scale: ±3 m',
-    consequences: 'Beam, swath & sounding consequences', consequenceLead: 'Final sample · compare the no-motion reference with the same instant under configured motion.', beamDisplacement: 'Beam displacement', swathEffect: 'Swath width', soundingEffect: 'Sounding positions', reference: 'Reference', moved: 'With motion', change: 'Change',
-    port: 'Port', nadir: 'Nadir', starboard: 'Starboard', noIntersection: 'No bottom intersection', plan: 'Plan view of sounding centres', error: 'The motion view could not be updated. Adjust the controls or try again.',
-    help: { roll: 'Roll is rotation about the vessel longitudinal axis.', pitch: 'Pitch is rotation about the vessel transverse axis.', yaw: 'Yaw is angular deviation about the vertical axis; Heading is the vessel direction clockwise from North.', heave: 'Heave is vertical translation; HydroSIM reports it positive Up.' },
-  },
-  pt: {
-    reset: 'Restaurar', heading: 'Heading', speed: 'Velocidade', duration: 'Duração', roll: 'Roll', pitch: 'Pitch', yaw: 'Yaw', heave: 'Heave', amplitude: 'Amplitude', period: 'Período',
-    trajectory: 'Trajetória da embarcação', attitude: 'Atitude ao longo do tempo', north: 'Norte', east: 'Leste', up: 'Cima', current: 'Amostra final', attitudeScale: 'Escala comum: ±20°', heaveScale: 'Escala: ±3 m',
-    consequences: 'Consequências nos feixes, faixa e sondagens', consequenceLead: 'Amostra final · compare a referência sem movimento com o mesmo instante sob o movimento configurado.', beamDisplacement: 'Deslocamento dos feixes', swathEffect: 'Largura da faixa', soundingEffect: 'Posições das sondagens', reference: 'Referência', moved: 'Com movimento', change: 'Variação',
-    port: 'Bombordo', nadir: 'Nadir', starboard: 'Boreste', noIntersection: 'Sem interseção com o fundo', plan: 'Vista em planta dos centros das sondagens', error: 'Não foi possível atualizar a visualização do movimento. Ajuste os controles ou tente novamente.',
-    help: { roll: 'Roll é a rotação em torno do eixo longitudinal da embarcação.', pitch: 'Pitch é a rotação em torno do eixo transversal da embarcação.', yaw: 'Yaw é o desvio angular em torno do eixo vertical; Heading é a direção da embarcação, medida no sentido horário a partir do Norte.', heave: 'Heave é a translação vertical; no HydroSIM é apresentada positiva para cima.' },
-  },
+const copy={
+ en:{title:'Vessel motion → acoustic geometry',lead:'Isolate one real vessel motion at a time. HydroSIM applies the canonical rigid-body transform and shows how the same seabed intersections move relative to the no-motion reference.',dof:'Motion component',heave:'Heave',roll:'Roll',pitch:'Pitch',yaw:'Yaw',amplitude:'Amplitude',period:'Period',advanced:'Trajectory context',heading:'Heading',speed:'Speed',duration:'Duration',reset:'Zero motion',response:'Canonical motion response',series:'Selected motion through time',peak:'Peak selected state',reference:'No-motion reference',moved:'With vessel motion',soundings:'Seafloor intersections',swath:'Swath width',change:'Change',port:'Port',nadir:'Nadir',starboard:'Starboard',up:'positive Up',cause:'VESSEL MOTION → SONAR POSE / DIRECTION → SEAFLOOR INTERSECTION',loading:'Updating canonical geometry…',error:'The canonical motion response is unavailable for this configuration.',note:'The vessel still moves. This comparison shows the geometric consequence; active beam stabilization and downstream sounding compensation remain distinct operations.'},
+ pt:{title:'Movimento da embarcação → geometria acústica',lead:'Isole um movimento real da embarcação por vez. O HydroSIM aplica a transformação rígida canônica e mostra como as mesmas interseções no fundo se deslocam em relação à referência sem movimento.',dof:'Componente do movimento',heave:'Heave',roll:'Roll',pitch:'Pitch',yaw:'Yaw',amplitude:'Amplitude',period:'Período',advanced:'Contexto da trajetória',heading:'Heading',speed:'Velocidade',duration:'Duração',reset:'Zerar movimento',response:'Resposta canônica ao movimento',series:'Movimento selecionado ao longo do tempo',peak:'Estado de pico selecionado',reference:'Referência sem movimento',moved:'Com movimento da embarcação',soundings:'Interseções no fundo',swath:'Largura da faixa',change:'Variação',port:'Bombordo',nadir:'Nadir',starboard:'Boreste',up:'positivo para cima',cause:'MOVIMENTO DA EMBARCAÇÃO → POSE / DIREÇÃO DO SONAR → INTERSEÇÃO NO FUNDO',loading:'Atualizando geometria canônica…',error:'A resposta canônica ao movimento não está disponível para esta configuração.',note:'A embarcação continua se movendo. Esta comparação mostra a consequência geométrica; estabilização ativa do feixe e compensação posterior da sondagem continuam sendo operações distintas.'}
 };
 
-function Term({ label, text }: { label: string; text: string }) {
-  const [open, setOpen] = useState(false);
-  return <span className="d12-term"><button type="button" onClick={() => setOpen(v => !v)} title={text}>{label} ⓘ</button>{open && <span>{text}</span>}</span>;
-}
+function seriesPath(samples:Sample[],key:keyof Sample,min:number,max:number,w=660,h=150){if(!samples.length)return'';return samples.map((s,i)=>{const v=Math.max(min,Math.min(max,Number(s[key]))),x=i/Math.max(1,samples.length-1)*w,y=h-(v-min)/(max-min)*h;return`${i?'L':'M'}${x},${y}`}).join(' ')}
 
-function fixedSeriesPath(samples: Sample[], key: keyof Sample, min: number, max: number, w = 660, h = 170) {
-  if (!samples.length) return '';
-  const span = max - min;
-  return samples.map((sample, index) => {
-    const value = Math.max(min, Math.min(max, Number(sample[key])));
-    const x = (index / Math.max(1, samples.length - 1)) * w;
-    const y = h - ((value - min) / span) * h;
-    return `${index ? 'L' : 'M'}${x},${y}`;
-  }).join(' ');
-}
-
-export default function VesselMotionLab({ onBack:_onBack }: { onBack: () => void }) {
-  const [lang, setLang] = useState<Lang>(initialLanguage);
-  const [heading, setHeading] = useState(DEFAULTS.heading);
-  const [speed, setSpeed] = useState(DEFAULTS.speed);
-  const [duration, setDuration] = useState(DEFAULTS.duration);
-  const [roll, setRoll] = useState<Harmonic>({ ...DEFAULTS.roll });
-  const [pitch, setPitch] = useState<Harmonic>({ ...DEFAULTS.pitch });
-  const [yaw, setYaw] = useState<Harmonic>({ ...DEFAULTS.yaw });
-  const [heaveAmp, setHeaveAmp] = useState(DEFAULTS.heaveAmp);
-  const [heavePeriod, setHeavePeriod] = useState(DEFAULTS.heavePeriod);
-  const [data, setData] = useState<Response | null>(null);
-  const [error, setError] = useState(false);
-  const t = copy[lang];
-
-  useEffect(()=>{const sync=(event:Event)=>setLang((event as CustomEvent<Lang>).detail);window.addEventListener('hydrosim-language-change',sync);return()=>window.removeEventListener('hydrosim-language-change',sync)},[]);
-  useEffect(() => {
-    const ac = new AbortController();
-    setError(false);
-    fetch('/api/v1/pedagogical/vessel-motion', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ac.signal,
-      body: JSON.stringify({
-        heading_deg: heading, speed_mps: speed, start_north_m: 0, start_east_m: 0, start_down_m: 0,
-        duration_seconds: duration, sample_count: 121, roll, pitch, yaw_deviation: yaw,
-        heave: { amplitude_m: heaveAmp, period_seconds: heavePeriod, phase_deg: 0 },
-      }),
-    }).then(async r => {
-      if (!r.ok) throw new Error('motion request rejected');
-      return r.json() as Promise<Response>;
-    }).then(setData).catch(e => { if (e.name !== 'AbortError') setError(true); });
-    return () => ac.abort();
-  }, [heading, speed, duration, roll, pitch, yaw, heaveAmp, heavePeriod]);
-
-  const path = useMemo(() => {
-    const samples = data?.samples ?? [];
-    if (!samples.length) return [];
-    const ns = samples.map(x => x.north_m), es = samples.map(x => x.east_m);
-    const n0 = Math.min(...ns), n1 = Math.max(...ns), e0 = Math.min(...es), e1 = Math.max(...es);
-    const dn = Math.max(1e-9, n1 - n0), de = Math.max(1e-9, e1 - e0);
-    return samples.map(x => ({ x: 8 + 84 * (x.east_m - e0) / de, y: 92 - 84 * (x.north_m - n0) / dn }));
-  }, [data]);
-
-  const last = data?.samples.at(-1);
-  const consequence = data?.consequences?.at(-1);
-  const beamName = (beam: BeamConsequence['beam']) => beam === 'port' ? t.port : beam === 'starboard' ? t.starboard : t.nadir;
-  const refNadir = consequence?.beams.find(b => b.beam === 'nadir')?.reference_intersection ?? null;
-  const planExtent = useMemo(() => {
-    if (!consequence || !refNadir) return 1;
-    const referenceDistances = consequence.beams.flatMap(b => b.reference_intersection ? [Math.hypot(b.reference_intersection.north_m - refNadir.north_m, b.reference_intersection.east_m - refNadir.east_m)] : []);
-    return Math.max(1, ...referenceDistances) * 1.45;
-  }, [consequence, refNadir]);
-  const plotPoint = (point: Vector | null) => point && refNadir ? {
-    x: 50 + ((point.east_m - refNadir.east_m) / planExtent) * 42,
-    y: 50 - ((point.north_m - refNadir.north_m) / planExtent) * 42,
-  } : null;
-  const refSwath = consequence?.swath.reference_width_m ?? null;
-  const movedSwath = consequence?.swath.moved_width_m ?? null;
-  const movedSwathPct = refSwath && movedSwath ? Math.max(8, Math.min(100, 80 * movedSwath / refSwath)) : 0;
-
-  const reset = () => {
-    setHeading(DEFAULTS.heading); setSpeed(DEFAULTS.speed); setDuration(DEFAULTS.duration);
-    setRoll({ ...DEFAULTS.roll }); setPitch({ ...DEFAULTS.pitch }); setYaw({ ...DEFAULTS.yaw });
-    setHeaveAmp(DEFAULTS.heaveAmp); setHeavePeriod(DEFAULTS.heavePeriod);
-  };
-  const harmonic = (label: string, value: Harmonic, setter: (v: Harmonic) => void, help: string) => <section>
-    <h3><Term label={label} text={help} /></h3>
-    <label>{t.amplitude}<strong>{value.amplitude_deg.toFixed(0)}°</strong><input type="range" min="0" max="20" step="1" value={value.amplitude_deg} onChange={e => setter({ ...value, amplitude_deg: +e.target.value })} /></label>
-    <label>{t.period}<strong>{value.period_seconds.toFixed(1)} s</strong><input type="range" min="2" max="16" step="0.5" value={value.period_seconds} onChange={e => setter({ ...value, period_seconds: +e.target.value })} /></label>
-  </section>;
-
-  return <div className="d12-lab">
-    <main>
-      <aside>
-        <label>{t.heading}<strong>{heading.toFixed(0)}°</strong><input type="range" min="0" max="359" value={heading} onChange={e => setHeading(+e.target.value)} /></label>
-        <label>{t.speed}<strong>{speed.toFixed(1)} m/s</strong><input type="range" min="0" max="8" step="0.25" value={speed} onChange={e => setSpeed(+e.target.value)} /></label>
-        <label>{t.duration}<strong>{duration.toFixed(0)} s</strong><input type="range" min="4" max="30" step="1" value={duration} onChange={e => setDuration(+e.target.value)} /></label>
-        {harmonic(t.roll, roll, setRoll, t.help.roll)}
-        {harmonic(t.pitch, pitch, setPitch, t.help.pitch)}
-        {harmonic(t.yaw, yaw, setYaw, t.help.yaw)}
-        <section>
-          <h3><Term label={t.heave} text={t.help.heave} /></h3>
-          <label>{t.amplitude}<strong>{heaveAmp.toFixed(1)} m</strong><input type="range" min="0" max="3" step="0.1" value={heaveAmp} onChange={e => setHeaveAmp(+e.target.value)} /></label>
-          <label>{t.period}<strong>{heavePeriod.toFixed(1)} s</strong><input type="range" min="2" max="16" step="0.5" value={heavePeriod} onChange={e => setHeavePeriod(+e.target.value)} /></label>
-        </section>
-        <button type="button" onClick={reset}><RotateCcw size={16} />{t.reset}</button>
-      </aside>
-      <section className="d12-stage">
-        {error ? <div className="d12-error" role="status">{t.error}</div> : <>
-          <div className="d12-panels">
-            <article>
-              <div className="d12-title"><Ship size={17} /><span>{t.trajectory}</span></div>
-              <div className="d12-map"><i className="north">N</i><svg viewBox="0 0 100 100">{path.length > 1 && <polyline points={path.map(p => `${p.x},${p.y}`).join(' ')} />}{path.length > 0 && <circle cx={path.at(-1)!.x} cy={path.at(-1)!.y} r="2.2" />}</svg></div>
-              <div className="d12-read"><span>{t.north}<strong>{last?.north_m.toFixed(1) ?? '—'} m</strong></span><span>{t.east}<strong>{last?.east_m.toFixed(1) ?? '—'} m</strong></span></div>
-            </article>
-            <article>
-              <div className="d12-title"><Rotate3D size={17} /><span>{t.attitude}</span></div>
-              <svg className="d12-series" viewBox="0 0 660 170" role="img" aria-label={t.attitudeScale}>
-                <line x1="0" y1="85" x2="660" y2="85" stroke="currentColor" strokeOpacity="0.14" />
-                <path className="roll" d={fixedSeriesPath(data?.samples ?? [], 'roll_deg', -20, 20)} />
-                <path className="pitch" d={fixedSeriesPath(data?.samples ?? [], 'pitch_deg', -20, 20)} />
-                <path className="yaw" d={fixedSeriesPath(data?.samples ?? [], 'yaw_deviation_deg', -20, 20)} />
-              </svg>
-              <div className="d12-legend"><span className="roll">Roll</span><span className="pitch">Pitch</span><span className="yaw">Yaw</span><span>{t.attitudeScale}</span></div>
-            </article>
-          </div>
-          <article className="d12-heave">
-            <div className="d12-title"><Waves size={17} /><span><Term label={t.heave} text={t.help.heave} /></span></div>
-            <svg className="d12-series" viewBox="0 0 660 120" role="img" aria-label={t.heaveScale}>
-              <line x1="0" y1="60" x2="660" y2="60" stroke="currentColor" strokeOpacity="0.14" />
-              <path className="heave" d={fixedSeriesPath(data?.samples ?? [], 'heave_up_m', -3, 3, 660, 120)} />
-            </svg>
-            <div className="d12-read"><span>{t.current}<strong>{last?.heading_deg.toFixed(1) ?? '—'}° Heading</strong></span><span>{t.up}<strong>{last?.heave_up_m.toFixed(2) ?? '—'} m</strong></span><span>{t.heaveScale}</span></div>
-          </article>
-          {consequence && <article className="d12-consequences">
-            <div className="d12-title"><Waves size={17} /><span>{t.consequences}</span></div>
-            <p className="d12-consequence-lead">{t.consequenceLead}</p>
-            <div className="d12-consequence-grid">
-              <section className="d12-sounding-panel">
-                <h3>{t.soundingEffect}</h3><small>{t.plan}</small>
-                <svg className="d12-sounding-plan" viewBox="0 0 100 100" role="img" aria-label={t.plan}>
-                  <line x1="50" y1="5" x2="50" y2="95" /><line x1="5" y1="50" x2="95" y2="50" />
-                  {consequence.beams.map(beam => {
-                    const ref = plotPoint(beam.reference_intersection); const moved = plotPoint(beam.moved_intersection);
-                    return <g key={beam.beam}>{ref && moved && <line className="shift" x1={ref.x} y1={ref.y} x2={moved.x} y2={moved.y} />}{ref && <circle className="reference" cx={ref.x} cy={ref.y} r="2.2" />}{moved && <circle className={`moved ${beam.beam}`} cx={moved.x} cy={moved.y} r="2.8" />}</g>;
-                  })}
-                </svg>
-                <div className="d12-plan-legend"><span className="reference">{t.reference}</span><span className="moved">{t.moved}</span></div>
-              </section>
-              <section className="d12-swath-panel">
-                <h3>{t.swathEffect}</h3>
-                <div className="d12-swath-bars"><div><small>{t.reference}</small><i style={{ width: '80%' }} /></div><div><small>{t.moved}</small><i className="moved" style={{ width: `${movedSwathPct}%` }} /></div></div>
-                <div className="d12-read"><span>{t.reference}<strong>{refSwath?.toFixed(2) ?? '—'} m</strong></span><span>{t.moved}<strong>{movedSwath?.toFixed(2) ?? '—'} m</strong></span><span>{t.change}<strong>{consequence.swath.width_change_m?.toFixed(2) ?? '—'} m</strong></span></div>
-              </section>
-            </div>
-            <section className="d12-beam-displacements"><h3>{t.beamDisplacement}</h3><div>{consequence.beams.map(beam => <section key={beam.beam}><strong>{beamName(beam.beam)}</strong>{beam.displacement ? <><span>ΔN <b>{beam.displacement.north_m.toFixed(2)} m</b></span><span>ΔE <b>{beam.displacement.east_m.toFixed(2)} m</b></span><span>ΔD <b>{beam.displacement.down_m.toFixed(2)} m</b></span></> : <span>{t.noIntersection}</span>}</section>)}</div></section>
-            <section className="d12-sounding-readouts"><h3>{t.soundingEffect}</h3><div>{consequence.beams.map(beam => <section key={beam.beam}><strong>{beamName(beam.beam)}</strong><small>{t.reference}</small><span>{beam.reference_intersection ? `N ${beam.reference_intersection.north_m.toFixed(1)} · E ${beam.reference_intersection.east_m.toFixed(1)} · D ${beam.reference_intersection.down_m.toFixed(1)} m` : t.noIntersection}</span><small>{t.moved}</small><span>{beam.moved_intersection ? `N ${beam.moved_intersection.north_m.toFixed(1)} · E ${beam.moved_intersection.east_m.toFixed(1)} · D ${beam.moved_intersection.down_m.toFixed(1)} m` : t.noIntersection}</span></section>)}</div></section>
-          </article>}
-        </>}
-      </section>
-    </main>
-  </div>;
+export default function VesselMotionLab({onBack:_onBack}:{onBack:()=>void}){
+ const[lang,setLang]=useState<Lang>(initialLanguage);const[dof,setDof]=useState<Dof>('heave');const[angularAmplitude,setAngularAmplitude]=useState(8);const[heaveAmplitude,setHeaveAmplitude]=useState(1);const[period,setPeriod]=useState(6);const[heading,setHeading]=useState(0);const[speed,setSpeed]=useState(0);const[duration,setDuration]=useState(12);const[data,setData]=useState<Response|null>(null);const[error,setError]=useState(false);const t=copy[lang];
+ useEffect(()=>{const sync=(e:Event)=>setLang((e as CustomEvent<Lang>).detail);window.addEventListener('hydrosim-language-change',sync);return()=>window.removeEventListener('hydrosim-language-change',sync)},[]);
+ useEffect(()=>{const ac=new AbortController();setError(false);const zero={amplitude_deg:0,period_seconds:period,phase_deg:0};const angular={amplitude_deg:angularAmplitude,period_seconds:period,phase_deg:0};fetch('/api/v1/pedagogical/vessel-motion',{method:'POST',headers:{'Content-Type':'application/json'},signal:ac.signal,body:JSON.stringify({heading_deg:heading,speed_mps:speed,start_north_m:0,start_east_m:0,start_down_m:0,duration_seconds:duration,sample_count:121,terrain_depth_m:30,half_swath_angle_deg:60,roll:dof==='roll'?angular:zero,pitch:dof==='pitch'?angular:zero,yaw_deviation:dof==='yaw'?angular:zero,heave:{amplitude_m:dof==='heave'?heaveAmplitude:0,period_seconds:period,phase_deg:0}})}).then(async r=>{if(!r.ok)throw new Error();return r.json() as Promise<Response>}).then(setData).catch(e=>{if(e.name!=='AbortError'){setData(null);setError(true)}});return()=>ac.abort()},[dof,angularAmplitude,heaveAmplitude,period,heading,speed,duration]);
+ const key:keyof Sample=dof==='heave'?'heave_up_m':dof==='roll'?'roll_deg':dof==='pitch'?'pitch_deg':'yaw_deviation_deg';
+ const peakIndex=useMemo(()=>{const s=data?.samples??[];let idx=0,best=-1;s.forEach((x,i)=>{const v=Math.abs(Number(x[key]));if(v>best){best=v;idx=i}});return idx},[data,key]);
+ const sample=data?.samples[peakIndex]??null,consequence=data?.consequences[peakIndex]??null;
+ const refNadir=consequence?.beams.find(b=>b.beam==='nadir')?.reference_intersection??null;
+ const extent=useMemo(()=>{if(!consequence||!refNadir)return 1;return Math.max(1,...consequence.beams.flatMap(b=>b.reference_intersection?[Math.hypot(b.reference_intersection.north_m-refNadir.north_m,b.reference_intersection.east_m-refNadir.east_m)]:[]))*1.45},[consequence,refNadir]);
+ const point=(v:Vector|null)=>v&&refNadir?{x:50+(v.east_m-refNadir.east_m)/extent*42,y:50-(v.north_m-refNadir.north_m)/extent*42}:null;
+ const beamName=(b:Beam['beam'])=>b==='port'?t.port:b==='starboard'?t.starboard:t.nadir;
+ const reset=()=>{setDof('heave');setAngularAmplitude(8);setHeaveAmplitude(1);setPeriod(6);setHeading(0);setSpeed(0);setDuration(12)};
+ const selectedValue=sample?Number(sample[key]):0;const selectedUnit=dof==='heave'?'m':'°';
+ return <div className="d12-lab"><main><aside>
+  <h2>{t.title}</h2><p>{t.lead}</p>
+  <label>{t.dof}<select value={dof} onChange={e=>setDof(e.target.value as Dof)}><option value="heave">{t.heave}</option><option value="roll">{t.roll}</option><option value="pitch">{t.pitch}</option><option value="yaw">{t.yaw}</option></select></label>
+  {dof==='heave'?<label>{t.amplitude}<strong>{heaveAmplitude.toFixed(1)} m · {t.up}</strong><input type="range" min="0" max="3" step="0.1" value={heaveAmplitude} onChange={e=>setHeaveAmplitude(+e.target.value)}/></label>:<label>{t.amplitude}<strong>{angularAmplitude.toFixed(0)}°</strong><input type="range" min="0" max="20" step="1" value={angularAmplitude} onChange={e=>setAngularAmplitude(+e.target.value)}/></label>}
+  <label>{t.period}<strong>{period.toFixed(1)} s</strong><input type="range" min="2" max="16" step="0.5" value={period} onChange={e=>setPeriod(+e.target.value)}/></label>
+  <details><summary>{t.advanced}</summary><label>{t.heading}<strong>{heading.toFixed(0)}°</strong><input type="range" min="0" max="359" value={heading} onChange={e=>setHeading(+e.target.value)}/></label><label>{t.speed}<strong>{speed.toFixed(1)} m/s</strong><input type="range" min="0" max="8" step="0.25" value={speed} onChange={e=>setSpeed(+e.target.value)}/></label><label>{t.duration}<strong>{duration.toFixed(0)} s</strong><input type="range" min="4" max="30" step="1" value={duration} onChange={e=>setDuration(+e.target.value)}/></label></details>
+  <button type="button" onClick={reset}><RotateCcw size={16}/>{t.reset}</button>
+ </aside><section className="d12-stage"><div className="d12-title"><Rotate3D size={17}/><span>{t.cause}</span></div>{error?<div className="d12-error">{t.error}</div>:!data?<div className="d12-error">{t.loading}</div>:<>
+  <article><div className="d12-title"><Waves size={17}/><span>{t.series}</span></div><svg className="d12-series" viewBox="0 0 660 150"><line x1="0" y1="75" x2="660" y2="75" stroke="currentColor" strokeOpacity=".14"/><path className={dof==='heave'?'heave':dof} d={seriesPath(data.samples,key,dof==='heave'?-3:-20,dof==='heave'?3:20)}/></svg><div className="d12-read"><span>{t.peak}<strong>{selectedValue.toFixed(dof==='heave'?2:1)} {selectedUnit}</strong></span><span>t<strong>{sample?.time_seconds.toFixed(2)} s</strong></span></div></article>
+  {consequence&&<article className="d12-consequences"><div className="d12-title"><Ship size={17}/><span>{t.response}</span></div><p className="d12-consequence-lead">{t.note}</p><div className="d12-consequence-grid"><section className="d12-sounding-panel"><h3>{t.soundings}</h3><svg className="d12-sounding-plan" viewBox="0 0 100 100"><line x1="50" y1="5" x2="50" y2="95"/><line x1="5" y1="50" x2="95" y2="50"/>{consequence.beams.map(b=>{const r=point(b.reference_intersection),m=point(b.moved_intersection);return <g key={b.beam}>{r&&m&&<line className="shift" x1={r.x} y1={r.y} x2={m.x} y2={m.y}/>} {r&&<circle className="reference" cx={r.x} cy={r.y} r="2.2"/>}{m&&<circle className={`moved ${b.beam}`} cx={m.x} cy={m.y} r="2.8"/>}</g>})}</svg><div className="d12-plan-legend"><span className="reference">{t.reference}</span><span className="moved">{t.moved}</span></div></section><section className="d12-swath-panel"><h3>{t.swath}</h3><div className="d12-read"><span>{t.reference}<strong>{consequence.swath.reference_width_m?.toFixed(2)??'—'} m</strong></span><span>{t.moved}<strong>{consequence.swath.moved_width_m?.toFixed(2)??'—'} m</strong></span><span>{t.change}<strong>{consequence.swath.width_change_m?.toFixed(2)??'—'} m</strong></span></div></section></div><section className="d12-beam-displacements"><div>{consequence.beams.map(b=><section key={b.beam}><strong>{beamName(b.beam)}</strong>{b.displacement?<><span>ΔN <b>{b.displacement.north_m.toFixed(2)} m</b></span><span>ΔE <b>{b.displacement.east_m.toFixed(2)} m</b></span><span>ΔD <b>{b.displacement.down_m.toFixed(2)} m</b></span></>:<span>—</span>}</section>)}</div></section></article>}
+ </>}</section></main></div>
 }
