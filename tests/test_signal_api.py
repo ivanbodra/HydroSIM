@@ -50,6 +50,82 @@ def test_cw_response_keeps_frequency_constant_and_ignores_lfm_controls():
     assert max(frequencies) == min(frequencies) == 100.0
 
 
+def test_d2_cw_resolution_and_relative_energy_follow_duration():
+    one_ms = prepare_signal_response(
+        SignalRequest(pulse_type="cw", duration_ms=1.0, sound_speed_mps=1500.0)
+    )
+    two_ms = prepare_signal_response(
+        SignalRequest(pulse_type="cw", duration_ms=2.0, sound_speed_mps=1500.0)
+    )
+
+    assert one_ms.ideal_range_resolution_m == pytest.approx(0.75)
+    assert two_ms.ideal_range_resolution_m == pytest.approx(1.5)
+    assert one_ms.range_resolution_basis == "cw_pulse_duration"
+    assert one_ms.range_resolution_kind == "ideal_analytical_reference"
+    assert one_ms.relative_energy == pytest.approx(1.0)
+    assert two_ms.relative_energy == pytest.approx(2.0)
+    assert one_ms.relative_energy_reference_duration_ms == pytest.approx(1.0)
+    assert one_ms.relative_energy_kind == "normalized_waveform_energy_proxy"
+    assert one_ms.sound_speed_mps == pytest.approx(1500.0)
+
+
+def test_d2_lfm_resolution_depends_on_bandwidth_not_duration():
+    short = prepare_signal_response(
+        SignalRequest(
+            pulse_type="lfm",
+            duration_ms=1.0,
+            bandwidth_khz=100.0,
+            sound_speed_mps=1500.0,
+        )
+    )
+    long = prepare_signal_response(
+        SignalRequest(
+            pulse_type="lfm",
+            duration_ms=2.0,
+            bandwidth_khz=100.0,
+            sound_speed_mps=1500.0,
+        )
+    )
+    wider = prepare_signal_response(
+        SignalRequest(
+            pulse_type="lfm",
+            duration_ms=1.0,
+            bandwidth_khz=200.0,
+            sound_speed_mps=1500.0,
+        )
+    )
+
+    assert short.ideal_range_resolution_m == pytest.approx(0.0075)
+    assert long.ideal_range_resolution_m == pytest.approx(short.ideal_range_resolution_m)
+    assert wider.ideal_range_resolution_m == pytest.approx(0.00375)
+    assert short.range_resolution_basis == "lfm_swept_bandwidth"
+    assert short.relative_energy == pytest.approx(1.0)
+    assert long.relative_energy == pytest.approx(2.0)
+
+
+def test_d2_tukey_envelope_reduces_relative_energy_without_changing_ideal_reference():
+    rectangular = prepare_signal_response(
+        SignalRequest(
+            pulse_type="lfm",
+            duration_ms=1.0,
+            bandwidth_khz=100.0,
+            envelope_model="rectangular",
+        )
+    )
+    tapered = prepare_signal_response(
+        SignalRequest(
+            pulse_type="lfm",
+            duration_ms=1.0,
+            bandwidth_khz=100.0,
+            envelope_model="tukey",
+        )
+    )
+
+    assert tapered.ideal_range_resolution_m == pytest.approx(rectangular.ideal_range_resolution_m)
+    assert tapered.relative_energy < rectangular.relative_energy
+    assert tapered.metadata["energy_scope"] == "single normalized pulse; PRF/cadence excluded"
+
+
 def test_wave_kinematics_response_exposes_canonical_period_wavelength_and_traces():
     response = prepare_wave_kinematics_response(
         WaveKinematicsRequest(
