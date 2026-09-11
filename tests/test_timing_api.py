@@ -87,6 +87,76 @@ def test_d14_timeline_is_chronologically_sorted() -> None:
     }
 
 
+def test_d14_fixed_clock_offset_changes_timestamp_not_physical_epochs() -> None:
+    baseline = prepare_d14_timing_response(D14TimingRequest(
+        trigger_time_s=10.0,
+        tx_delay_ms=20.0,
+        rx_start_delay_ms=20.0,
+        sensor_sample_time_s=9.5,
+        sensor_latency_ms=125.0,
+        synchronization_mode="fixed_clock_offset",
+        clock_offset_ms=0.0,
+        apply_clock_correction=False,
+    ))
+    ahead = prepare_d14_timing_response(D14TimingRequest(
+        trigger_time_s=10.0,
+        tx_delay_ms=20.0,
+        rx_start_delay_ms=20.0,
+        sensor_sample_time_s=9.5,
+        sensor_latency_ms=125.0,
+        synchronization_mode="fixed_clock_offset",
+        clock_offset_ms=250.0,
+        apply_clock_correction=False,
+    ))
+
+    assert ahead.sensor_sample_time_s == pytest.approx(baseline.sensor_sample_time_s)
+    assert ahead.sensor_available_time_s == pytest.approx(baseline.sensor_available_time_s)
+    assert ahead.tx_time_s == pytest.approx(baseline.tx_time_s)
+    assert ahead.clock_synchronization.sensor_reported_time_s == pytest.approx(9.75)
+    assert ahead.clock_synchronization.clock_offset_s == pytest.approx(0.25)
+    assert ahead.clock_synchronization.clock_epoch_error_s == pytest.approx(0.25)
+
+
+def test_d14_known_clock_offset_correction_recovers_common_measurement_epoch() -> None:
+    response = prepare_d14_timing_response(D14TimingRequest(
+        sensor_sample_time_s=2.0,
+        synchronization_mode="fixed_clock_offset",
+        clock_offset_ms=-40.0,
+        apply_clock_correction=True,
+    ))
+    clock = response.clock_synchronization
+
+    assert clock.sensor_reported_time_s == pytest.approx(1.96)
+    assert clock.corrected_common_time_s == pytest.approx(2.0)
+    assert clock.interpreted_measurement_time_s == pytest.approx(2.0)
+    assert clock.clock_epoch_error_s == pytest.approx(0.0, abs=1e-12)
+
+
+def test_d14_latency_changes_availability_not_reported_timestamp() -> None:
+    fast = prepare_d14_timing_response(D14TimingRequest(
+        sensor_sample_time_s=1.0,
+        sensor_latency_ms=10.0,
+        synchronization_mode="fixed_clock_offset",
+        clock_offset_ms=100.0,
+    ))
+    slow = prepare_d14_timing_response(D14TimingRequest(
+        sensor_sample_time_s=1.0,
+        sensor_latency_ms=210.0,
+        synchronization_mode="fixed_clock_offset",
+        clock_offset_ms=100.0,
+    ))
+
+    assert slow.clock_synchronization.sensor_reported_time_s == pytest.approx(
+        fast.clock_synchronization.sensor_reported_time_s
+    )
+    assert slow.sensor_available_time_s - fast.sensor_available_time_s == pytest.approx(0.2)
+
+
+def test_d14_ideal_common_time_rejects_nonzero_clock_offset() -> None:
+    with pytest.raises(ValidationError, match="clock_offset_ms"):
+        D14TimingRequest(synchronization_mode="ideal_common_time", clock_offset_ms=1.0)
+
+
 def test_d14_rejects_rx_start_before_tx() -> None:
     with pytest.raises(ValidationError, match="trigger_time <= tx_time <= rx_start_time <= rx_end_time"):
         prepare_d14_timing_response(D14TimingRequest(tx_delay_ms=5.0, rx_start_delay_ms=2.0))
