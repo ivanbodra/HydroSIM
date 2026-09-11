@@ -71,7 +71,7 @@ PHYSICAL ARRAY GEOMETRY
 | D7 | Echosounders — SBES vs MBES | Mapped | `D07_echosounders_sbes_mbes.md` |
 | D8 | Bottom Detection | Mapped | `D08_bottom_detection.md` |
 | D9 | Multisector MBES | Mapped | `D09_multisector_mbes.md` |
-| D10 | Vessel & Sensor Configuration | Pending | `D10_vessel_sensor_configuration.md` |
+| D10 | Vessel & Sensor Configuration | Mapped | `D10_vessel_sensor_configuration.md` |
 | D11 | Vessel Motion | Pending | `D11_vessel_motion.md` |
 | D12 | PU & Sensor Integration | Pending | `D12_pu_sensor_integration.md` |
 | D13 | Timing, Synchronization & Latency | Pending | `D13_timing_sync_latency.md` |
