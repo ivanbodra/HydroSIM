@@ -2,7 +2,7 @@
 
 Status: **canonical modular specification — iterative**
 
-This directory is now the canonical editable pedagogical specification for the Acoustic Lab. Each lab is maintained in its own file so UX, Scientific Core, QA and implementation agents can load only the active block plus this overview.
+This directory is the canonical editable pedagogical specification for the Acoustic Lab. Each lab is maintained in its own file so UX, Scientific Core, QA and implementation agents can load only the active block plus this overview.
 
 The former monolithic specification is retained only as an archive snapshot and must not be treated as the active source of truth.
 
@@ -50,6 +50,24 @@ PHYSICAL ARRAY GEOMETRY
 - preserve `Truth != Observed != Configured != Estimated != Derived`;
 - vendor behavior is evidence, not universal law.
 
+## Mapped-lab completeness contract
+
+A lab may be marked **Mapped** only when its own modular file contains enough information for an implementation agent to know what the learner changes, what must visibly change, why it changes, what message should remain, and where that knowledge is reused. Every mapped lab must therefore contain:
+
+1. **Purpose**;
+2. **Dominant discovery** / central causal chain;
+3. **Inputs**, distinguishing primary from secondary/advanced where useful;
+4. **Outputs / visual response**;
+5. **Interaction sequence**;
+6. **Operational intuition / trade-offs**;
+7. an explicit **desired learner message / intuition**;
+8. **Scientific guardrails** and scope boundaries;
+9. **Dependencies / forward reuse**;
+10. **Current implementation delta**;
+11. **Recognized references** with author/institution, title, year/edition where available, and stable URL.
+
+Each active lab must receive fresh source research before final mapping. References are recorded locally in that lab file. A consolidated bibliography is intentionally deferred until D1–D17 are mapped so routine editing does not repeatedly load/update a global reference list.
+
 ## Source hierarchy
 
 1. IHO S-5A Ed. 2.0.0 (Aug 2026) — competence anchor.
@@ -73,7 +91,7 @@ PHYSICAL ARRAY GEOMETRY
 | D9 | Multisector MBES | Mapped | `D09_multisector_mbes.md` |
 | D10 | Vessel & Sensor Configuration | Mapped | `D10_vessel_sensor_configuration.md` |
 | D11 | Vessel Motion | Mapped | `D11_vessel_motion.md` |
-| D12 | PU & Sensor Integration | Pending | `D12_pu_sensor_integration.md` |
+| D12 | PU & Sensor Integration | Mapped | `D12_pu_sensor_integration.md` |
 | D13 | Timing, Synchronization & Latency | Pending | `D13_timing_sync_latency.md` |
 | D14 | Sounding Formation | Pending | `D14_sounding_formation.md` |
 | D15 | Survey Planning | Pending | `D15_survey_planning.md` |
