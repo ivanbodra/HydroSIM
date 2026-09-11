@@ -1,5 +1,7 @@
 # D7 — Echosounders: SBES vs MBES
 
+Status: **Mapped**
+
 **Decision:** `KEEP + REFINE + ADD EXPERIENCE`  
 **Current:** `web/pedagogical-explorer/src/EchosounderLab.tsx`
 
@@ -45,7 +47,9 @@ Required synchronized views:
 ## Operational intuition / trade-offs
 More RX beams increase simultaneous directional sampling; wider sectors increase coverage but outer-beam geometric cost; greater depth increases projected footprint and spacing; more formed beams increase density but not independent acoustic resolution; equidistant spacing changes angle distribution rather than physical beamwidth.
 
-## Guardrails
+Desired learner message: **an MBES fan is built from transmitted insonification plus many receive look directions; each direction samples a different geometry, so beam centre, footprint, sounding density and independent acoustic resolution must remain distinct.**
+
+## Scientific guardrails
 Do not model TX×RX as hard-edged polygon multiplication. Teach mechanism, not one vendor geometry as universal. Multisector sequencing belongs to D9. Keep beam centre, footprint and accepted bottom detection distinct; D8 owns detection. Footprint depends on beam shapes, range, incidence, pulse/time-gate effects where applicable and bottom geometry. Outer beams do not intrinsically have worse range resolution. Beam count/sounding density is not acoustic resolution.
 
 ## Dependencies / forward reuse
@@ -54,9 +58,9 @@ Consumes D2 pulse, D3 range/SNR, D5 TX/RX directivity, D6 beamforming/steering. 
 ## Implementation delta
 Add one TX response + many RX directions; explicit D6 shared-array bridge; selected `TX one-way -> RX one-way -> two-way response -> seafloor footprint`; independent along/across footprint geometry; fixed-scale nadir/intermediate/outer comparison; synchronized top-down and cross-section views; per-beam variation primary.
 
-## References
-- IHO S-5A Ed. 2.0.0 H2.
-- Hughes Clarke (2017), *Multibeam Echosounders*.
-- UNB Ocean Mapping Group publications.
-- Kongsberg EM beam-spacing note.
-- Kongsberg EM 710 Mk2 and EM 2040 MkII documentation.
+## Recognized references
+- **IHO S-5A Ed. 2.0.0 (Aug 2026), H2 hydrographic acoustics / echo sounding / multibeam competence** — SBES/MBES principles, beam geometry, footprint and spacing: <https://portal.iho.int/share/api/files/AAAAAAABALI/Standard%20S-5A%20Ed.2.0.0/S-5A_Ed2.0.0_05May26.pdf>
+- **Hughes Clarke, John E. (2017), “Multibeam Echosounders”** — MBES beam/swath geometry and practical resolution: <https://scholars.unh.edu/ccom/1370/>
+- **University of New Brunswick Ocean Mapping Group, Publications & Multibeam Sonar Theory class reports**: <https://www.omg.unb.ca/publications/>
+- **Kongsberg (2013), “Sector coverage and beam spacing modes for multibeam echosounders”** — equiangular/equidistant/High Density spacing as architecture-specific examples: <https://www.kongsberg.com/contentassets/058cd4fb2f1d417dab5f444f8f5cbf9a/em-sector-coverage-beam-spacing-modes.pdf>
+- **Kongsberg EM 2040 MKII product documentation** — modern MBES architecture and operational modes: <https://www.kongsberg.com/what-we-do/ocean-space/seafloor-mapping/em/EM2040-Mk2/>
