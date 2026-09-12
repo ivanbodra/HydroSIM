@@ -40,7 +40,7 @@ test('PED-D16 connects coverage, density, resolution evidence and efficiency in 
   await page.goto('/#tradeoff-lab');
   const languageControl=page.getByRole('button',{name:'Mudar idioma para português'});
   await expect(languageControl).toHaveCount(1);
-  await expect(page.getByText('Connected acquisition strip',{exact:true})).toBeVisible();
+  await expect(page.locator('.d16-scene').first()).toBeVisible();
   await expect(page.getByText('Coverage',{exact:true})).toBeVisible();
   await expect(page.getByText('Density',{exact:true})).toBeVisible();
   await expect(page.getByText('Resolution evidence',{exact:true})).toBeVisible();
