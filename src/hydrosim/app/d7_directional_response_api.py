@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import degrees, radians
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from hydrosim.acquisition.beam_spacing import make_equiangular_beam_plan
@@ -57,26 +59,35 @@ def prepare_d7_directional_response(request: D7DirectionalResponseRequest) -> D7
     if request.maximum_angle_deg <= request.minimum_angle_deg:
         raise ValueError("maximum_angle_deg must exceed minimum_angle_deg")
     plan = make_equiangular_beam_plan(
-        minimum_angle_rad=__import__("math").radians(request.minimum_angle_deg),
-        maximum_angle_rad=__import__("math").radians(request.maximum_angle_deg),
+        minimum_angle_rad=radians(request.minimum_angle_deg),
+        maximum_angle_rad=radians(request.maximum_angle_deg),
         beam_count=request.mbes_beam_count,
     )
     if request.selected_beam_index >= len(plan.across_track_angles_rad):
         raise ValueError("selected_beam_index must identify an MBES receive beam")
-    selected_deg = __import__("math").degrees(plan.across_track_angles_rad[request.selected_beam_index])
+    selected_deg = degrees(plan.across_track_angles_rad[request.selected_beam_index])
     step = (request.maximum_angle_deg - request.minimum_angle_deg) / (request.angular_sample_count - 1)
     angles = tuple(request.minimum_angle_deg + i * step for i in range(request.angular_sample_count))
     tx = _series(angles, steering=0.0, hpbw=request.transmit_across_track_beamwidth_deg)
     rx = _series(angles, steering=selected_deg, hpbw=request.receive_across_track_beamwidth_deg)
-    two_field = tuple(a * b for a, b in zip(tx.normalized_field_amplitude, rx.normalized_field_amplitude, strict=True))
-    two_power = tuple(a * b for a, b in zip(tx.normalized_power, rx.normalized_power, strict=True))
+    two_field = tuple(
+        a * b
+        for a, b in zip(tx.normalized_field_amplitude, rx.normalized_field_amplitude, strict=True)
+    )
+    two_power = tuple(
+        a * b for a, b in zip(tx.normalized_power, rx.normalized_power, strict=True)
+    )
     return D7DirectionalResponse(
         selected_beam_index=request.selected_beam_index,
         selected_receive_steering_deg=selected_deg,
         transmit_steering_deg=0.0,
         tx=tx,
         rx=rx,
-        two_way=D7DirectionalSeries(angle_deg=angles, normalized_field_amplitude=two_field, normalized_power=two_power),
+        two_way=D7DirectionalSeries(
+            angle_deg=angles,
+            normalized_field_amplitude=two_field,
+            normalized_power=two_power,
+        ),
         metadata={
             "pattern_source": "beamwidth_gaussian_proxy",
             "angle_frame": "sensor across-track; positive Port (-Y), negative Starboard (+Y)",
