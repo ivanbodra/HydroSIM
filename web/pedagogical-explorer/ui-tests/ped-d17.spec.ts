@@ -9,7 +9,7 @@ async function setRangeValue(locator: import('@playwright/test').Locator, value:
   }, value);
 }
 
-test('PED-D17 links acquisition controls to density and coverage outputs', async ({ page }) => {
+test('PED-D16 connects coverage, density, resolution evidence and efficiency in one acquisition strip', async ({ page }) => {
   const echoRequests: Array<Record<string, unknown>> = [];
   const multiRequests: Array<Record<string, unknown>> = [];
   const detectionRequests: Array<Record<string, unknown>> = [];
@@ -40,35 +40,41 @@ test('PED-D17 links acquisition controls to density and coverage outputs', async
   await page.goto('/#tradeoff-lab');
   const languageControl=page.getByRole('button',{name:'Mudar idioma para português'});
   await expect(languageControl).toHaveCount(1);
-  await expect(page.getByText('High Density points')).toBeVisible();
-  await expect(page.getByText('Survey coverage',{exact:true})).toBeVisible();
+  await expect(page.locator('.d16-scene').first()).toBeVisible();
+  await expect(page.getByText('Coverage',{exact:true})).toBeVisible();
+  await expect(page.getByText('Density',{exact:true})).toBeVisible();
+  await expect(page.getByText('Resolution evidence',{exact:true})).toBeVisible();
+  await expect(page.getByText('Efficiency evidence',{exact:true})).toBeVisible();
   await expect(page.getByText('0.30 m').first()).toBeVisible();
   await expect(page.getByText('Gapped').first()).toBeVisible();
 
-  const depth=page.locator('label').filter({hasText:'Depth'}).locator('input');
-  await setRangeValue(depth,'200');
-  await expect.poll(()=>echoRequests.at(-1)?.vertical_separation_m).toBe(200);
-
-  const frequency=page.locator('label').filter({hasText:'Sector frequency'}).locator('input');
-  await setRangeValue(frequency,'400');
-  await expect.poll(()=>((multiRequests.at(-1)?.sectors as Array<Record<string,unknown>>)?.[1]?.frequency_khz)).toBe(400);
-
-  await page.locator('label').filter({hasText:'Bottom detection'}).locator('select').selectOption('multiple');
-  await expect.poll(()=>detectionRequests.at(-1)?.multiple_detection).toBe(true);
-  await page.locator('label').filter({hasText:'High Density'}).locator('select').selectOption('on');
+  const scene=page.locator('.d16-scene');
+  const coverageGeometry=await scene.getAttribute('data-coverage-geometry');
+  await page.getByRole('combobox',{name:'High Density'}).selectOption('on');
   await expect.poll(()=>((detectionRequests.at(-1)?.high_density as Record<string,unknown>)?.high_density_enabled)).toBe(true);
-  await expect(page.getByText('5.0×').first()).toBeVisible();
+  await expect(scene).toHaveAttribute('data-coverage-geometry',coverageGeometry??'');
+  await expect(page.getByText(/High Density adds detections inside the same coverage geometry/)).toBeVisible();
 
-  const pingRate=page.locator('label').filter({hasText:'Ping rate'}).locator('input');
+  const pingRate=page.getByRole('slider',{name:'Ping rate'});
   await setRangeValue(pingRate,'20');
   await expect.poll(()=>surveyRequests.at(-1)?.ping_rate_hz).toBe(20);
   await expect(page.getByText('0.15 m').first()).toBeVisible();
-  const speed=page.locator('label').filter({hasText:'Vessel speed'}).locator('input');
+  const speed=page.getByRole('slider',{name:'Vessel speed'});
   await setRangeValue(speed,'8');
   await expect.poll(()=>surveyRequests.at(-1)?.vessel_speed_knots).toBe(8);
 
+  await page.getByText('More upstream controls',{exact:true}).click();
+  const depth=page.locator('label').filter({hasText:'Depth'}).locator('input');
+  await setRangeValue(depth,'200');
+  await expect.poll(()=>echoRequests.at(-1)?.vertical_separation_m).toBe(200);
+  const frequency=page.locator('label').filter({hasText:'Sector frequency'}).locator('input');
+  await setRangeValue(frequency,'400');
+  await expect.poll(()=>((multiRequests.at(-1)?.sectors as Array<Record<string,unknown>>)?.[1]?.frequency_khz)).toBe(400);
+  await page.locator('label').filter({hasText:'Bottom detection'}).locator('select').selectOption('multiple');
+  await expect.poll(()=>detectionRequests.at(-1)?.multiple_detection).toBe(true);
+
   await languageControl.click();
   await expect(page.getByRole('button',{name:'Switch language to English'})).toHaveCount(1);
-  await expect(page.getByText('Cobertura do levantamento',{exact:true})).toBeVisible();
-  await expect(page.getByText('Espaçamento longitudinal entre pings',{exact:true}).first()).toBeVisible();
+  await expect(page.getByText('Cobertura',{exact:true})).toBeVisible();
+  await expect(page.getByText('Espaçamento longitudinal entre pings',{exact:false}).first()).toBeVisible();
 });
