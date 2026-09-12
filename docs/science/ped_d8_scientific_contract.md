@@ -1,7 +1,7 @@
 # PED-D8 Scientific Contract — Echosounders: SBES vs MBES
 
 Status: authoritative pedagogical-generation contract  
-Experience: `PED-D8`  
+Experience: `PED-D8` (legacy numbering; current pedagogical requalification name: **D7 — Echosounders: SBES vs MBES**)  
 Scope: first production learner vertical slice
 
 ## Learning question
@@ -17,9 +17,10 @@ The first slice must reuse the existing Scientific Core:
 - `src/hydrosim/acquisition/beam_spacing.py` — canonical equiangular and equidistant receive-beam steering plans;
 - `src/hydrosim/acquisition/layered_propagation.py` — canonical ray endpoints for the configured sound-speed profile;
 - `src/hydrosim/acquisition/footprint.py` — reference flat-seafloor half-power/pulse rectangular footprint approximation;
-- `src/hydrosim/acquisition/beam_pattern.py`, `array_factor.py`, `element_factor.py` — canonical ideal one-way directivity where a beam-pattern visualization is reused from PED-D6/PED-D7.
+- `src/hydrosim/acquisition/beam_pattern.py`, `array_factor.py`, `element_factor.py` — canonical ideal one-way directivity when a physical/registered array is available;
+- the canonical D7 beamwidth-defined directional-response helper — normalized Gaussian power-pattern proxy used only when nominal half-power beamwidths are available but no physical/registered array pattern is configured.
 
-The application/API and React layers may compose and serialize these results but must not independently recreate beam-spacing, ray-endpoint, or footprint equations.
+The application/API and React layers may compose and serialize these results but must not independently recreate beam-spacing, ray-endpoint, footprint, or directional-response equations.
 
 This PED-D8 identifier is distinct from the older `docs/science/d8_observation_state_contract.md`, which concerns the historical Sounding Formation / Detection Chain naming. That document remains authoritative for state semantics where applicable but does not define this pedagogical SBES-vs-MBES experience.
 
@@ -34,6 +35,7 @@ Minimum controls for the first slice:
 - sound-speed profile used by the canonical propagation path; a constant profile is sufficient for the simplest anchor;
 - pulse duration `tau` [s] and sound speed used by the compact footprint approximation;
 - transmit along-track half-power beamwidth [rad];
+- transmit across-track half-power beamwidth [rad] when the selected directional-response view is used without a registered TX pattern;
 - receive across-track half-power beamwidth [rad];
 - for MBES only: receive beam count `N >= 2`, minimum and maximum across-track steering angles, and spacing method `equiangular` or `equidistant`;
 - for equidistant MBES: target depth and start depth required by the canonical solver.
@@ -54,7 +56,8 @@ Canonical learner outputs are:
 - pulse-limited across-track width [m] when defined by the canonical footprint model;
 - effective across-track footprint width, effective rectangular area, and limiting mechanism from `estimate_flat_seafloor_footprint()`;
 - incidence angle from the local flat-bottom normal for each reference beam in the simplified flat-bottom case;
-- optional canonical normalized directivity curves reused from PED-D6/PED-D7, if needed to explain that beamwidth is a response threshold rather than a hard physical edge.
+- selected TX one-way, selected RX one-way, and TX×RX two-way normalized directional-response series when the learner selects a beam;
+- explicit directional-response provenance identifying either a registered physical array pattern or the beamwidth-defined Gaussian proxy.
 
 These quantities are `Derived`. The first PED-D8 slice creates no new `Observed`, `Estimated`, or stochastic `Truth` state.
 
@@ -88,9 +91,60 @@ The first slice may display TX/RX as a single conceptual channel or co-aligned b
 
 MBES is represented as a common ping with multiple ideal receive beam-centre directions spanning the configured across-track sector. The learner should see that multiple beam centres intersect the seafloor across a swath in one ping.
 
-The first slice does not yet model a complete two-way Mills-Cross response. It may explain the conventional conceptual architecture — broad transmit insonification combined with multiple narrower steered receive beams — while using the existing footprint approximation (`transmit_along_track_beamwidth` × `receive_across_track_beamwidth`) for footprint geometry.
+The first slice does not require a complete physical two-way Mills-Cross array model. It may explain the conventional conceptual architecture — broad transmit insonification combined with multiple narrower steered receive beams — while using the existing footprint approximation (`transmit_along_track_beamwidth` × `receive_across_track_beamwidth`) for footprint geometry.
 
 Distinct TX sectors, sector tilts, frequencies, pulse schedules, dynamic receive focusing, and vendor-specific beamforming belong to later experiences, principally PED-D10 and future higher-fidelity extensions.
+
+## Selected directional-response rule
+
+The current D7 requalification requires a selected-beam directional-response view even when the echosounder configuration provides nominal half-power beamwidths but no physical/registered TX or RX array pattern. In that case HydroSIM uses a deliberately limited **beamwidth-defined Gaussian power-pattern proxy**.
+
+For full half-power beamwidth `beta > 0`, evaluation angle `theta`, and steering centre `theta0`, normalized one-way power is
+
+\[
+P(\theta;\theta_0,\beta)=\exp\left[-4\ln(2)\left(\frac{\theta-\theta_0}{\beta}\right)^2\right].
+\]
+
+The corresponding normalized nonnegative field amplitude is
+
+\[
+B(\theta;\theta_0,\beta)=\sqrt{P(\theta;\theta_0,\beta)}.
+\]
+
+This parameterization makes `P = 0.5` exactly at `theta = theta0 ± beta/2`, so `beta` is the full -3 dB / half-power beamwidth.
+
+For the first selected MBES view:
+
+- TX across-track steering is fixed at `theta_tx = 0` (nadir/broadside reference);
+- selected RX steering `theta_rx` is the selected canonical receive-beam steering angle returned by the beam plan;
+- TX and RX are evaluated on the same sensor-frame across-track angular grid;
+- positive angle remains Port and negative angle Starboard;
+- one-way responses are normalized independently to unity at their steering centres.
+
+Two-way composition follows the same field-domain rule as the registered-array Core:
+
+\[
+B_{2w}(\theta)=B_{tx}(\theta)B_{rx}(\theta),
+\]
+
+\[
+P_{2w}(\theta)=|B_{2w}(\theta)|^2=P_{tx}(\theta)P_{rx}(\theta).
+\]
+
+The proxy is **not** a recovered physical array. From nominal beamwidth alone HydroSIM must not infer:
+
+- acoustic frequency;
+- aperture dimensions;
+- element count or spacing;
+- element factor;
+- sidelobe levels or shape;
+- grating lobes;
+- taper/weighting;
+- manufacturer-specific transducer construction.
+
+Therefore the API must expose provenance such as `beamwidth_gaussian_proxy` so the learner-facing layer does not present the curve as a measured or physically reconstructed transducer pattern.
+
+If a registered physical TX/RX array or directional pattern is available, HydroSIM should use the existing physical Core path (`one_way_beam_pattern` / `two_way_beam_pattern[_sensor_frame]`) instead of fitting or converting that pattern to the Gaussian proxy.
 
 ## Equiangular versus equidistant beam spacing
 
@@ -124,7 +178,7 @@ Therefore PED-D8 may use this model to demonstrate:
 4. a beam footprint is finite even though the beam-centre position is a point;
 5. adjacent MBES footprints may overlap even when beam-centre soundings are distinct.
 
-The UI must not label the -3 dB footprint boundary as the absolute edge of acoustic energy. Sidelobes and energy outside the half-power contour exist in the underlying directivity concept.
+The UI must not label the -3 dB footprint boundary as the absolute edge of acoustic energy. Sidelobes and energy outside the half-power contour exist in a physical directivity pattern; the Gaussian proxy intentionally does not model sidelobes.
 
 ## Required cause → effect relationships
 
@@ -137,6 +191,7 @@ The first production experience must make these relationships observable:
 5. **Equidistant compensation** — the Core equidistant plan changes steering-angle increments so target-depth endpoint spacing is approximately constant.
 6. **Beam count effect** — for a fixed sector and spacing strategy, changing beam count changes adjacent beam-centre spacing; it does not by itself change the configured outer-sector limits.
 7. **Swath versus footprint distinction** — geometric swath width is an extent of beam-centre endpoints; footprint is the finite spatial support associated with an individual beam/pulse approximation. They must not be presented as the same quantity.
+8. **Selected two-way response** — changing the selected RX beam moves the RX directional-response centre and therefore the TX×RX two-way response while the TX across-track steering remains fixed in the first slice.
 
 ## Sounding-spacing boundary
 
@@ -165,6 +220,8 @@ The first PED-D8 slice assumes:
 - no dynamic receive focusing;
 - no along-track vessel-motion coverage model.
 
+For the beamwidth-defined Gaussian proxy specifically, the validity statement is narrower: it is a normalized didactic directional-response shape constrained only by nominal HPBW and steering centre. It is not evidence of a physical transducer's sidelobes, aperture, frequency response, or array construction.
+
 Layered sound-speed propagation may be used by the equidistant beam-spacing solver because that physics already exists in the Core. However, the compact footprint approximation remains a flat-bottom geometric approximation and must not be misrepresented as a full refracted 2-D footprint projection.
 
 ## Minimum scientific acceptance anchors
@@ -181,7 +238,12 @@ Engineering/tests for the PED-D8 adapter should preserve at least these properti
 - increasing flat-bottom depth with fixed angular sector increases geometric swath width;
 - the compact footprint output is obtained from `estimate_flat_seafloor_footprint()` rather than a duplicate frontend formula;
 - footprint width/area remain positive for valid inputs, and the limiting mechanism is reported from the Core;
-- equidistant requests outside the Core validity boundary fail explicitly rather than silently changing spacing strategy.
+- equidistant requests outside the Core validity boundary fail explicitly rather than silently changing spacing strategy;
+- Gaussian-proxy one-way power is `1` at `theta0` and `0.5` at `theta0 ± beta/2` within numerical tolerance;
+- selected RX proxy response peaks at the selected canonical RX steering angle;
+- TX proxy remains centred at `0` in the first selected-direction slice;
+- two-way proxy power equals pointwise `P_tx * P_rx`;
+- proxy metadata is explicit and no physical array parameters are inferred from HPBW.
 
 ## First production payload boundary
 
@@ -195,20 +257,26 @@ A minimal PED-D8 application adapter is scientifically sufficient if it returns,
 - representative or per-beam footprint results from the canonical compact footprint model;
 - explicit spacing-method metadata;
 - for equidistant mode, target positions returned by the Core;
+- selected TX one-way, RX one-way and two-way directional-response series plus response provenance when that view is requested;
 - explicit validity/error state when an unsupported configuration is requested.
 
-The adapter may provide a synchronized SBES/MBES comparison payload for the same depth, sound-speed and beamwidth assumptions. It must not introduce a second geometry implementation in the application layer.
+The adapter may provide a synchronized SBES/MBES comparison payload for the same depth, sound-speed and beamwidth assumptions. It must not introduce a second geometry or directional-response implementation in the application layer.
 
 ## References / traceability
 
 Primary HydroSIM sources for this contract:
 
-- `docs/pedagogy/hydrosim_pedagogical_plan.md` — PED-D8 learning scope;
+- `docs/pedagogy/hydrosim_pedagogical_plan.md` — historical PED-D8 learning scope;
+- `docs/pedagogy/acoustic_lab/D07_echosounders_sbes_mbes.md` — current D7 pedagogical requalification;
 - `docs/science/ped_d6_scientific_contract.md` — array/directivity construction boundary;
 - `docs/science/ped_d7_scientific_contract.md` — electronic steering and sign conventions;
 - `src/hydrosim/acquisition/beam_spacing.py`;
 - `src/hydrosim/acquisition/layered_propagation.py`;
 - `src/hydrosim/acquisition/footprint.py`;
-- `src/hydrosim/acquisition/beam_pattern.py`.
+- `src/hydrosim/acquisition/beam_pattern.py`;
+- `src/hydrosim/acquisition/two_way_pattern.py`;
+- scientific disposition #435 and implementation handoff #441 for the beamwidth-defined Gaussian proxy.
 
-PED-D8 therefore advances the learner from `how one beam is formed and steered` to `how one or many beam centres and footprints map onto the seafloor`, while leaving detection and operational multisector behavior to their dedicated experiences.
+The Gaussian proxy is an **internal didactic/analytic contract**, not an externally attributed transducer model. Therefore no new external bibliography entry is required solely for this proxy.
+
+This legacy-numbered PED-D8 contract therefore remains the scientific authority for the current D7 Echosounders experience while preserving historical traceability.
