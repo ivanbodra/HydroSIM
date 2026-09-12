@@ -37,6 +37,11 @@ from hydrosim.app.echosounder_api import (
     D8EchosounderResponse,
     prepare_d8_echosounder_response,
 )
+from hydrosim.app.echosounder_directional_api import (
+    D7SelectedDirectionalRequest,
+    D7SelectedDirectionalResponse,
+    prepare_d7_selected_directional_response,
+)
 from hydrosim.app.multisector_api import (
     D10MultisectorRequest,
     D10MultisectorResponse,
@@ -382,6 +387,18 @@ def create_fastapi_app():
     def echosounders(request: D8EchosounderRequest) -> D8EchosounderResponse:
         try:
             return prepare_d8_echosounder_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post(
+        "/api/v1/pedagogical/echosounders/selected-directional-response",
+        response_model=D7SelectedDirectionalResponse,
+    )
+    def echosounder_selected_directional_response(
+        request: D7SelectedDirectionalRequest,
+    ) -> D7SelectedDirectionalResponse:
+        try:
+            return prepare_d7_selected_directional_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
