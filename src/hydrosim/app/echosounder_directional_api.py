@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from hydrosim.acquisition.beamwidth_pattern import gaussian_beamwidth_pattern
 from hydrosim.app.echosounder_api import (
@@ -10,8 +10,6 @@ from hydrosim.app.echosounder_api import (
     D8EchosounderResponse,
     prepare_d8_echosounder_response,
 )
-from hydrosim.app.array_api import D6PatternSeries
-from pydantic import BaseModel
 
 
 class D7SelectedDirectionalRequest(D8EchosounderRequest):
