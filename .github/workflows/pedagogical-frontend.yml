@@ -98,3 +98,9 @@ jobs:
           HYDROSIM_E2E_REAL_API: '1'
           HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
         run: npx playwright test ui-tests/ped-d1-d2-real-api.spec.ts
+
+      - name: Run D5 real React-Python smoke
+        env:
+          HYDROSIM_E2E_REAL_API: '1'
+          HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
+        run: npx playwright test ui-tests/ped-d5-real-api.spec.ts
