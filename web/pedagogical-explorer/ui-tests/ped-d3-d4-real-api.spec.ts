@@ -20,8 +20,8 @@ test.describe('D3/D4 real scientific API runtime boundary',()=>{
     await range.press('ArrowRight');
     await expect.poll(()=>statuses.length).toBeGreaterThan(beforeRange);
     expect(statuses.at(-1)).toBe(200);
-    const rl=rail.getByText(/Received level/).locator('..').locator('strong');
-    const snr=rail.getByText(/^SNR$/).locator('..').locator('strong');
+    const rl=rail.getByText('= Received level',{exact:true}).locator('..').locator('strong');
+    const snr=rail.getByText('= SNR',{exact:true}).locator('..').locator('strong');
     const rlBefore=await rl.textContent();
     const snrBefore=await snr.textContent();
     const noise=page.getByRole('slider',{name:'Noise level'});
@@ -44,6 +44,12 @@ test.describe('D3/D4 real scientific API runtime boundary',()=>{
     await expect.poll(()=>statuses.length).toBeGreaterThan(1);
     expect(statuses.at(-1)).toBe(200);
     await expect(page.getByTestId('processing-ray')).toHaveAttribute('points',/\d/);
+    // Comparison intentionally starts matched. Create the learner-visible mismatch through the Processing control.
+    const processing=page.getByRole('slider',{name:'Processing-profile sound speed'});
+    const beforeMismatch=statuses.length;
+    await processing.press('ArrowRight');
+    await expect.poll(()=>statuses.length).toBeGreaterThan(beforeMismatch);
+    expect(statuses.at(-1)).toBe(200);
     await expect(page.getByTestId('endpoint-error-vector')).toBeVisible();
     await expect(page.getByTestId('d4-error-sweep')).toBeVisible();
     await expect(page.getByText('Across-swath consequence',{exact:true})).toBeVisible();
