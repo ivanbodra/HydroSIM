@@ -15,9 +15,9 @@ test.describe('D5 real scientific API runtime boundary',()=>{
     await expect(page.getByText('Scientific API unavailable',{exact:true})).toHaveCount(0);
 
     const relation=page.getByTestId('d5-relation-strip');
-    const envelope=page.getByTestId('d5-main-lobe-envelope');
+    const envelopeGraphic=page.getByTestId('d5-main-lobe-envelope').getByRole('img');
     const beforeRelation=await relation.innerText();
-    const beforeEnvelope=await envelope.innerText();
+    const beforeEnvelope=await envelopeGraphic.getAttribute('aria-label');
     const beforeElements=await page.locator('.array-element').count();
 
     const frequency=page.getByRole('slider',{name:'Frequency'});
@@ -31,7 +31,7 @@ test.describe('D5 real scientific API runtime boundary',()=>{
     await expect.poll(()=>responses.length).toBeGreaterThan(2);
     expect(responses.at(-1)).toBe(200);
     await expect.poll(()=>page.locator('.array-element').count()).toBeGreaterThan(beforeElements);
-    await expect.poll(async()=>envelope.innerText()).not.toBe(beforeEnvelope);
+    await expect.poll(async()=>envelopeGraphic.getAttribute('aria-label')).not.toBe(beforeEnvelope);
     await expect(page.locator('.beamwidth-bracket')).toHaveCount(2);
     await expect(page.locator('.half-power-guide')).toHaveCount(2);
   });
