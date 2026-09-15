@@ -85,7 +85,7 @@ jobs:
       - name: Start production frontend on API-authorized origin
         shell: bash
         run: |
-          npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/hydrosim-pedagogical-dev.log 2>&1 &
+          npm run dev -- --host 127.0.0.1 --port 5173 --strictPort > /tmp/hydrosim-pedagogical-dev.log 2>&1 &
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:5173/ >/dev/null; then exit 0; fi
             sleep 1
@@ -93,8 +93,8 @@ jobs:
           cat /tmp/hydrosim-pedagogical-dev.log
           exit 1
 
-      - name: Run PED-D2 real React-Python smoke
+      - name: Run D1/D2 real React-Python smoke
         env:
           HYDROSIM_E2E_REAL_API: '1'
           HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
-        run: npx playwright test ui-tests/ped-d2-real-api.spec.ts
+        run: npx playwright test ui-tests/ped-d1-d2-real-api.spec.ts
