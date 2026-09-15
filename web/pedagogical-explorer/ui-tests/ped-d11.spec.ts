@@ -17,8 +17,8 @@ test('PED-D10 sends configured vessel geometry and renders installation/referenc
   const languageControl=page.getByRole('button',{name:'Mudar idioma para português'});
   await expect(languageControl).toHaveCount(1);
   await expect(page.getByText('Vessel blueprint')).toBeVisible();
-  await expect(page.getByText('INSTALLATION MOVE')).toBeVisible();
-  await expect(page.getByText('REFERENCE MOVE')).toBeVisible();
+  await expect(page.getByText('INSTALLATION MOVE').first()).toBeVisible();
+  await expect(page.getByText('REFERENCE MOVE').first()).toBeVisible();
 
   await page.getByRole('button',{name:'Sonar'}).click();
   const txX=page.getByLabel('X · Forward');
