@@ -26,6 +26,7 @@ def test_constant_speed_profile_preserves_straight_ray_and_units() -> None:
     assert ray.horizontal_distance_m == pytest.approx(34.64101615137754)
     assert ray.path_length_m == pytest.approx(69.2820323027551)
     assert ray.travel_time_seconds == pytest.approx(ray.path_length_m / 1500.0)
+    assert response.error_sweep is None
     assert response.metadata["distance_unit"] == "m"
     assert response.metadata["angle_ui_unit"] == "deg from downward vertical"
     assert response.metadata["ray_outputs_state"] == "Derived"
@@ -105,6 +106,54 @@ def test_incorrect_processing_profile_exposes_derived_endpoint_error() -> None:
     assert abs(comparison.depth_endpoint_error_m) > 1e-6
     assert abs(comparison.horizontal_endpoint_error_m) > 1e-6
     assert response.metadata["processing_profile_state"] == "Configured"
+
+
+def test_error_sweep_returns_render_ready_authoritative_endpoint_errors() -> None:
+    angles = (0.0, 15.0, 30.0, 45.0)
+    response = prepare_d4_refraction_response(
+        D4RefractionRequest(
+            target_depth_m=100.0,
+            reference_profile=(
+                _layer(0.0, 50.0, 1480.0),
+                _layer(50.0, 150.0, 1520.0),
+            ),
+            processing_profile=(
+                _layer(0.0, 50.0, 1500.0),
+                _layer(50.0, 150.0, 1500.0),
+            ),
+            error_sweep_angles_deg_from_vertical=angles,
+        )
+    )
+
+    assert response.error_sweep is not None
+    assert tuple(sample.launch_angle_deg_from_vertical for sample in response.error_sweep) == angles
+    for sample in response.error_sweep:
+        assert sample.horizontal_endpoint_error_m == pytest.approx(
+            sample.processing_horizontal_endpoint_m - sample.reference_horizontal_endpoint_m
+        )
+        assert sample.depth_endpoint_error_m == pytest.approx(
+            sample.processing_depth_endpoint_m - 100.0
+        )
+    assert response.error_sweep[0].horizontal_endpoint_error_m == pytest.approx(0.0, abs=1e-12)
+    assert response.metadata["error_sweep_state"].startswith("Derived from Truth")
+
+
+def test_identical_profiles_close_error_sweep_at_every_angle() -> None:
+    profile = (
+        _layer(0.0, 50.0, 1490.0),
+        _layer(50.0, 150.0, 1520.0),
+    )
+    response = prepare_d4_refraction_response(
+        D4RefractionRequest(
+            target_depth_m=100.0,
+            reference_profile=profile,
+            processing_profile=profile,
+            error_sweep_angles_deg_from_vertical=(0.0, 20.0, 40.0),
+        )
+    )
+    assert response.error_sweep is not None
+    assert all(abs(sample.horizontal_endpoint_error_m) < 1e-9 for sample in response.error_sweep)
+    assert all(abs(sample.depth_endpoint_error_m) < 1e-9 for sample in response.error_sweep)
 
 
 def test_profile_domain_is_not_silently_extrapolated() -> None:
