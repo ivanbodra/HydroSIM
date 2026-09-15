@@ -49,11 +49,17 @@ class D4RefractionRequest(BaseModel):
         D4ProfileLayer(top_depth_m=50.0, bottom_depth_m=150.0, sound_speed_mps=1520.0),
     )
     processing_profile: tuple[D4ProfileLayer, ...] | None = None
+    error_sweep_angles_deg_from_vertical: tuple[float, ...] | None = None
 
     @model_validator(mode="after")
     def _validate_depths(self) -> "D4RefractionRequest":
         if self.target_depth_m <= self.start_depth_m:
             raise ValueError("target_depth_m must exceed start_depth_m")
+        if self.error_sweep_angles_deg_from_vertical is not None:
+            if not self.error_sweep_angles_deg_from_vertical:
+                raise ValueError("error_sweep_angles_deg_from_vertical must not be empty")
+            if any(angle < 0.0 or angle >= 90.0 for angle in self.error_sweep_angles_deg_from_vertical):
+                raise ValueError("error sweep angles must be in [0, 90) deg from vertical")
         return self
 
 
@@ -95,6 +101,17 @@ class D4ProfileComparison(BaseModel):
     travel_time_difference_seconds: float
 
 
+class D4ErrorSweepSample(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    launch_angle_deg_from_vertical: float
+    reference_horizontal_endpoint_m: float
+    processing_horizontal_endpoint_m: float
+    processing_depth_endpoint_m: float
+    horizontal_endpoint_error_m: float
+    depth_endpoint_error_m: float
+
+
 class D4RefractionResponse(BaseModel):
     """Stable render-ready PED-D4 contract derived from canonical Core outputs."""
 
@@ -102,6 +119,7 @@ class D4RefractionResponse(BaseModel):
 
     reference_ray: D4RayResult
     profile_comparison: D4ProfileComparison | None
+    error_sweep: tuple[D4ErrorSweepSample, ...] | None
     metadata: dict[str, str | float]
 
 
@@ -145,11 +163,35 @@ def _serialize_ray(path: LayeredRayPath) -> D4RayResult:
     )
 
 
+def _compare_at_angle(
+    *,
+    angle_deg: float,
+    reference_profile: LayeredSoundSpeedProfile,
+    processing_profile: LayeredSoundSpeedProfile,
+    start_depth_m: float,
+    target_depth_m: float,
+) -> tuple[LayeredRayPath, LayeredRayPath]:
+    angle_rad = radians(angle_deg)
+    reference_path = trace_layered_ray_to_depth(
+        profile=reference_profile,
+        launch_angle_from_vertical_rad=angle_rad,
+        target_depth_m=target_depth_m,
+        start_depth_m=start_depth_m,
+    )
+    processing_path = trace_layered_ray_for_travel_time(
+        profile=processing_profile,
+        launch_angle_from_vertical_rad=angle_rad,
+        travel_time_seconds=float(reference_path.travel_time_seconds),
+        start_depth_m=start_depth_m,
+    )
+    return reference_path, processing_path
+
+
 def prepare_d4_refraction_response(request: D4RefractionRequest) -> D4RefractionResponse:
     """Evaluate PED-D4 through the canonical layered propagation Core."""
 
-    angle_rad = radians(request.launch_angle_deg_from_vertical)
     reference_profile = _build_profile(request.reference_profile)
+    angle_rad = radians(request.launch_angle_deg_from_vertical)
     reference_path = trace_layered_ray_to_depth(
         profile=reference_profile,
         launch_angle_from_vertical_rad=angle_rad,
@@ -159,6 +201,7 @@ def prepare_d4_refraction_response(request: D4RefractionRequest) -> D4Refraction
     reference_ray = _serialize_ray(reference_path)
 
     comparison = None
+    error_sweep = None
     if request.processing_profile is not None:
         processing_profile = _build_profile(request.processing_profile)
         processing_path = trace_layered_ray_for_travel_time(
@@ -185,10 +228,38 @@ def prepare_d4_refraction_response(request: D4RefractionRequest) -> D4Refraction
                 float(processing_path.travel_time_seconds) - float(reference_path.travel_time_seconds)
             ),
         )
+        if request.error_sweep_angles_deg_from_vertical is not None:
+            samples = []
+            for angle_deg in request.error_sweep_angles_deg_from_vertical:
+                sweep_reference, sweep_processing = _compare_at_angle(
+                    angle_deg=angle_deg,
+                    reference_profile=reference_profile,
+                    processing_profile=processing_profile,
+                    start_depth_m=request.start_depth_m,
+                    target_depth_m=request.target_depth_m,
+                )
+                samples.append(
+                    D4ErrorSweepSample(
+                        launch_angle_deg_from_vertical=angle_deg,
+                        reference_horizontal_endpoint_m=float(sweep_reference.horizontal_distance_m),
+                        processing_horizontal_endpoint_m=float(sweep_processing.horizontal_distance_m),
+                        processing_depth_endpoint_m=float(sweep_processing.target_depth_m),
+                        horizontal_endpoint_error_m=(
+                            float(sweep_processing.horizontal_distance_m)
+                            - float(sweep_reference.horizontal_distance_m)
+                        ),
+                        depth_endpoint_error_m=(
+                            float(sweep_processing.target_depth_m)
+                            - float(sweep_reference.target_depth_m)
+                        ),
+                    )
+                )
+            error_sweep = tuple(samples)
 
     return D4RefractionResponse(
         reference_ray=reference_ray,
         profile_comparison=comparison,
+        error_sweep=error_sweep,
         metadata={
             "angle_ui_unit": "deg from downward vertical",
             "angle_internal_unit": "rad from downward vertical",
@@ -199,5 +270,6 @@ def prepare_d4_refraction_response(request: D4RefractionRequest) -> D4Refraction
             "reference_profile_state": "Truth for comparison exercise; otherwise Configured",
             "processing_profile_state": "Configured",
             "ray_outputs_state": "Derived",
+            "error_sweep_state": "Derived from Truth reference travel time and Configured processing profile",
         },
     )
