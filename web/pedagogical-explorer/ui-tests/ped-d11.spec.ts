@@ -19,7 +19,7 @@ test('PED-D10 sends configured vessel geometry and renders installation/referenc
   await expect(page.getByText('Vessel blueprint')).toBeVisible();
   await expect(page.getByText('INSTALLATION MOVE').first()).toBeVisible();
 
-  await page.getByRole('button',{name:'Sonar'}).click();
+  await page.getByRole('tab',{name:'Sonar'}).click();
   const txX=page.getByLabel('X · Forward');
   await txX.evaluate((el:HTMLInputElement)=>{
     const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;
@@ -30,7 +30,7 @@ test('PED-D10 sends configured vessel geometry and renders installation/referenc
   await expect.poll(()=>((requests.at(-1)?.transducer_lever_arm_m as Record<string,unknown>)?.x)).toBe(6);
   await expect(page.getByText('Physical sensor position changes').first()).toBeVisible();
 
-  await page.getByRole('button',{name:'VRP'}).click();
+  await page.getByRole('tab',{name:'VRP'}).click();
   await expect(page.getByText('REFERENCE MOVE').first()).toBeVisible();
   await expect(page.getByText('Sensors stay fixed; only reference vectors change').first()).toBeVisible();
 
