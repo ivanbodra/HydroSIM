@@ -2,6 +2,8 @@ name: pedagogical-frontend
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'web/pedagogical-explorer/**'
       - 'src/hydrosim/app/**'
@@ -28,34 +30,26 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
-
       - name: Resolve production lockfile
         run: npm install --package-lock-only --ignore-scripts
-
       - name: Install frontend dependencies
         run: npm ci
-
       - name: Install HydroSIM web bridge
         working-directory: ${{ github.workspace }}
         run: python -m pip install -e '.[web]'
-
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-
       - name: Build production frontend
         run: npm run build
-
       - name: Start built frontend
         shell: bash
         run: |
@@ -66,10 +60,8 @@ jobs:
           done
           cat /tmp/hydrosim-pedagogical-preview.log
           exit 1
-
       - name: Run focused learner UI tests
         run: npm run test:ui
-
       - name: Start real pedagogical API
         working-directory: ${{ github.workspace }}
         shell: bash
@@ -81,7 +73,6 @@ jobs:
           done
           cat /tmp/hydrosim-api.log
           exit 1
-
       - name: Start production frontend on API-authorized origin
         shell: bash
         run: |
@@ -92,15 +83,22 @@ jobs:
           done
           cat /tmp/hydrosim-pedagogical-dev.log
           exit 1
-
-      - name: Run D1-D4 real React-Python smoke
-        env:
-          HYDROSIM_E2E_REAL_API: '1'
-          HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
+      - name: Run D1-D4 real React-Python regression
+        if: github.event_name != 'pull_request'
+        env: { HYDROSIM_E2E_REAL_API: '1', HYDROSIM_UI_BASE_URL: 'http://127.0.0.1:5173' }
         run: npx playwright test ui-tests/ped-d1-d2-real-api.spec.ts ui-tests/ped-d3-d4-real-api.spec.ts
-
-      - name: Run D5 real React-Python smoke
-        env:
-          HYDROSIM_E2E_REAL_API: '1'
-          HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
+      - name: Run D5 real React-Python regression
+        if: github.event_name != 'pull_request'
+        env: { HYDROSIM_E2E_REAL_API: '1', HYDROSIM_UI_BASE_URL: 'http://127.0.0.1:5173' }
         run: npx playwright test ui-tests/ped-d5-real-api.spec.ts
+      - name: Run D7 real React-Python smoke
+        env: { HYDROSIM_E2E_REAL_API: '1', HYDROSIM_UI_BASE_URL: 'http://127.0.0.1:5173' }
+        run: npx playwright test ui-tests/ped-d7-real-api.spec.ts
+      - name: Run D8 real React-Python smoke
+        if: always()
+        env: { HYDROSIM_E2E_REAL_API: '1', HYDROSIM_UI_BASE_URL: 'http://127.0.0.1:5173' }
+        run: npx playwright test ui-tests/ped-d8-real-api.spec.ts
+      - name: Run D9 real React-Python smoke
+        if: always()
+        env: { HYDROSIM_E2E_REAL_API: '1', HYDROSIM_UI_BASE_URL: 'http://127.0.0.1:5173' }
+        run: npx playwright test ui-tests/ped-d9-real-api.spec.ts
