@@ -9,15 +9,23 @@ test('PED-D8 keeps learner controls wired to canonical echosounder outputs', asy
     const system={system:lastBody.selected_system,spacing_method:lastBody.selected_system==='sbes'?null:lastBody.spacing_method,beams,adjacent_across_track_spacings_m:lastBody.selected_system==='sbes'?[]:[80,80],geometric_beam_center_swath_width_m:lastBody.selected_system==='sbes'?0:160,target_across_track_positions_m:null};
     await route.fulfill({json:{selected_system:lastBody.selected_system,target_depth_m:lastBody.vertical_separation_m,sbes:lastBody.selected_system==='sbes'?system:{...system,system:'sbes',beams:[beams[1]??beams[0]],adjacent_across_track_spacings_m:[],geometric_beam_center_swath_width_m:0},mbes:lastBody.selected_system==='mbes'?system:{...system,system:'mbes'},metadata:{}}});
   });
+
   await page.goto('/#echosounder-lab');
-  await expect(page.locator('.lesson-location').getByText('D7',{exact:true})).toBeVisible();
-  await expect(page.getByText('160.0 m').first()).toBeVisible();
+
+  const lessonLocation=page.locator('.lesson-location');
   const comparisonReadouts=page.locator('.echo-readouts[aria-label="Synchronized SBES × MBES comparison"]');
+  const sbesButton=page.getByRole('button',{name:'SBES',exact:true});
+  const languageButton=page.getByRole('button',{name:'Mudar idioma para português',exact:true});
+
+  await expect(lessonLocation.getByText('D7',{exact:true})).toBeVisible();
+  await expect(comparisonReadouts).toBeVisible();
   await expect(comparisonReadouts).toContainText('160.0 m');
-  await page.getByRole('button',{name:'SBES'}).click();
+
+  await sbesButton.click();
   await expect.poll(()=>lastBody?.selected_system).toBe('sbes');
   await expect(comparisonReadouts).toContainText('0.0 m');
-  await page.getByRole('button',{name:'Mudar idioma para português'}).click();
-  await expect(page.getByRole('button',{name:'Switch language to English'})).toBeVisible();
+
+  await languageButton.click();
+  await expect(page.getByRole('button',{name:'Switch language to English',exact:true})).toBeVisible();
   await expect(page.getByText('Controles do aluno',{exact:true})).toBeVisible();
 });
