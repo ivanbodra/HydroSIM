@@ -93,11 +93,11 @@ jobs:
           cat /tmp/hydrosim-pedagogical-dev.log
           exit 1
 
-      - name: Run D1/D2 real React-Python smoke
+      - name: Run D1-D4 real React-Python smoke
         env:
           HYDROSIM_E2E_REAL_API: '1'
           HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
-        run: npx playwright test ui-tests/ped-d1-d2-real-api.spec.ts
+        run: npx playwright test ui-tests/ped-d1-d2-real-api.spec.ts ui-tests/ped-d3-d4-real-api.spec.ts
 
       - name: Run D5 real React-Python smoke
         env:
