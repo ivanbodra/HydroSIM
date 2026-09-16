@@ -18,7 +18,6 @@ test('PED-D10 sends configured vessel geometry and renders installation/referenc
   await expect(languageControl).toHaveCount(1);
   await expect(page.getByText('Vessel blueprint')).toBeVisible();
   await expect(page.getByText('INSTALLATION MOVE').first()).toBeVisible();
-  await expect(page.getByText('REFERENCE MOVE').first()).toBeVisible();
 
   await page.getByRole('button',{name:'Sonar'}).click();
   const txX=page.getByLabel('X · Forward');
@@ -32,6 +31,7 @@ test('PED-D10 sends configured vessel geometry and renders installation/referenc
   await expect(page.getByText('Physical sensor position changes').first()).toBeVisible();
 
   await page.getByRole('button',{name:'VRP'}).click();
+  await expect(page.getByText('REFERENCE MOVE').first()).toBeVisible();
   await expect(page.getByText('Sensors stay fixed; only reference vectors change').first()).toBeVisible();
 
   await languageControl.click();
