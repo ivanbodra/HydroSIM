@@ -12,7 +12,7 @@ test('PED-D8 keeps learner controls wired to canonical echosounder outputs', asy
   await page.goto('/#echosounder-lab');
   await expect(page.locator('.lesson-location').getByText('D7',{exact:true})).toBeVisible();
   await expect(page.getByText('160.0 m').first()).toBeVisible();
-  await expect(page.getByLabel('Synchronized SBES × MBES comparison')).toContainText('160.0 m');
+  await expect(page.locator('.echo-readouts')).toContainText('160.0 m');
   await page.getByRole('button',{name:'SBES'}).click();
   await expect.poll(()=>lastBody?.selected_system).toBe('sbes');
   await expect(page.getByText('0.0 m').first()).toBeVisible();
