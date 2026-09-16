@@ -35,11 +35,20 @@ npm run dev
 
 Run the Python pedagogical API separately according to `docs/development/react_signal_bridge.md`.
 
-## Build and focused UI tests
+## Build and tests
 
 ```bash
 npm run build
 npm run test:ui
 ```
+
+Use the test layer that matches the change:
+
+- Python/Core/API tests protect scientific calculations, units, frames and request/response contracts.
+- Playwright lab tests protect learner actions and their visible consequences. Prefer semantic roles and observable behavior; do not depend on DOM nesting, CSS classes or superseded copy unless those are explicit requirements.
+- Visual review owns layout and presentation details that are not behavioral contracts.
+- React↔Python smoke tests are reserved for effects that cross the HTTP boundary and must use the Python API rather than a mocked route.
+
+During UX work, run the affected lab's Playwright test first. Run the broader UI suite before handoff. Use the React↔Python smoke when the change depends on API integration; CI remains the final integration check.
 
 Production CI should run from this directory. Changes to the concept sandbox must not silently alter the production frontend.
