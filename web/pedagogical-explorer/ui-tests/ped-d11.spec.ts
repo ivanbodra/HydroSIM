@@ -20,7 +20,7 @@ test('PED-D10 sends configured vessel geometry and renders installation/referenc
   await expect(page.getByText('INSTALLATION MOVE').first()).toBeVisible();
 
   await page.getByRole('tab',{name:'Sonar'}).click();
-  const txX=page.getByLabel('X · Forward');
+  const txX=page.getByRole('slider',{name:'X · Forward'});
   await txX.evaluate((el:HTMLInputElement)=>{
     const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;
     setter?.call(el,'6');
