@@ -29,10 +29,10 @@ test('PED-D10 sends configured vessel geometry and renders installation/referenc
     el.dispatchEvent(new Event('change',{bubbles:true}));
   });
   await expect.poll(()=>((requests.at(-1)?.transducer_lever_arm_m as Record<string,unknown>)?.x)).toBe(6);
-  await expect(page.getByText('Physical sensor position changes')).toBeVisible();
+  await expect(page.getByText('Physical sensor position changes').first()).toBeVisible();
 
   await page.getByRole('button',{name:'VRP'}).click();
-  await expect(page.getByText('Sensors stay fixed; only reference vectors change')).toBeVisible();
+  await expect(page.getByText('Sensors stay fixed; only reference vectors change').first()).toBeVisible();
 
   await languageControl.click();
   await expect(page.getByRole('button',{name:'Switch language to English'})).toHaveCount(1);
