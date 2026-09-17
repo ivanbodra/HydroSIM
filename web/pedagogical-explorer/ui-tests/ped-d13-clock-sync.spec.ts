@@ -47,9 +47,17 @@ test('D13 exposes measurement to availability to TX causality without frontend t
   await expect(page.getByText('Sample age').first()).toBeVisible();
   await expect(page.getByText('0.10 m')).toBeVisible();
 
+  const consequence = page.getByTestId('d13-position-consequence');
+  await expect(consequence).toHaveAttribute('data-consequence-m', '0.105');
+  await expect(consequence).toHaveAttribute('data-scale-px-per-m', '48');
+  await expect(consequence.locator('.ghost')).toHaveAttribute('style', /translateX\(5\.04px\)/);
+  const timeline = page.locator('svg.timing-svg');
+  await expect(timeline).toHaveAttribute('aria-label', /Position; 10 Hz; 20 ms; TX 41\.0 ms; Sample age 21\.0 ms; available/);
+
   await page.getByRole('button', { name: 'Attitude' }).click();
   await expect.poll(() => latestRequest?.selected_streams?.[0]).toBe('attitude');
   await expect(page.getByText('Sample age only — no metre consequence is inferred.')).toBeVisible();
+  await expect(page.getByTestId('d13-position-consequence')).toHaveCount(0);
 });
 
 test('D13 keeps synchronization distinct from latency and localized in PT-BR', async ({ page }) => {
@@ -66,8 +74,6 @@ test('D13 keeps synchronization distinct from latency and localized in PT-BR', a
   await offset.fill('12.5');
   await expect.poll(() => latestRequest?.clock_offset_ms).toBe(12.5);
 
-  // The configured offset is proven at the request boundary. The learner panel
-  // presents its timing consequence, not a duplicate configured-value readout.
   const synchronization = page.getByTestId('d13-clock-sync');
   await expect(synchronization).toContainText('Sensor-reported time32.5 ms');
   await expect(synchronization).toContainText('Interpreted common time20.0 ms');
@@ -76,4 +82,5 @@ test('D13 keeps synchronization distinct from latency and localized in PT-BR', a
   await page.evaluate(() => { sessionStorage.setItem('hydrosim-language', 'pt'); location.reload(); });
   await expect(page.getByText('Medição → disponibilidade → uso no TX')).toBeVisible();
   await expect(page.getByText('Consequência temporal no estado de posição')).toBeVisible();
+  await expect(page.locator('svg.timing-svg')).toHaveAttribute('aria-label', /Posição; 10 Hz; 20 ms; TX 41\.0 ms; Idade da amostra 21\.0 ms; disponível/);
 });
