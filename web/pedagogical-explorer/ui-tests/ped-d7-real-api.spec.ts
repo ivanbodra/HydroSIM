@@ -40,7 +40,6 @@ test('D7 real API: geometry and directional response follow learner controls', a
 
   await expect(page.getByTestId('d7-selected-directional')).toBeVisible();
   await expect(page.getByRole('img', { name: 'Selected directional response' })).toBeVisible();
-  await page.getByText('More', { exact: true }).click();
   const txAcross = page.getByRole('slider', { name: 'TX across-track beamwidth' });
   const requestCount = directionalRequests.length;
   const responseCount = directionalResponses.length;
