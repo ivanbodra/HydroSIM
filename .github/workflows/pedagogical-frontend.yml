@@ -95,43 +95,13 @@ jobs:
           cat /tmp/hydrosim-pedagogical-dev.log
           exit 1
 
-      - name: Run D1-D4 real React-Python smoke
-        id: runtime_d1_d4
+      - name: Run live React-Python integration suite
+        id: runtime_integration
         continue-on-error: true
-        env: &real_api_env
+        env:
           HYDROSIM_E2E_REAL_API: '1'
           HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
-        run: npx playwright test ui-tests/ped-d1-d2-real-api.spec.ts ui-tests/ped-d3-d4-real-api.spec.ts
-
-      - name: Run D7 real React-Python smoke
-        id: runtime_d7
-        continue-on-error: true
-        env: *real_api_env
-        run: npx playwright test ui-tests/ped-d7-real-api.spec.ts
-
-      - name: Run D8 real React-Python smoke
-        id: runtime_d8
-        continue-on-error: true
-        env: *real_api_env
-        run: npx playwright test ui-tests/ped-d8-real-api.spec.ts
-
-      - name: Run D9 real React-Python smoke
-        id: runtime_d9
-        continue-on-error: true
-        env: *real_api_env
-        run: npx playwright test ui-tests/ped-d9-real-api.spec.ts
-
-      - name: Run D12 real React-Python smoke
-        id: runtime_d12
-        continue-on-error: true
-        env: *real_api_env
-        run: npx playwright test ui-tests/ped-d12-real-api.spec.ts
-
-      - name: Run D13 real React-Python smoke
-        id: runtime_d13
-        continue-on-error: true
-        env: *real_api_env
-        run: npx playwright test ui-tests/ped-d13-real-api.spec.ts
+        run: npm run test:integration
 
       - name: Enforce learner and integration gates
         if: always()
@@ -139,25 +109,10 @@ jobs:
         shell: bash
         env:
           FOCUSED_UI: ${{ steps.focused_ui.outcome }}
-          D1_D4: ${{ steps.runtime_d1_d4.outcome }}
-          D7: ${{ steps.runtime_d7.outcome }}
-          D8: ${{ steps.runtime_d8.outcome }}
-          D9: ${{ steps.runtime_d9.outcome }}
-          D12: ${{ steps.runtime_d12.outcome }}
-          D13: ${{ steps.runtime_d13.outcome }}
+          INTEGRATION: ${{ steps.runtime_integration.outcome }}
         run: |
           printf '%-24s %s\n' \
             'focused learner UI' "$FOCUSED_UI" \
-            'D1-D4 React-Python' "$D1_D4" \
-            'D7 React-Python' "$D7" \
-            'D8 React-Python' "$D8" \
-            'D9 React-Python' "$D9" \
-            'D12 React-Python' "$D12" \
-            'D13 React-Python' "$D13"
+            'React-Python integration' "$INTEGRATION"
           test "$FOCUSED_UI" = success
-          test "$D1_D4" = success
-          test "$D7" = success
-          test "$D8" = success
-          test "$D9" = success
-          test "$D12" = success
-          test "$D13" = success
+          test "$INTEGRATION" = success
