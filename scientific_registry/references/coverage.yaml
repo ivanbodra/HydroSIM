@@ -1,4 +1,4 @@
-version: 0.1.1
+version: 0.2.0
 language: en
 purpose: >-
   Canonical map from HydroSIM scientific domains and explanatory contracts to stable
@@ -15,201 +15,106 @@ rules:
 
 domains:
   waveform_and_matched_filter:
-    documents:
-      - docs/science/signal_waveform_contract.md
-      - docs/science/ped_d1_d2_scientific_contract.md
-    references:
-      - lurton_2010_underwater_acoustics
-      - waite_2002_sonar_for_practising_engineers
-    evidence:
-      finite_CW_LFM_and_matched_filter: direct_source_general
-      period_wavelength_two_way_range: mathematical_identity
+    documents: [docs/science/signal_waveform_contract.md, docs/science/ped_d1_d2_scientific_contract.md]
+    references: [lurton_2010_underwater_acoustics, waite_2002_sonar_for_practising_engineers]
+    evidence: {finite_CW_LFM_and_matched_filter: direct_source_general, period_wavelength_two_way_range: mathematical_identity}
     status: covered
 
   sonar_equation_and_absorption:
-    documents:
-      - docs/science/sonar_equation_v0_1_contract.md
-      - docs/science/ped_d3_scientific_contract.md
-    references:
-      - ainslie_mccolm_1998_seawater_absorption
-      - francois_garrison_1982_absorption_part1
-      - francois_garrison_1982_absorption_part2
-      - waite_2002_sonar_for_practising_engineers
-    evidence:
-      absorption_model: direct_source
-      level_domain_active_sonar_structure: direct_source_general
+    documents: [docs/science/sonar_equation_v0_1_contract.md, docs/science/ped_d3_scientific_contract.md]
+    references: [ainslie_mccolm_1998_seawater_absorption, francois_garrison_1982_absorption_part1, francois_garrison_1982_absorption_part2, waite_2002_sonar_for_practising_engineers]
+    evidence: {absorption_model: direct_source, level_domain_active_sonar_structure: direct_source_general}
     status: covered
 
   sound_speed_and_refraction:
-    documents:
-      - docs/science/environmental_sound_speed_extension.md
-      - docs/science/sound_speed_at_transducer.md
-      - docs/science/ped_d4_scientific_contract.md
-      - docs/science/layered_svp_error_family.md
-      - docs/science/layered_svp_swath_curvature.md
-      - docs/science/layered_svp_interface_depth_sweep.md
-      - docs/science/layered_svp_interface_contrast_map.md
-      - docs/science/layered_svp_interface_contrast_local_sensitivity.md
-      - docs/science/layered_svp_interface_contrast_compensation_curve.md
-      - docs/science/layered_svp_interface_contrast_compensated_swath_response.md
-      - docs/science/layered_svp_interface_contrast_sensitivity_convergence.md
-    references:
-      - chen_millero_1977_sound_speed_seawater
-      - wong_zhu_1995_sound_speed_seawater
-      - ioc_scor_iapso_2010_teos10_manual
-      - beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed
-      - nistad_improved_water_column_sound_speed_ray_tracing
-      - kongsberg_em120_operator_manual_850_164112
-      - kongsberg_em1002_operator_manual_850_160977
-    internal_dependencies:
-      - scientific_registry/models/propagation/layered_snell_piecewise_constant.yaml
-      - scientific_registry/models/propagation/sound_speed_zero_thickness_boundary.yaml
-    evidence:
-      layered_Snell_geometry: direct_source_general
-      environmental_sound_speed_extension: derived_from_source
-      strict_no_silent_extrapolation: internal_contract
+    documents: [docs/science/environmental_sound_speed_extension.md, docs/science/sound_speed_at_transducer.md, docs/science/ped_d4_scientific_contract.md]
+    references: [chen_millero_1977_sound_speed_seawater, wong_zhu_1995_sound_speed_seawater, ioc_scor_iapso_2010_teos10_manual, beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed, nistad_improved_water_column_sound_speed_ray_tracing, kongsberg_em120_operator_manual_850_164112, kongsberg_em1002_operator_manual_850_160977]
+    evidence: {layered_Snell_geometry: direct_source_general, environmental_sound_speed_extension: derived_from_source, strict_no_silent_extrapolation: internal_contract}
     status: covered
 
   arrays_beamforming_and_directivity:
-    documents:
-      - docs/science/array_factor.md
-      - docs/science/beam_pattern.md
-      - docs/science/two_way_beam_pattern.md
-      - docs/science/principal_plane_array_tilt.md
-      - docs/science/principal_plane_array_tilt_sensitivity.md
-      - docs/science/principal_plane_array_tilt_sensitivity_map.md
-      - docs/science/principal_plane_array_tilt_sounding_error_map.md
-      - docs/science/principal_plane_array_tilt_depth_normalized_response.md
-      - docs/science/ped_d6_scientific_contract.md
-      - docs/science/ped_d6_steering_peak_interpretation.md
-      - docs/science/ped_d7_scientific_contract.md
-    references:
-      - van_trees_2002_optimum_array_processing
-      - lurton_2010_underwater_acoustics
-      - demer_et_al_2015_calibration_acoustic_instruments
-    evidence:
-      array_factor_and_spatial_filtering: direct_source_general
-      grating_lobe_relation: derived_from_source
-      mills_cross_description: direct_source
-      hydrosim_port_starboard_sign: internal_contract
+    documents: [docs/science/array_factor.md, docs/science/beam_pattern.md, docs/science/two_way_beam_pattern.md, docs/science/ped_d6_scientific_contract.md, docs/science/ped_d6_steering_peak_interpretation.md, docs/science/ped_d7_scientific_contract.md]
+    references: [van_trees_2002_optimum_array_processing, lurton_2010_underwater_acoustics, demer_et_al_2015_calibration_acoustic_instruments]
+    evidence: {array_factor_and_spatial_filtering: direct_source_general, grating_lobe_relation: derived_from_source, mills_cross_description: direct_source, hydrosim_port_starboard_sign: internal_contract}
     status: covered
 
   bottom_detection_and_high_density:
-    documents:
-      - docs/science/d8_observation_state_contract.md
-      - docs/science/ped_d9_scientific_contract.md
-      - docs/science/ped_d9_detection_extension_contract.md
-      - docs/science/ped_d9_high_density_phase_contract.md
-    references:
-      - lurton_2003_acoustical_measurement_accuracy
-      - bourguignon_et_al_2009_me70_bottom_detection
-      - kongsberg_em2040_instruction_manual_346210
-    evidence:
-      split_aperture_phase_zero_crossing: direct_source
-      high_density_multiple_points_per_beam: direct_source_manufacturer
-      hydrosim_phase_inversion_and_decimation: derived_from_source
-      generic_threshold_multiple_peak_policy: pedagogical_internal_contract
+    documents: [docs/science/d8_observation_state_contract.md, docs/science/ped_d9_scientific_contract.md, docs/science/ped_d9_detection_extension_contract.md, docs/science/ped_d9_high_density_phase_contract.md]
+    references: [lurton_2003_acoustical_measurement_accuracy, bourguignon_et_al_2009_me70_bottom_detection, kongsberg_em2040_instruction_manual_346210]
+    evidence: {split_aperture_phase_zero_crossing: direct_source, high_density_multiple_points_per_beam: direct_source_manufacturer, hydrosim_phase_inversion_and_decimation: derived_from_source, generic_threshold_multiple_peak_policy: pedagogical_internal_contract}
     status: covered
 
   multibeam_sector_and_geometry:
-    documents:
-      - docs/science/sonar_system_geometry_contracts.md
-      - docs/science/ped_d8_scientific_contract.md
-      - docs/science/ped_d10_scientific_contract.md
-      - docs/science/ped_d11_reference_geometry_contract.md
-      - docs/science/ped_d12_motion_consequence_contract.md
-    references:
-      - demer_et_al_2015_calibration_acoustic_instruments
-      - beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed
-      - kongsberg_em2040_instruction_manual_346210
-    evidence:
-      tx_rx_mills_cross_and_multibeam_context: direct_source_general
-      sector_timing_and_surface_sound_speed_context: direct_source
-      rigid_body_reference_geometry: mathematical_identity
-      hydrosim_frames_and_state_semantics: internal_contract
+    documents: [docs/science/sonar_system_geometry_contracts.md, docs/science/ped_d8_scientific_contract.md, docs/science/ped_d10_scientific_contract.md, docs/science/ped_d11_reference_geometry_contract.md, docs/science/ped_d12_motion_consequence_contract.md]
+    references: [demer_et_al_2015_calibration_acoustic_instruments, beaudoin_hughes_clarke_bartlett_2004_surface_sound_speed, kongsberg_em2040_instruction_manual_346210]
+    evidence: {tx_rx_mills_cross_and_multibeam_context: direct_source_general, sector_timing_and_surface_sound_speed_context: direct_source, rigid_body_reference_geometry: mathematical_identity, hydrosim_frames_and_state_semantics: internal_contract}
     status: covered
 
   sensor_integration_and_timing:
-    documents:
-      - docs/science/ped_d13_pu_sensor_integration_contract.md
-      - docs/science/ped_d14_timing_association_contract.md
-    references:
-      - iec_61162_1_2024
-      - nmea_0183_interface_standard
-      - hughes_clarke_2003_dynamic_motion_residuals
-    evidence:
-      maritime_serial_interface_semantics: direct_source_standard
-      baud_vs_update_rate_distinction: direct_source_standard
-      sample_availability_association_model: internal_contract
-      latency_motion_consequence: direct_source
+    documents: [docs/science/ped_d13_pu_sensor_integration_contract.md, docs/science/ped_d14_timing_association_contract.md]
+    references: [iec_61162_1_2024, nmea_0183_interface_standard, hughes_clarke_2003_dynamic_motion_residuals]
+    evidence: {maritime_serial_interface_semantics: direct_source_standard, baud_vs_update_rate_distinction: direct_source_standard, sample_availability_association_model: internal_contract, latency_motion_consequence: direct_source}
     status: covered
 
   survey_coverage_density_and_planning:
-    documents:
-      - docs/science/ped_d16_survey_planning_contract.md
-      - docs/science/ped_d17_coverage_density_contract.md
-    references:
-      - iho_s44_6_2_0_2024
-    internal_dependencies:
-      - docs/science/ped_d8_scientific_contract.md
-      - docs/science/ped_d9_high_density_phase_contract.md
-      - docs/science/ped_d10_scientific_contract.md
-    evidence:
-      speed_ping_spacing: mathematical_identity
-      footprint_union_gap_overlap: mathematical_geometry
-      line_spacing_from_fractional_overlap: mathematical_geometry
-      high_density_does_not_widen_parent_footprint: derived_from_source
-      iho_reference_role: standards_context_only
-    notes: >-
-      PED-D16/D17 do not claim IHO compliance. S-44 is context for survey-quality terminology;
-      the first-slice planning and coverage equations are deterministic geometry built from
-      canonical HydroSIM footprint/swath models.
+    documents: [docs/science/ped_d16_survey_planning_contract.md, docs/science/ped_d17_coverage_density_contract.md]
+    references: [iho_s44_6_2_0_2024]
+    evidence: {speed_ping_spacing: mathematical_identity, footprint_union_gap_overlap: mathematical_geometry, line_spacing_from_fractional_overlap: mathematical_geometry, high_density_does_not_widen_parent_footprint: derived_from_source, iho_reference_role: standards_context_only}
     status: covered
 
   uncertainty_and_verification:
-    documents:
-      - docs/science/uncertainty_error_verification_contract.md
-      - docs/science/ped_d18_scientific_contract.md
-    references:
-      - jcgm_100_2008_gum
-      - jcgm_100_2008_amd1_2026
-      - jcgm_101_2008_monte_carlo
-      - iho_s44_6_2_0_2024
-      - hughes_clarke_2003_dynamic_motion_residuals
-    evidence:
-      covariance_and_first_order_propagation: direct_source_standard
-      nonlinear_model_caution: direct_source_standard
-      monte_carlo_alternative: direct_source_standard
-      thu_tvu_hydrographic_context: direct_source_standard
-      truth_error_vs_residual_semantics: internal_contract
+    documents: [docs/science/uncertainty_error_verification_contract.md, docs/science/ped_d18_scientific_contract.md]
+    references: [jcgm_100_2008_gum, jcgm_100_2008_amd1_2026, jcgm_101_2008_monte_carlo, iho_s44_6_2_0_2024, hughes_clarke_2003_dynamic_motion_residuals]
+    evidence: {covariance_and_first_order_propagation: direct_source_standard, nonlinear_model_caution: direct_source_standard, monte_carlo_alternative: direct_source_standard, thu_tvu_hydrographic_context: direct_source_standard, truth_error_vs_residual_semantics: internal_contract}
     status: covered
 
   dynamic_motion_and_risc:
-    documents:
-      - docs/science/dynamic_motion_residuals.md
-      - docs/science/risc.md
-    references:
-      - hughes_clarke_2003_dynamic_motion_residuals
-      - maingot_2019_high_frequency_motion_residuals_thesis
-      - maingot_hughes_clarke_calder_2019_identification_estimation
-      - maingot_2019_motion_residuals_seminar
-    evidence:
-      dynamic_residual_taxonomy: direct_source
-      risc_model_and_parameters: direct_source
+    documents: [docs/science/dynamic_motion_residuals.md, docs/science/risc.md]
+    references: [hughes_clarke_2003_dynamic_motion_residuals, maingot_2019_high_frequency_motion_residuals_thesis, maingot_hughes_clarke_calder_2019_identification_estimation, maingot_2019_motion_residuals_seminar, maingot_2023_realtime_inter_sensor_calibration, jhc_ccom_2020_annual_report]
+    evidence: {dynamic_residual_taxonomy: direct_source, risc_model_and_parameters: direct_source, realtime_risc_continuation_and_external_error_sensitivity: direct_source}
     status: covered
 
   patch_test_calibration:
     documents:
+      - docs/science/patch_test_common_scientific_contract.md
+      - docs/science/patch_test_module_scientific_contract.md
       - docs/science/pitch_patch_test_v0_1_contract.md
+      - docs/science/patch_test_references_by_submodule.md
     references:
+      - iho_s5a_2_0_0_2026
+      - noaa_fpm_2020
       - noaa_ocean_exploration_2010_patch_test
       - noaa_hssd_2022
+      - rathnayake_lekkerkerk_2025_survey_systems_verification_calibration
       - r2sonic_2017_patch_test
+      - hughes_clarke_2003_dynamic_motion_residuals
+      - maingot_2019_high_frequency_motion_residuals_thesis
+      - maingot_hughes_clarke_calder_2019_identification_estimation
+      - maingot_2019_motion_residuals_seminar
+      - maingot_2023_realtime_inter_sensor_calibration
+      - jhc_ccom_2020_annual_report
+      - jerram_hoy_sowers_baechler_2019_okeanos_shakedown
+      - jerram_johnson_ferrini_2019_neil_armstrong_em710
+      - jerram_johnson_ferrini_2021_thompson_em302_qat
+      - johnson_beaudoin_et_al_2014_mbac_three_years
+      - kongsberg_2026_multibeam_survey_planning
     evidence:
-      reciprocal_pitch_line_geometry: direct_source_practice
-      slope_observability_guidance: direct_source_practice
-      iterative_pitch_null_minimum: direct_source_manufacturer_training
-      hydrosim_rms_estimator: derived_from_source
+      classic_four_parameter_patch_test: direct_source_practice
+      line_terrain_speed_direction_geometry: direct_source_practice
+      calibration_and_visual_verification: direct_source_practice
+      hydrosim_state_sign_and_additive_correction: internal_contract
+      latency_constant_velocity_scale: mathematical_geometry
+      hydrosim_rms_objectives: derived_from_source
+      synthetic_bias_through_reconstruction_not_display_shift: internal_contract
+      p5_holdout_truth_separation: internal_validation_contract
+      risc_boundary_and_six_parameter_model: direct_source
+    submodules:
+      P1: [iho_s5a_2_0_0_2026, noaa_fpm_2020, noaa_ocean_exploration_2010_patch_test, noaa_hssd_2022, rathnayake_lekkerkerk_2025_survey_systems_verification_calibration, r2sonic_2017_patch_test, hughes_clarke_2003_dynamic_motion_residuals, maingot_2019_high_frequency_motion_residuals_thesis]
+      P2: [iho_s5a_2_0_0_2026, noaa_fpm_2020, noaa_ocean_exploration_2010_patch_test, noaa_hssd_2022, rathnayake_lekkerkerk_2025_survey_systems_verification_calibration, r2sonic_2017_patch_test, kongsberg_2026_multibeam_survey_planning]
+      P3: [iho_s5a_2_0_0_2026, noaa_fpm_2020, noaa_ocean_exploration_2010_patch_test, noaa_hssd_2022, rathnayake_lekkerkerk_2025_survey_systems_verification_calibration, jerram_hoy_sowers_baechler_2019_okeanos_shakedown, jerram_johnson_ferrini_2019_neil_armstrong_em710, johnson_beaudoin_et_al_2014_mbac_three_years, hughes_clarke_2003_dynamic_motion_residuals]
+      P4: [noaa_fpm_2020, noaa_ocean_exploration_2010_patch_test, noaa_hssd_2022, rathnayake_lekkerkerk_2025_survey_systems_verification_calibration, r2sonic_2017_patch_test]
+      P5: [iho_s5a_2_0_0_2026, noaa_fpm_2020, noaa_ocean_exploration_2010_patch_test, noaa_hssd_2022, rathnayake_lekkerkerk_2025_survey_systems_verification_calibration, r2sonic_2017_patch_test, jerram_johnson_ferrini_2019_neil_armstrong_em710, jerram_johnson_ferrini_2021_thompson_em302_qat, johnson_beaudoin_et_al_2014_mbac_three_years, hughes_clarke_2003_dynamic_motion_residuals, maingot_2019_high_frequency_motion_residuals_thesis, maingot_hughes_clarke_calder_2019_identification_estimation]
+      P6: [maingot_2019_high_frequency_motion_residuals_thesis, maingot_hughes_clarke_calder_2019_identification_estimation, maingot_2019_motion_residuals_seminar, maingot_2023_realtime_inter_sensor_calibration, jhc_ccom_2020_annual_report, hughes_clarke_2003_dynamic_motion_residuals]
     status: covered
 
 reference_corrections:
