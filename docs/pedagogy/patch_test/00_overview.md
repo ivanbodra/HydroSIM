@@ -65,6 +65,9 @@ Truth must remain hidden during estimation and may be revealed only by an explic
 | P5 | Assessment & Validation | verify correction quality with holdout/reference evidence and diagnose remaining problems | `P05_assessment_validation.md` |
 | P6 | RISC / Advanced Integration Diagnostics | show why residuals can remain after a classic patch test and introduce model-based inter-sensor diagnostics | `P06_risc_integrated_diagnostics.md` |
 
+### Historical numbering note
+Older HydroSIM issues/contracts were created before this P1–P6 pedagogical taxonomy was fixed. In particular, the preserved `Pitch Patch Test v0.1 Scientific Contract` calls its isolated pitch-calibration experience **P2**, and issues #343/#344 use legacy labels. Those labels are historical references only. Under the canonical taxonomy above, isolated numerical calibration belongs to **P4**, while **P2** is line planning. Do not rename historical artifacts merely to make their old identifiers look current; map their reusable effect into the canonical P-files.
+
 ## Classic line-geometry anchors
 
 For the classic MBES patch-test experience, HydroSIM uses the established operational geometries documented by NOAA and other hydrographic sources:
