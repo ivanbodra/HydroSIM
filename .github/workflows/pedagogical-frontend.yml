@@ -127,6 +127,12 @@ jobs:
         env: *real_api_env
         run: npx playwright test ui-tests/ped-d12-real-api.spec.ts
 
+      - name: Run D13 real React-Python smoke
+        id: runtime_d13
+        continue-on-error: true
+        env: *real_api_env
+        run: npx playwright test ui-tests/ped-d13-real-api.spec.ts
+
       - name: Enforce learner and integration gates
         if: always()
         working-directory: ${{ github.workspace }}
@@ -138,6 +144,7 @@ jobs:
           D8: ${{ steps.runtime_d8.outcome }}
           D9: ${{ steps.runtime_d9.outcome }}
           D12: ${{ steps.runtime_d12.outcome }}
+          D13: ${{ steps.runtime_d13.outcome }}
         run: |
           printf '%-24s %s\n' \
             'focused learner UI' "$FOCUSED_UI" \
@@ -145,10 +152,12 @@ jobs:
             'D7 React-Python' "$D7" \
             'D8 React-Python' "$D8" \
             'D9 React-Python' "$D9" \
-            'D12 React-Python' "$D12"
+            'D12 React-Python' "$D12" \
+            'D13 React-Python' "$D13"
           test "$FOCUSED_UI" = success
           test "$D1_D4" = success
           test "$D7" = success
           test "$D8" = success
           test "$D9" = success
           test "$D12" = success
+          test "$D13" = success
