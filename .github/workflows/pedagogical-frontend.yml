@@ -68,6 +68,8 @@ jobs:
           exit 1
 
       - name: Run focused learner UI tests
+        id: focused_ui
+        continue-on-error: true
         run: npm run test:ui
 
       - name: Start real pedagogical API
@@ -94,7 +96,59 @@ jobs:
           exit 1
 
       - name: Run D1-D4 real React-Python smoke
-        env:
+        id: runtime_d1_d4
+        continue-on-error: true
+        env: &real_api_env
           HYDROSIM_E2E_REAL_API: '1'
           HYDROSIM_UI_BASE_URL: http://127.0.0.1:5173
         run: npx playwright test ui-tests/ped-d1-d2-real-api.spec.ts ui-tests/ped-d3-d4-real-api.spec.ts
+
+      - name: Run D7 real React-Python smoke
+        id: runtime_d7
+        continue-on-error: true
+        env: *real_api_env
+        run: npx playwright test ui-tests/ped-d7-real-api.spec.ts
+
+      - name: Run D8 real React-Python smoke
+        id: runtime_d8
+        continue-on-error: true
+        env: *real_api_env
+        run: npx playwright test ui-tests/ped-d8-real-api.spec.ts
+
+      - name: Run D9 real React-Python smoke
+        id: runtime_d9
+        continue-on-error: true
+        env: *real_api_env
+        run: npx playwright test ui-tests/ped-d9-real-api.spec.ts
+
+      - name: Run D12 real React-Python smoke
+        id: runtime_d12
+        continue-on-error: true
+        env: *real_api_env
+        run: npx playwright test ui-tests/ped-d12-real-api.spec.ts
+
+      - name: Enforce learner and integration gates
+        if: always()
+        working-directory: ${{ github.workspace }}
+        shell: bash
+        env:
+          FOCUSED_UI: ${{ steps.focused_ui.outcome }}
+          D1_D4: ${{ steps.runtime_d1_d4.outcome }}
+          D7: ${{ steps.runtime_d7.outcome }}
+          D8: ${{ steps.runtime_d8.outcome }}
+          D9: ${{ steps.runtime_d9.outcome }}
+          D12: ${{ steps.runtime_d12.outcome }}
+        run: |
+          printf '%-24s %s\n' \
+            'focused learner UI' "$FOCUSED_UI" \
+            'D1-D4 React-Python' "$D1_D4" \
+            'D7 React-Python' "$D7" \
+            'D8 React-Python' "$D8" \
+            'D9 React-Python' "$D9" \
+            'D12 React-Python' "$D12"
+          test "$FOCUSED_UI" = success
+          test "$D1_D4" = success
+          test "$D7" = success
+          test "$D8" = success
+          test "$D9" = success
+          test "$D12" = success
