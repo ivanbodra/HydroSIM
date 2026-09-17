@@ -20,7 +20,7 @@ const response = (request: any) => ({
   semantics: {},
 });
 
-test('D14 stages detection into sounding and withholds truth until Compare', async ({ page }) => {
+test('D14 progressively reveals detection, geometry and sounding; truth remains Compare-only', async ({ page }) => {
   let latestRequest: any = null;
   await page.route('**/api/v1/pedagogical/sounding-formation', async route => {
     latestRequest = route.request().postDataJSON();
@@ -29,21 +29,40 @@ test('D14 stages detection into sounding and withholds truth until Compare', asy
 
   await page.goto('/#sounding-formation-lab');
   await expect(page.getByText('Observed acoustic detection')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Range \/ path/ })).toBeVisible();
-  await expect(page.getByText('Truth', { exact: true })).toHaveCount(0);
   await expect.poll(() => latestRequest?.active_stage).toBe('bottom-detection');
+  await expect(page.locator('[data-stage="detection"]')).toBeVisible();
+  await expect(page.locator('[data-stage="range"]')).toHaveCount(0);
+  await expect(page.locator('[data-stage="sensor"]')).toHaveCount(0);
+  await expect(page.locator('[data-stage="vessel"]')).toHaveCount(0);
+  await expect(page.locator('[data-stage="pose"]')).toHaveCount(0);
+  await expect(page.locator('[data-stage="sounding"]')).toHaveCount(0);
+  await expect(page.getByText('Truth', { exact: true })).toHaveCount(0);
 
   await page.getByRole('button', { name: /Range \/ path/ }).click();
   await expect.poll(() => latestRequest?.active_stage).toBe('twtt-range');
+  await expect(page.locator('[data-stage="range"]')).toBeVisible();
+  await expect(page.locator('[data-stage="sounding"]')).toHaveCount(0);
   await expect(page.getByText('Sound speed')).toBeVisible();
 
+  await page.getByRole('button', { name: /Sensor geometry/ }).click();
+  await expect(page.locator('[data-stage="sensor"]')).toBeVisible();
+  await expect(page.locator('[data-stage="vessel"]')).toHaveCount(0);
+
   await page.getByRole('button', { name: /Vessel geometry/ }).click();
+  await expect(page.locator('[data-stage="vessel"]')).toBeVisible();
   await expect(page.getByText('Sensor lever arm')).toBeVisible();
 
   await page.getByRole('button', { name: /Pose association/ }).click();
   await expect.poll(() => latestRequest?.active_stage).toBe('pose-association');
+  await expect(page.locator('[data-stage="pose"]')).toBeVisible();
+  await expect(page.locator('[data-stage="sounding"]')).toHaveCount(0);
   await expect(page.getByText('Vessel position')).toBeVisible();
   await expect(page.getByText('Vessel attitude')).toBeVisible();
+
+  await page.getByRole('button', { name: /^6Sounding/ }).click();
+  await expect.poll(() => latestRequest?.active_stage).toBe('reconstruction');
+  await expect(page.locator('[data-stage="sounding"]').first()).toBeVisible();
+  await expect(page.getByText('Truth', { exact: true })).toHaveCount(0);
 
   await page.getByRole('button', { name: /Compare/ }).click();
   await expect.poll(() => latestRequest?.active_stage).toBe('truth-observed');
@@ -59,6 +78,7 @@ test('D14 learner flow localizes its primary milestones in PT-BR', async ({ page
   await page.goto('/#sounding-formation-lab');
   await page.evaluate(() => { sessionStorage.setItem('hydrosim-language', 'pt'); location.reload(); });
   await expect(page.getByText('Detecção acústica observada')).toBeVisible();
+  await expect(page.getByText('Eco retido')).toBeVisible();
   await expect(page.getByRole('button', { name: /Distância \/ caminho/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Geometria do sensor/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Associação da pose/ })).toBeVisible();
