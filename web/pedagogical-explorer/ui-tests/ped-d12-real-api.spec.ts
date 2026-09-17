@@ -23,12 +23,12 @@ test('D12 carries learner PU-sensor changes through the real Python API', async 
 
   const sensor = page.getByRole('combobox', { name: 'Sensor' });
   const changedResponsePromise = page.waitForResponse(response => response.url().endsWith(endpoint) && response.request().method() === 'POST');
-  await sensor.selectOption('attitude_sensor');
+  await sensor.selectOption('sound_speed_sensor');
   const changedResponse = await changedResponsePromise;
   expect(changedResponse.status()).toBe(200);
   const changedBody = await changedResponse.json();
 
-  await expect.poll(() => requests.at(-1)?.stream?.device_class).toBe('attitude_sensor');
+  await expect.poll(() => requests.at(-1)?.stream?.device_class).toBe('sound_speed_sensor');
   expect(changedBody.status).toBe('incompatible');
   expect(changedBody.reason_codes).toContain('device_class_mismatch');
   await expect(page.getByRole('img', { name: /Needs correction/ })).toBeVisible();
