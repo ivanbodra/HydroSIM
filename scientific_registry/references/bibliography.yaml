@@ -1,4 +1,4 @@
-version: 0.2.1
+version: 0.3.0
 language: en
 
 references:
@@ -306,3 +306,95 @@ references:
     title: "The Patch Test"
     primary_url: "https://www.r2sonic.com/wp-content/uploads/2020/03/The-New-Patch-Test.pdf"
     scope: [multibeam patch test, pitch test, reciprocal lines, slope, iterative correction]
+
+  - id: iho_s5a_2_0_0_2026
+    type: international_competence_standard
+    organization: "International Hydrographic Organization"
+    year: 2026
+    title: "Standards of Competence for Category A Hydrographic Surveyors"
+    edition: "2.0.0"
+    primary_url: "https://iho.int/standards-and-specifications"
+    scope: [hydrographic competence, multibeam operations, calibration procedures, diagnosis of deficiencies]
+
+  - id: noaa_fpm_2020
+    type: hydrographic_field_manual
+    organization: "NOAA Office of Coast Survey"
+    year: 2020
+    title: "Field Procedures Manual"
+    edition: "2020"
+    primary_url: "https://nauticalcharts.noaa.gov/publications/docs/standards-and-requirements/fpm/field_procedures_manual_2020.pdf"
+    scope: [multibeam calibration, patch test, roll, pitch, heading, timing, line planning, verification]
+
+  - id: rathnayake_lekkerkerk_2025_survey_systems_verification_calibration
+    type: journal_technical_report
+    authors: [Chandana Rathnayake, Huibert-Jan Lekkerkerk]
+    year: 2025
+    title: "Survey systems verification and calibration in the hydrospatial domain"
+    publication: "The International Hydrographic Review"
+    volume: "31"
+    issue: "2"
+    pages: "158-172"
+    doi: "10.58440/ihr-31-2-n09"
+    primary_url: "https://ihr.iho.int/articles/survey-systems-verification-and-calibration-in-the-hydrospatial-domain/"
+    scope: [survey system calibration, verification, MBES patch test, roll, pitch, heading, latency, dual head, visual verification]
+
+  - id: maingot_2023_realtime_inter_sensor_calibration
+    type: seminar
+    authors: [Brandon Maingot]
+    year: 2023
+    title: "An Efficient and Robust Real-Time Calibration Routine for Inter-Sensor Offsets Within Integrated Multibeam Systems"
+    institution: "University of New Hampshire Center for Coastal and Ocean Mapping"
+    primary_url: "https://scholars.unh.edu/ccom_seminars/408/"
+    scope: [RISC, inter-sensor calibration, six integration errors, residual minimization, real-time calibration, robustness]
+
+  - id: jhc_ccom_2020_annual_report
+    type: annual_report
+    organization: "UNH/NOAA Joint Hydrographic Center / Center for Coastal and Ocean Mapping"
+    year: 2020
+    title: "2020 Annual Report"
+    primary_url: "https://ccom.unh.edu/sites/default/files/progress_reports/jhc-ccom-2020-annual-report-web.pdf"
+    scope: [RISC, multibeam integration, simulation, known truth, georeferencing]
+
+  - id: jerram_hoy_sowers_baechler_2019_okeanos_shakedown
+    type: technical_report
+    authors: [Kevin Jerram, Shannon Hoy, Derek Sowers, Nathan Baechler]
+    year: 2019
+    title: "NOAA Ship Okeanos Explorer 2019 Acoustic Systems Shakedown Report"
+    institution: "University of New Hampshire Center for Coastal and Ocean Mapping"
+    primary_url: "https://scholars.unh.edu/ccom/1709/"
+    scope: [multibeam calibration, system configuration, acoustic systems verification]
+
+  - id: jerram_johnson_ferrini_2019_neil_armstrong_em710
+    type: technical_report
+    authors: [Kevin Jerram, Paul Johnson, Vicki Ferrini]
+    year: 2019
+    title: "R/V Neil Armstrong 2019 EM710 Calibration Report"
+    institution: "University of New Hampshire Center for Coastal and Ocean Mapping"
+    primary_url: "https://scholars.unh.edu/ccom/1727/"
+    scope: [multibeam calibration, patch test, EM710, calibration acquisition, quality assurance]
+
+  - id: jerram_johnson_ferrini_2021_thompson_em302_qat
+    type: technical_report
+    authors: [Kevin Jerram, Paul Johnson, Vicki Ferrini]
+    year: 2021
+    title: "2021 R/V Thomas G. Thompson EM302 QAT Report"
+    institution: "University of New Hampshire Center for Coastal and Ocean Mapping"
+    primary_url: "https://scholars.unh.edu/ccom/1577/"
+    scope: [multibeam calibration, quality assurance, post-maintenance verification]
+
+  - id: johnson_beaudoin_et_al_2014_mbac_three_years
+    type: conference_paper
+    authors: [Paul Johnson, Jonathan Beaudoin, et al.]
+    year: 2014
+    title: "Multibeam Advisory Committee - Three Years of Working Towards the Improvement of Multibeam Echosounder Data Collection"
+    institution: "University of New Hampshire Center for Coastal and Ocean Mapping"
+    primary_url: "https://scholars.unh.edu/ccom/53/"
+    scope: [multibeam advisory, patch test, survey planning, calibration, swath performance]
+
+  - id: kongsberg_2026_multibeam_survey_planning
+    type: manufacturer_technical_note
+    organization: "Kongsberg Discovery"
+    year: 2026
+    title: "Multibeam survey planning - The key to success"
+    primary_url: "https://www.kongsberg.com/globalassets/kongsberg-discovery/commerce/seafloor-mapping/em2040-mkii/em-technical-note-multibeam-survey-planning-the-key-to-success.pdf"
+    scope: [multibeam survey planning, calibration areas, operating conditions]
