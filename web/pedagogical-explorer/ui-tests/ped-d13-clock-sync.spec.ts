@@ -44,7 +44,7 @@ test('D13 exposes measurement to availability to TX causality without frontend t
   await page.goto('/#timing-lab');
   await expect(page.getByText('Measurement → availability → use at TX')).toBeVisible();
   await expect(page.getByText('Latest available at TX')).toBeVisible();
-  await expect(page.getByText('Sample age')).toBeVisible();
+  await expect(page.getByText('Sample age').first()).toBeVisible();
   await expect(page.getByText('0.10 m')).toBeVisible();
 
   await page.getByRole('button', { name: 'Attitude' }).click();
@@ -60,7 +60,7 @@ test('D13 keeps synchronization distinct from latency and localized in PT-BR', a
   });
 
   await page.goto('/#timing-lab');
-  await page.getByText('Synchronization').click();
+  await page.getByText('Synchronization', { exact: true }).first().click();
   await page.getByLabel('Synchronization mode').selectOption('fixed_clock_offset');
   const offset = page.locator('label').filter({ hasText: 'Sensor clock offset' }).locator('input[type="range"]');
   await offset.fill('12.5');
