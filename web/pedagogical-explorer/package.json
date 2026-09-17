@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "capture": "node capture.mjs",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "test:integration": "playwright test real-api"
   },
   "dependencies": {
     "lucide-react": "1.39.0",
