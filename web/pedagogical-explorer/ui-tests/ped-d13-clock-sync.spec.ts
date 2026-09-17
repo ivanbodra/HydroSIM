@@ -65,7 +65,13 @@ test('D13 keeps synchronization distinct from latency and localized in PT-BR', a
   const offset = page.locator('label').filter({ hasText: 'Sensor clock offset' }).locator('input[type="range"]');
   await offset.fill('12.5');
   await expect.poll(() => latestRequest?.clock_offset_ms).toBe(12.5);
-  await expect(page.getByTestId('d13-clock-sync')).toContainText('12.5 ms');
+
+  // The configured offset is proven at the request boundary. The learner panel
+  // presents its timing consequence, not a duplicate configured-value readout.
+  const synchronization = page.getByTestId('d13-clock-sync');
+  await expect(synchronization).toContainText('Sensor-reported time32.5 ms');
+  await expect(synchronization).toContainText('Interpreted common time20.0 ms');
+  await expect(synchronization).toContainText('Clock epoch error0.0 ms');
 
   await page.evaluate(() => { sessionStorage.setItem('hydrosim-language', 'pt'); location.reload(); });
   await expect(page.getByText('Medição → disponibilidade → uso no TX')).toBeVisible();
