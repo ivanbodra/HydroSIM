@@ -40,7 +40,10 @@ test('D14 progressively reveals detection, geometry and sounding; truth remains 
 
   await page.getByRole('button', { name: /Range \/ path/ }).click();
   await expect.poll(() => latestRequest?.active_stage).toBe('twtt-range');
-  await expect(page.locator('[data-stage="range"]')).toBeVisible();
+  // The default range path is a vertical SVG line (zero CSS width), so Playwright's
+  // visibility heuristic reports it hidden even though the stroked line is rendered.
+  // Presence is the correct assertion for progressive disclosure here.
+  await expect(page.locator('[data-stage="range"]')).toHaveCount(1);
   await expect(page.locator('[data-stage="sounding"]')).toHaveCount(0);
   await expect(page.getByText('Sound speed')).toBeVisible();
 
