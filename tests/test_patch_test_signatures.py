@@ -65,3 +65,23 @@ def test_combined_case_does_not_force_a_classic_label() -> None:
 
     assert result.likely_classification == "confounded"
     assert not result.evidence_sufficient
+
+
+def test_zero_error_repeated_run_residual_closes() -> None:
+    result = run_patch_signature_scenario(
+        PatchSignatureConfig(error_family="roll", angular_residual_deg=0.0)
+    )
+
+    assert result.dataset_residuals
+    assert all(
+        point.vertical_difference_m == pytest.approx(0.0, abs=1e-12)
+        for point in result.dataset_residuals
+    )
+
+
+@pytest.mark.parametrize("family", ["roll", "pitch", "yaw", "latency"])
+def test_isolated_signature_has_nonzero_repeated_run_residual(family: str) -> None:
+    result = run_patch_signature_scenario(PatchSignatureConfig(error_family=family))
+
+    assert result.dataset_residuals
+    assert max(abs(point.vertical_difference_m) for point in result.dataset_residuals) > 0.0
