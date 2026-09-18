@@ -62,7 +62,7 @@ test('D14 progressively reveals detection, geometry and sounding; truth remains 
   await expect(page.getByText('Vessel position')).toBeVisible();
   await expect(page.getByText('Vessel attitude')).toBeVisible();
 
-  await page.getByRole('button', { name: /^6Sounding/ }).click();
+  await page.getByRole('button', { name: /Sounding/ }).click();
   await expect.poll(() => latestRequest?.active_stage).toBe('reconstruction');
   await expect(page.locator('[data-stage="sounding"]').first()).toBeVisible();
   await expect(page.getByText('Truth', { exact: true })).toHaveCount(0);
