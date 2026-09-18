@@ -33,5 +33,5 @@ test('D12 submits the learner stream by canonical PU profile id only', async ({ 
   expect(body?.pu_input_id).toBe('PU-A');
   expect(body).not.toHaveProperty('pu_input');
   expect(body).toHaveProperty('stream');
-  await expect(page.getByText('PU-A', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('PU input: PASS').getByText('PU-A', { exact: true })).toBeVisible();
 });

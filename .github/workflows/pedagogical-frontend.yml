@@ -102,3 +102,7 @@ jobs:
         if: always()
         env: { HYDROSIM_E2E_REAL_API: '1', HYDROSIM_UI_BASE_URL: 'http://127.0.0.1:5173' }
         run: npx playwright test ui-tests/ped-d9-real-api.spec.ts
+      - name: Run Block 4 D12-D14 real React-Python smoke
+        if: always()
+        env: { HYDROSIM_E2E_REAL_API: '1', HYDROSIM_UI_BASE_URL: 'http://127.0.0.1:5173' }
+        run: npx playwright test ui-tests/ped-d12-real-api.spec.ts ui-tests/ped-d13-real-api.spec.ts ui-tests/ped-d14-real-api.spec.ts
