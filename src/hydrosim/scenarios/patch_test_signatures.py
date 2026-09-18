@@ -67,6 +67,17 @@ class PatchSignatureRun(BaseModel):
     points: tuple[PatchSignaturePoint, ...]
 
 
+class PatchDatasetResidualPoint(BaseModel):
+    """Run-to-run vertical disagreement on common navigation-frame support."""
+
+    model_config = ConfigDict(frozen=True)
+
+    coordinate_m: FiniteFloat
+    run_a_z_m: FiniteFloat
+    run_b_z_m: FiniteFloat
+    vertical_difference_m: FiniteFloat
+
+
 class PatchSignatureResult(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -76,7 +87,12 @@ class PatchSignatureResult(BaseModel):
     comparison_region: Literal["outer_swath", "near_nadir", "common_outer_swath"]
     geometry_description: str
     runs: tuple[PatchSignatureRun, ...]
-    state_semantics: str = "Truth hidden; observations reconstructed with Configured state; residuals Derived"
+    dataset_residual_axis: Literal["x", "y"]
+    dataset_residuals: tuple[PatchDatasetResidualPoint, ...]
+    state_semantics: str = (
+        "Truth hidden; observations reconstructed with Configured state; "
+        "run-to-run residuals Derived; Truth-comparison diagnostics separate"
+    )
 
 
 def _fan(config: PatchSignatureConfig, *, nadir_only: bool = False):
@@ -188,6 +204,54 @@ def _latency_run(config: PatchSignatureConfig, *, run_id: str, speed_mps: float)
     return PatchSignatureRun(id=run_id, heading_deg=0.0, speed_mps=speed_mps, points=tuple(points))
 
 
+def _dataset_residuals(
+    runs: tuple[PatchSignatureRun, PatchSignatureRun],
+    *,
+    axis: Literal["x", "y"],
+    sample_count: int,
+) -> tuple[PatchDatasetResidualPoint, ...]:
+    """Interpolate both Configured datasets onto their common navigation support."""
+
+    def profile(run: PatchSignatureRun) -> tuple[np.ndarray, np.ndarray]:
+        coordinates = np.asarray(
+            [
+                point.configured_x_m if axis == "x" else point.configured_y_m
+                for point in run.points
+            ],
+            dtype=float,
+        )
+        depths = np.asarray([point.configured_z_m for point in run.points], dtype=float)
+        order = np.argsort(coordinates)
+        coordinates = coordinates[order]
+        depths = depths[order]
+        unique_coordinates, inverse = np.unique(coordinates, return_inverse=True)
+        depth_sums = np.zeros_like(unique_coordinates)
+        counts = np.zeros_like(unique_coordinates)
+        np.add.at(depth_sums, inverse, depths)
+        np.add.at(counts, inverse, 1.0)
+        return unique_coordinates, depth_sums / counts
+
+    coordinate_a, depth_a = profile(runs[0])
+    coordinate_b, depth_b = profile(runs[1])
+    lower = max(float(coordinate_a[0]), float(coordinate_b[0]))
+    upper = min(float(coordinate_a[-1]), float(coordinate_b[-1]))
+    if upper < lower:
+        return ()
+
+    common = np.linspace(lower, upper, sample_count) if upper > lower else np.asarray([lower])
+    interpolated_a = np.interp(common, coordinate_a, depth_a)
+    interpolated_b = np.interp(common, coordinate_b, depth_b)
+    return tuple(
+        PatchDatasetResidualPoint(
+            coordinate_m=float(coordinate),
+            run_a_z_m=float(z_a),
+            run_b_z_m=float(z_b),
+            vertical_difference_m=float(z_a - z_b),
+        )
+        for coordinate, z_a, z_b in zip(common, interpolated_a, interpolated_b, strict=True)
+    )
+
+
 def run_patch_signature_scenario(config: PatchSignatureConfig) -> PatchSignatureResult:
     """Generate the controlled P1 forward signature selected by ``error_family``."""
 
@@ -209,6 +273,10 @@ def run_patch_signature_scenario(config: PatchSignatureConfig) -> PatchSignature
             comparison_region="outer_swath",
             geometry_description="reciprocal coincident lines over a flat seabed",
             runs=runs,
+            dataset_residual_axis="y",
+            dataset_residuals=_dataset_residuals(
+                runs, axis="y", sample_count=config.beam_count
+            ),
         )
 
     if config.error_family == "pitch":
@@ -218,7 +286,18 @@ def run_patch_signature_scenario(config: PatchSignatureConfig) -> PatchSignature
             _alignment_run(config, run_id="A", heading_deg=0.0, y_m=0.0, terrain=terrain, true_alignment=alignment, nadir_only=True),
             _alignment_run(config, run_id="B", heading_deg=180.0, y_m=0.0, terrain=terrain, true_alignment=alignment, nadir_only=True),
         )
-        return PatchSignatureResult(error_family="pitch", likely_classification="pitch", evidence_sufficient=float(config.terrain_slope_deg) > 0.0, comparison_region="near_nadir", geometry_description="reciprocal coincident lines over an along-track slope", runs=runs)
+        return PatchSignatureResult(
+            error_family="pitch",
+            likely_classification="pitch",
+            evidence_sufficient=float(config.terrain_slope_deg) > 0.0,
+            comparison_region="near_nadir",
+            geometry_description="reciprocal coincident lines over an along-track slope",
+            runs=runs,
+            dataset_residual_axis="x",
+            dataset_residuals=_dataset_residuals(
+                runs, axis="x", sample_count=config.sample_count
+            ),
+        )
 
     if config.error_family == "yaw":
         alignment = Attitude.from_degrees(roll=0.0, pitch=0.0, yaw=angle)
@@ -228,7 +307,18 @@ def run_patch_signature_scenario(config: PatchSignatureConfig) -> PatchSignature
             _alignment_run(config, run_id="A", heading_deg=0.0, y_m=-offset / 2.0, terrain=terrain, true_alignment=alignment, nadir_only=False),
             _alignment_run(config, run_id="B", heading_deg=0.0, y_m=offset / 2.0, terrain=terrain, true_alignment=alignment, nadir_only=False),
         )
-        return PatchSignatureResult(error_family="yaw", likely_classification="yaw", evidence_sufficient=float(config.terrain_slope_deg) > 0.0, comparison_region="common_outer_swath", geometry_description="same-direction offset parallel lines over a cross-track feature/slope", runs=runs)
+        return PatchSignatureResult(
+            error_family="yaw",
+            likely_classification="yaw",
+            evidence_sufficient=float(config.terrain_slope_deg) > 0.0,
+            comparison_region="common_outer_swath",
+            geometry_description="same-direction offset parallel lines over a cross-track feature/slope",
+            runs=runs,
+            dataset_residual_axis="y",
+            dataset_residuals=_dataset_residuals(
+                runs, axis="y", sample_count=config.beam_count
+            ),
+        )
 
     runs = (
         _latency_run(config, run_id="slow", speed_mps=float(config.slow_speed_mps)),
@@ -241,4 +331,8 @@ def run_patch_signature_scenario(config: PatchSignatureConfig) -> PatchSignature
         comparison_region="near_nadir",
         geometry_description="same-direction lines at different speeds over an along-track slope",
         runs=runs,
+        dataset_residual_axis="x",
+        dataset_residuals=_dataset_residuals(
+            runs, axis="x", sample_count=config.sample_count
+        ),
     )
