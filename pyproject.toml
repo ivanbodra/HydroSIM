@@ -18,7 +18,8 @@ hydrosim-didactic-legacy = "hydrosim.app.didactic_explorer_integrated:launch_did
 dev = [
     "pytest",
     "pytest-cov",
-    "ruff"
+    "ruff",
+    "httpx"
 ]
 visualization = [
     "matplotlib",
