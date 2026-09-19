@@ -5,17 +5,19 @@ type Family='roll'|'pitch'|'yaw'|'latency';
 type Point={coordinate_m:number;vertical_difference_m:number};
 type Evidence={evidence_id:string;before_residual:Point[];after_residual:Point[];before_rms_m:number;after_rms_m:number;improvement_fraction:number;structured_fraction:number;opposite_sense:boolean};
 type Result={error_family:Family;correction_unit:'degrees'|'milliseconds';candidate_correction:number;assessment:'Adequate'|'Suboptimal'|'Inadequate';reasons:string[];calibration:Evidence;holdout:Evidence;inherited_warnings:string[];submitted:boolean;estimation_error:number|null;estimation_error_semantics:string|null};
+type Assessment=Result['assessment'];
 const families:Family[]=['roll','pitch','yaw','latency'];
 
 export default function PatchAssessmentLab(){
   const [lang,setLang]=useState<'en'|'pt'>('en');
   const [family,setFamily]=useState<Family>('roll');
   const [candidate,setCandidate]=useState(0);
+  const [choice,setChoice]=useState<Assessment|null>(null);
   const [submitted,setSubmitted]=useState(false);
   const [data,setData]=useState<Result|null>(null);
   const [error,setError]=useState(false);
   const pt=lang==='pt', limit=family==='latency'?400:4, step=family==='latency'?5:.1;
-  useEffect(()=>{setCandidate(0);setSubmitted(false)},[family]);
+  useEffect(()=>{setCandidate(0);setChoice(null);setSubmitted(false)},[family]);
   useEffect(()=>{
     const ac=new AbortController();setError(false);
     fetch('/api/v1/pedagogical/patch-test/assessment',{method:'POST',headers:{'content-type':'application/json'},signal:ac.signal,body:JSON.stringify({error_family:family,candidate_correction:candidate,search_min:-limit,search_max:limit,submitted})})
@@ -51,18 +53,19 @@ export default function PatchAssessmentLab(){
     <div className="p5-layout">
       <aside className="p5-controls">
         <div className="p5-family">{families.map(f=><button key={f} className={family===f?'active':''} onClick={()=>setFamily(f)}>{f==='yaw'?'Yaw / Heading':f}</button>)}</div>
-        <label>{pt?'Correção estimada':'Estimated correction'}<output>{candidate.toFixed(family==='latency'?0:1)} {unit}</output><input type="range" min={-limit} max={limit} step={step} value={candidate} onChange={e=>{setCandidate(+e.target.value);setSubmitted(false)}}/></label>
+        <label>{pt?'Correção estimada':'Estimated correction'}<output>{candidate.toFixed(family==='latency'?0:1)} {unit}</output><input type="range" min={-limit} max={limit} step={step} value={candidate} onChange={e=>{setCandidate(+e.target.value);setChoice(null);setSubmitted(false)}}/></label>
         <div className="p5-lock"><LockKeyhole/><div><small>OBSERVED</small><strong>{pt?'Linhas bloqueadas':'Locked lines'}</strong></div></div>
-        <button className="p5-reset" onClick={()=>{setCandidate(0);setSubmitted(false)}}><RotateCcw/>{pt?'Reiniciar':'Reset'}</button>
-        <button className="p5-submit" onClick={()=>setSubmitted(true)}><Eye/>{pt?'Enviar avaliação':'Submit assessment'}</button>
+        <fieldset className="p5-choice"><legend>{pt?'Sua avaliação':'Your assessment'}</legend>{(['Adequate','Suboptimal','Inadequate'] as Assessment[]).map(v=><button type="button" key={v} className={choice===v?'active':''} onClick={()=>{setChoice(v);setSubmitted(false)}}>{pt?({Adequate:'Adequada',Suboptimal:'Subótima',Inadequate:'Inadequada'} as Record<Assessment,string>)[v]:v}</button>)}</fieldset>
+        <button className="p5-reset" onClick={()=>{setCandidate(0);setChoice(null);setSubmitted(false)}}><RotateCcw/>{pt?'Reiniciar':'Reset'}</button>
+        <button className="p5-submit" disabled={!choice} onClick={()=>setSubmitted(true)}><Eye/>{pt?'Enviar avaliação':'Submit assessment'}</button>
       </aside>
       <div className="p5-workspace">
         {error?<div className="p5-error"><AlertTriangle/>{pt?'API indisponível':'API unavailable'}</div>:data&&<>
           <div className="p5-legend"><span className="before">{pt?'Antes':'Before'}</span><span className="after">{pt?'Candidata atual':'Current candidate'}</span></div>
           <EvidencePanel title={pt?'PAR DE CALIBRAÇÃO':'CALIBRATION PAIR'} e={data.calibration}/>
           <EvidencePanel title={pt?'HOLDOUT INDEPENDENTE':'INDEPENDENT HOLDOUT'} e={data.holdout}/>
-          {!submitted?<div className="p5-gate"><LockKeyhole/><strong>{pt?'Classifique pela evidência antes de revelar Truth':'Judge the evidence before revealing Truth'}</strong></div>:<section className={`p5-verdict ${data.assessment.toLowerCase()}`}>
-            <div><CheckCircle2/><small>{pt?'AVALIAÇÃO DA API':'API ASSESSMENT'}</small><h2>{data.assessment}</h2><p>{pt?(reasonPt[data.reasons[0]]??data.reasons[0]):data.reasons[0]}</p></div>
+          {!submitted?<div className="p5-gate"><LockKeyhole/><strong>{choice?(pt?'Envie sua avaliação para comparar e revelar Truth':'Submit your assessment to compare and reveal Truth'):(pt?'Classifique pela evidência antes de revelar Truth':'Judge the evidence before revealing Truth')}</strong></div>:<section className={`p5-verdict ${data.assessment.toLowerCase()}`}>
+            <div><CheckCircle2/><small>{pt?'SUA ESCOLHA → AVALIAÇÃO DA API':'YOUR CHOICE → API ASSESSMENT'}</small><h2>{choice} → {data.assessment}</h2><p>{pt?(reasonPt[data.reasons[0]]??data.reasons[0]):data.reasons[0]}</p></div>
             <div className="p5-truth"><small>ESTIMATED − TRUTH</small><strong>{data.estimation_error?.toFixed(family==='latency'?1:3)} {unit}</strong><span>{pt?'Diagnóstico após envio; não é RMS nem TPU':'Post-submit diagnostic; not RMS or TPU'}</span></div>
           </section>}
           {!!data.inherited_warnings.length&&<section className="p5-warnings"><AlertTriangle/><div><strong>{pt?'Avisos herdados':'Inherited warnings'}</strong>{data.inherited_warnings.map((w,i)=><p key={i}>{w}</p>)}</div></section>}
