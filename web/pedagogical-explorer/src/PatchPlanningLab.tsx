@@ -138,8 +138,11 @@ export default function PatchPlanningLab() {
     scale = 2.15,
     center = 300,
     xa = center - half * scale,
-    xb = center + offset * scale - half * scale,
     w = Math.min(half * 2 * scale, 520),
+    lineB = center + offset * scale,
+    headingRad = (headingB * Math.PI) / 180,
+    labelBx = lineB + 22 * Math.cos(headingRad),
+    labelBy = 215 + 22 * Math.sin(headingRad),
     support = data?.metrics.common_support_interval_m,
     sx = (v: number) => center + v * scale;
   const pt = lang === "pt";
@@ -310,13 +313,23 @@ export default function PatchPlanningLab() {
                 width={w}
                 height="275"
               />
-              <rect
-                className="p2-swath b"
-                x={xb}
-                y="70"
-                width={w}
-                height="275"
-              />
+              <g transform={`rotate(${headingB} ${lineB} 215)`}>
+                <rect
+                  className="p2-swath b"
+                  x={lineB - half * scale}
+                  y="70"
+                  width={w}
+                  height="275"
+                />
+                <line
+                  className="p2-line b"
+                  x1={lineB}
+                  y1="350"
+                  x2={lineB}
+                  y2="80"
+                  markerEnd="url(#p2-arrow)"
+                />
+              </g>
               {support && (
                 <rect
                   className="p2-support"
@@ -334,14 +347,17 @@ export default function PatchPlanningLab() {
                 y2="80"
                 markerEnd="url(#p2-arrow)"
               />
-              <line
-                className="p2-line b"
-                x1={center + offset * scale}
-                y1={headingB > 90 ? 80 : 350}
-                x2={center + offset * scale}
-                y2={headingB > 90 ? 350 : 80}
-                markerEnd="url(#p2-arrow)"
-              />
+              <text className="p2-run-label a" x={center + 12} y="335">
+                A · {speedA.toFixed(1)} m/s
+              </text>
+              <text
+                className="p2-run-label b"
+                x={labelBx}
+                y={labelBy}
+                textAnchor={headingB > 90 ? "end" : "start"}
+              >
+                B · {speedB.toFixed(1)} m/s · {headingB}°
+              </text>
               <text x="70" y="60">
                 {pt ? "FUNDO DISPONÍVEL" : "AVAILABLE SEABED"}
               </text>
