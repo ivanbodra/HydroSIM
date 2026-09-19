@@ -47,6 +47,11 @@ from hydrosim.app.multisector_api import (
     D10MultisectorResponse,
     prepare_d10_multisector_response,
 )
+from hydrosim.app.patch_test_planning_api import (
+    PatchPlanningRequest,
+    PatchPlanningResponse,
+    prepare_patch_planning_response,
+)
 from hydrosim.app.pu_sensor_api import (
     D13PuSensorRequest,
     D13PuSensorResponse,
@@ -423,6 +428,13 @@ def create_fastapi_app():
     @app.post("/api/v1/pedagogical/vessel-motion", response_model=D12VesselMotionResponse)
     def vessel_motion(request: D12VesselMotionRequest) -> D12VesselMotionResponse:
         return prepare_d12_vessel_motion_response(request)
+
+    @app.post(
+        "/api/v1/pedagogical/patch-test/planning",
+        response_model=PatchPlanningResponse,
+    )
+    def patch_test_planning(request: PatchPlanningRequest) -> PatchPlanningResponse:
+        return prepare_patch_planning_response(request)
 
     @app.post("/api/v1/pedagogical/pu-sensor", response_model=D13PuSensorResponse)
     def pu_sensor(request: D13PuSensorRequest) -> D13PuSensorResponse:
