@@ -62,6 +62,11 @@ from hydrosim.app.patch_test_manual_calibration_api import (
     PatchManualCalibrationResponse,
     prepare_patch_manual_calibration_response,
 )
+from hydrosim.app.patch_test_assessment_api import (
+    PatchAssessmentRequest,
+    PatchAssessmentResponse,
+    prepare_patch_assessment_response,
+)
 from hydrosim.app.pu_sensor_api import (
     D13PuSensorRequest,
     D13PuSensorResponse,
@@ -479,6 +484,16 @@ def create_fastapi_app():
     ) -> PatchManualCalibrationResponse:
         try:
             return prepare_patch_manual_calibration_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post(
+        "/api/v1/pedagogical/patch-test/assessment",
+        response_model=PatchAssessmentResponse,
+    )
+    def patch_test_assessment(request: PatchAssessmentRequest) -> PatchAssessmentResponse:
+        try:
+            return prepare_patch_assessment_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
