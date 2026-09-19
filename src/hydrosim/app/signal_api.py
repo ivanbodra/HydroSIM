@@ -57,6 +57,11 @@ from hydrosim.app.patch_test_api import (
     PatchSignatureResponse,
     prepare_patch_signature_response,
 )
+from hydrosim.app.patch_test_acquisition_api import (
+    PatchAcquisitionRequest,
+    PatchAcquisitionResponse,
+    prepare_patch_acquisition_response,
+)
 from hydrosim.app.pu_sensor_api import (
     D13PuSensorRequest,
     D13PuSensorResponse,
@@ -459,6 +464,16 @@ def create_fastapi_app():
     def patch_test_signatures(request: PatchSignatureRequest) -> PatchSignatureResponse:
         try:
             return prepare_patch_signature_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post(
+        "/api/v1/pedagogical/patch-test/acquisition",
+        response_model=PatchAcquisitionResponse,
+    )
+    def patch_test_acquisition(request: PatchAcquisitionRequest) -> PatchAcquisitionResponse:
+        try:
+            return prepare_patch_acquisition_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 

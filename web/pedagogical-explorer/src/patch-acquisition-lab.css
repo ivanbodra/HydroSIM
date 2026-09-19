@@ -1,0 +1,363 @@
+.p3-lab {
+  min-height: 100vh;
+  background: radial-gradient(
+    circle at 70% 0,
+    #183b4b,
+    #07151f 44%,
+    #040a10 82%
+  );
+  color: #dcecf2;
+  padding: 0 28px 45px;
+}
+.p3-lab > header {
+  max-width: 1500px;
+  min-height: 140px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.p3-lab header span,
+.p3-title span {
+  font-size: 9px;
+  letter-spacing: 0.17em;
+  color: #50dfce;
+}
+.p3-lab h1 {
+  margin: 7px 0;
+  font-size: 30px;
+}
+.p3-lab header p {
+  margin: 0;
+  color: #7894a3;
+}
+.p3-lab header button {
+  border: 1px solid #58c7ff42;
+  background: #091923;
+  color: #8fbdce;
+  border-radius: 9px;
+  padding: 9px 12px;
+}
+.p3-layout {
+  max-width: 1500px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: 18px;
+}
+.p3-controls,
+.p3-track,
+.p3-evidence,
+.p3-fitness,
+.p3-provenance {
+  border: 1px solid #69b8d12a;
+  background: #07141ddd;
+  border-radius: 18px;
+}
+.p3-controls {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.p3-family {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.p3-family button,
+.p3-toggles button,
+.p3-reset,
+.p3-play button {
+  border: 1px solid #72aac52a;
+  background: #091923;
+  color: #7897a5;
+  border-radius: 9px;
+  padding: 10px;
+}
+.p3-family button.active,
+.p3-toggles button.on {
+  color: #c0fff7;
+  border-color: #50dfce77;
+  background: #50dfce10;
+}
+.p3-controls label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px;
+  font-size: 10px;
+  color: #8aa4b1;
+}
+.p3-controls output {
+  color: #dcecf2;
+}
+.p3-controls input {
+  grid-column: 1/-1;
+  accent-color: #50dfce;
+}
+.p3-toggles {
+  display: grid;
+  gap: 7px;
+  border-top: 1px solid #72aac51e;
+  padding-top: 13px;
+}
+.p3-toggles button,
+.p3-reset {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.p3-reset {
+  justify-content: center;
+  margin-top: auto;
+}
+.p3-instrument {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  position: relative;
+}
+.p3-track,
+.p3-evidence {
+  overflow: hidden;
+}
+.p3-title {
+  height: 52px;
+  border-bottom: 1px solid #69b8d11e;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.p3-title strong {
+  font-size: 11px;
+}
+.p3-track svg,
+.p3-evidence svg {
+  width: 100%;
+  display: block;
+  background: linear-gradient(#0a2633, #081a24);
+}
+.p3-support {
+  fill: #50dfce18;
+  stroke: #50dfce88;
+  stroke-dasharray: 6 5;
+}
+.p3-run {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.p3-run.r0 {
+  stroke: #50dfce;
+}
+.p3-run.r1 {
+  stroke: #ffbd4f;
+}
+.p3-vessel {
+  stroke-width: 4;
+  fill: #07141d;
+}
+.p3-vessel.r0 {
+  stroke: #50dfce;
+}
+.p3-vessel.r1 {
+  stroke: #ffbd4f;
+}
+.p3-track g.foreground .p3-run {
+  opacity: 1;
+}
+.p3-track text {
+  fill: #8aa4b1;
+  font-size: 10px;
+}
+.p3-play {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+}
+.p3-play button {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 11px;
+}
+.p3-play button svg {
+  width: 14px;
+  height: 14px;
+}
+.p3-play input {
+  flex: 1;
+  accent-color: #50dfce;
+}
+.p3-observed {
+  fill: none;
+  stroke-width: 2;
+}
+.p3-observed.r0 {
+  stroke: #50dfce;
+}
+.p3-observed.r1 {
+  stroke: #ffbd4f;
+}
+.p3-derived.r0 {
+  fill: #b9fff8;
+}
+.p3-derived.r1 {
+  fill: #ffe2a9;
+}
+.p3-legend {
+  display: flex;
+  gap: 18px;
+  padding: 10px 16px;
+  color: #819aa5;
+  font-size: 9px;
+}
+.p3-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.p3-legend i {
+  width: 8px;
+  height: 8px;
+}
+.p3-legend .obs {
+  border: 2px solid #50dfce;
+  border-radius: 50%;
+}
+.p3-legend .drv {
+  background: #b9fff8;
+}
+.p3-fitness {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+}
+.p3-fitness > div {
+  flex: 1;
+}
+.p3-fitness small {
+  display: block;
+  color: #7894a3;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+.p3-fitness strong {
+  font-size: 18px;
+}
+.p3-fitness p {
+  margin: 4px 0 0;
+  color: #91a7b0;
+  font-size: 10px;
+}
+.p3-fitness > b {
+  text-align: right;
+  font-size: 19px;
+}
+.p3-fitness > b small {
+  font-weight: 400;
+}
+.p3-fitness.usable > svg {
+  color: #50dfce;
+}
+.p3-fitness.marginal > svg {
+  color: #ffbd4f;
+}
+.p3-fitness.reacquire > svg {
+  color: #ff847c;
+}
+.p3-provenance {
+  grid-column: 1/-1;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.p3-provenance article {
+  border: 1px solid #72aac51f;
+  border-radius: 11px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #718d98;
+}
+.p3-provenance article.active {
+  border-color: #50dfce55;
+  color: #b5d5dd;
+}
+.p3-provenance article > svg {
+  width: 16px;
+}
+.p3-provenance article div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.p3-provenance small {
+  font-size: 8px;
+  color: #50dfce;
+}
+.p3-provenance strong,
+.p3-provenance span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.p3-provenance strong {
+  font-size: 11px;
+}
+.p3-provenance span {
+  font-size: 9px;
+  color: #738e99;
+}
+.p3-error {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: #32181b;
+  color: #ffc0b6;
+  padding: 9px;
+  border-radius: 9px;
+}
+@media (max-width: 1000px) {
+  .p3-layout {
+    grid-template-columns: 1fr;
+  }
+  .p3-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .p3-family,
+  .p3-toggles,
+  .p3-reset {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 720px) {
+  .p3-lab {
+    padding: 0 12px 30px;
+  }
+  .p3-lab h1 {
+    font-size: 23px;
+  }
+  .p3-instrument {
+    grid-template-columns: 1fr;
+  }
+  .p3-fitness,
+  .p3-provenance {
+    grid-column: 1;
+  }
+  .p3-provenance {
+    grid-template-columns: 1fr;
+  }
+  .p3-controls {
+    display: flex;
+  }
+}
