@@ -144,6 +144,7 @@
   stroke-dasharray: 6 5;
 }
 .p3-run {
+  fill: none;
   stroke-width: 4;
   stroke-linecap: round;
   opacity: 0.55;

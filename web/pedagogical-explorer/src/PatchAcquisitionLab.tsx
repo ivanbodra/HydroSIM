@@ -35,6 +35,11 @@ type Result = {
   fitness: "usable" | "marginal" | "reacquire";
   fitness_reasons: string[];
   common_support_fraction: number;
+  common_support_geometry: {
+    axis: "x" | "y";
+    interval_m: [number, number] | null;
+    bounds: { min_x_m: number; max_x_m: number; min_y_m: number; max_y_m: number } | null;
+  };
   residual_axis: "x" | "y";
   residual_preview: { coordinate_m: number; vertical_difference_m: number }[];
   state_semantics: string;
@@ -130,6 +135,14 @@ export default function PatchAcquisitionLab() {
       [Math.min(...a, 0), Math.max(...a, 1)] as const;
     return { x: span(xs), y: span(ys), z: span(zs) };
   }, [points]);
+  const planExt = useMemo(() => {
+    const samples = data?.runs.flatMap((r) => r.observed) ?? [];
+    const bounds = data?.common_support_geometry.bounds;
+    const xs = samples.map((p) => p.measured_x_m).concat(bounds ? [bounds.min_x_m, bounds.max_x_m] : []);
+    const ys = samples.map((p) => p.measured_y_m).concat(bounds ? [bounds.min_y_m, bounds.max_y_m] : []);
+    const span = (a: number[]) => [Math.min(...a, 0), Math.max(...a, 1)] as const;
+    return { x: span(xs), y: span(ys) };
+  }, [data]);
   const map = (
     v: number,
     [a, b]: readonly [number, number],
@@ -248,44 +261,39 @@ export default function PatchAcquisitionLab() {
                   : "Executed lines and coverage"
               }
             >
-              {showSupport && (
+              {showSupport && data?.common_support_geometry.bounds && (
                 <rect
                   className="p3-support"
-                  x={130 + (1 - overlap) * 180}
-                  y="42"
-                  width={500 * overlap}
-                  height="166"
+                  x={map(data.common_support_geometry.bounds.min_x_m, planExt.x, 70, 690)}
+                  y={map(data.common_support_geometry.bounds.max_y_m, planExt.y, 215, 35)}
+                  width={Math.max(2,map(data.common_support_geometry.bounds.max_x_m, planExt.x, 70, 690)-map(data.common_support_geometry.bounds.min_x_m, planExt.x, 70, 690))}
+                  height={Math.max(2,map(data.common_support_geometry.bounds.min_y_m, planExt.y, 215, 35)-map(data.common_support_geometry.bounds.max_y_m, planExt.y, 215, 35))}
                   rx="12"
                 />
               )}
               {[0, 1].map((i) => {
                 const run = data?.runs[i];
-                const progress = Math.min(
-                  visible / Math.max(run?.observed.length ?? 1, 1),
-                  1,
-                );
-                const reverse = (run?.heading_deg ?? 0) > 90;
-                const x = reverse ? 630 - progress * 500 : 130 + progress * 500;
+                const acquired=run?.observed??[];
+                const shown=acquired.slice(0,visible);
+                const vessel=shown.at(-1)??acquired[0];
+                const track=acquired.map((p,j)=>`${j?'L':'M'}${map(p.measured_x_m,planExt.x,70,690).toFixed(1)},${map(p.measured_y_m,planExt.y,215,35).toFixed(1)}`).join(' ');
                 return (
                   <g
                     key={i}
                     className={foreground === i ? "foreground" : ""}
                     onClick={() => setForeground(i as 0 | 1)}
                   >
-                    <line
+                    <path
                       className={`p3-run r${i}`}
-                      x1="130"
-                      y1={90 + i * 75}
-                      x2="630"
-                      y2={90 + i * 75}
+                      d={track}
                     />
-                    <circle
+                    {vessel&&<circle
                       className={`p3-vessel r${i}`}
-                      cx={x}
-                      cy={90 + i * 75}
+                      cx={map(vessel.measured_x_m,planExt.x,70,690)}
+                      cy={map(vessel.measured_y_m,planExt.y,215,35)}
                       r="10"
-                    />
-                    <text x="140" y={75 + i * 75}>
+                    />}
+                    <text x="85" y={25 + i * 18}>
                       {run?.line_id ?? `RUN ${i + 1}`} ·{" "}
                       {run?.speed_mps.toFixed(1) ?? "—"} m/s ·{" "}
                       {run?.heading_deg.toFixed(0) ?? "—"}°
