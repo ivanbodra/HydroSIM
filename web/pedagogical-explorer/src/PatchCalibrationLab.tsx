@@ -51,12 +51,34 @@ export default function PatchCalibrationLab() {
     [family, setFamily] = useState<Family>("roll"),
     [candidate, setCandidate] = useState(0),
     [data, setData] = useState<Result | null>(null),
+    [baseline, setBaseline] = useState<Result | null>(null),
     [error, setError] = useState(false),
     [view, setView] = useState<"current" | "residual" | "compare">("compare");
   const pt = lang === "pt",
     limit = family === "latency" ? 400 : 4,
     step = family === "latency" ? 5 : 0.1;
   useEffect(() => setCandidate(0), [family]);
+  useEffect(() => {
+    const ac = new AbortController();
+    fetch("/api/v1/pedagogical/patch-test/manual-calibration", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      signal: ac.signal,
+      body: JSON.stringify({
+        error_family: family,
+        candidate_correction: 0,
+        search_min: -limit,
+        search_max: limit,
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then(setBaseline)
+      .catch(() => undefined);
+    return () => ac.abort();
+  }, [family, limit]);
   useEffect(() => {
     const ac = new AbortController();
     setError(false);
@@ -82,16 +104,17 @@ export default function PatchCalibrationLab() {
     return () => ac.abort();
   }, [family, candidate, limit]);
   const curve = data?.objective_curve ?? [],
-    res = data?.spatial_residual ?? [];
+    res = data?.spatial_residual ?? [],
+    before = baseline?.spatial_residual ?? [];
   const bounds = useMemo(() => {
     const cs = curve.map((p) => p.correction),
       rs = curve.map((p) => p.rms_m),
-      xs = res.map((p) => p.coordinate_m),
-      zs = res.flatMap((p) => [p.run_a_z_m, p.run_b_z_m]);
+      xs = [...res, ...before].map((p) => p.coordinate_m),
+      zs = [...res, ...before].flatMap((p) => [p.run_a_z_m, p.run_b_z_m]);
     const span = (a: number[]) =>
       [Math.min(...a, 0), Math.max(...a, 1)] as const;
     return { c: span(cs), r: span(rs), x: span(xs), z: span(zs) };
-  }, [curve, res]);
+  }, [curve, res, before]);
   const map = (
     v: number,
     [a, b]: readonly [number, number],
@@ -216,36 +239,30 @@ export default function PatchCalibrationLab() {
                   y2={55 + i * 55}
                 />
               ))}
-              {(view === "current" || view === "compare") && (
+              {view === "compare" && (
                 <>
                   <path
                     className="p4-before a"
                     d={path(
-                      res.map((p) => ({
+                      before.map((p) => ({
                         x: map(p.coordinate_m, bounds.x, 55, 715),
-                        y: map(
-                          p.run_a_z_m - p.vertical_difference_m,
-                          bounds.z,
-                          275,
-                          40,
-                        ),
+                        y: map(p.run_a_z_m, bounds.z, 275, 40),
                       })),
                     )}
                   />
                   <path
                     className="p4-before b"
                     d={path(
-                      res.map((p) => ({
+                      before.map((p) => ({
                         x: map(p.coordinate_m, bounds.x, 55, 715),
-                        y: map(
-                          p.run_b_z_m + p.vertical_difference_m,
-                          bounds.z,
-                          275,
-                          40,
-                        ),
+                        y: map(p.run_b_z_m, bounds.z, 275, 40),
                       })),
                     )}
                   />
+                </>
+              )}
+              {(view === "current" || view === "compare") && (
+                <>
                   <path
                     className="p4-current a"
                     d={path(
