@@ -47,6 +47,11 @@ from hydrosim.app.multisector_api import (
     D10MultisectorResponse,
     prepare_d10_multisector_response,
 )
+from hydrosim.app.patch_test_api import (
+    PatchSignatureRequest,
+    PatchSignatureResponse,
+    prepare_patch_signature_response,
+)
 from hydrosim.app.pu_sensor_api import (
     D13PuSensorRequest,
     D13PuSensorResponse,
@@ -432,6 +437,16 @@ def create_fastapi_app():
     def timing(request: D14TimingRequest) -> D14TimingResponse:
         try:
             return prepare_d14_timing_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post(
+        "/api/v1/pedagogical/patch-test/signatures",
+        response_model=PatchSignatureResponse,
+    )
+    def patch_test_signatures(request: PatchSignatureRequest) -> PatchSignatureResponse:
+        try:
+            return prepare_patch_signature_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
