@@ -18,6 +18,12 @@ type Run = {
   speed_mps: number;
   points: Point[];
 };
+type DatasetResidual = {
+  coordinate_m: number;
+  run_a_z_m: number;
+  run_b_z_m: number;
+  vertical_difference_m: number;
+};
 type Response = {
   error_family: Family;
   likely_classification: Family;
@@ -25,6 +31,8 @@ type Response = {
   comparison_region: "outer_swath" | "near_nadir" | "common_outer_swath";
   geometry_description: string;
   runs: Run[];
+  dataset_residual_axis: "x" | "y";
+  dataset_residuals: DatasetResidual[];
 };
 const API_BASE =
   (import.meta.env.VITE_HYDROSIM_API_BASE as string | undefined) ??
@@ -76,6 +84,8 @@ const copy = {
     },
     run: "Run",
     residual: "maximum disagreement",
+    datasetResidual: "maximum run-to-run difference",
+    difference: "run A − run B",
   },
   pt: {
     fundamentals: "FUNDAMENTOS",
@@ -122,6 +132,8 @@ const copy = {
     },
     run: "Linha",
     residual: "discordância máxima",
+    datasetResidual: "diferença máxima entre linhas",
+    difference: "linha A − linha B",
   },
 };
 const range = (v: number[]) => {
@@ -267,17 +279,24 @@ function Signature({
         )
         .join(" "),
     max = Math.max(
-      ...points.map((p) =>
-        Math.hypot(p.horizontal_residual_m, p.vertical_residual_m),
-      ),
-    );
+      0,
+      ...data.dataset_residuals.map((p) => Math.abs(p.vertical_difference_m)),
+    ),
+    residualPath = data.dataset_residuals
+      .map((p, i) => {
+        const px =
+          55 + (i / Math.max(data.dataset_residuals.length - 1, 1)) * 610;
+        const py = 307 - (p.vertical_difference_m / Math.max(max, 0.001)) * 18;
+        return `${i ? "L" : "M"} ${px.toFixed(1)} ${py.toFixed(1)}`;
+      })
+      .join(" ");
   return (
     <div className="patch-signature-wrap">
       <svg
         className="patch-signature"
         viewBox="0 0 720 340"
         role="img"
-        aria-label={`${t.residual}: ${max.toFixed(2)} m`}
+        aria-label={`${t.datasetResidual}: ${max.toFixed(2)} m`}
       >
         {[0, 1, 2, 3].map((i) => (
           <line
@@ -300,6 +319,11 @@ function Signature({
             d={path(r)}
           />
         ))}
+        <line className="patch-grid" x1="55" x2="665" y1="307" y2="307" />
+        <path className="patch-difference" d={residualPath} />
+        <text x="58" y="332">
+          Δz · {t.difference}
+        </text>
         <text x="58" y="28">
           {profile ? t.alongTrack : t.acrossTrack} (m)
         </text>
@@ -308,7 +332,7 @@ function Signature({
       <div className="patch-residual">
         <span>Δ</span>
         <div>
-          <small>{t.residual}</small>
+          <small>{t.datasetResidual}</small>
           <strong>{max.toFixed(2)} m</strong>
         </div>
       </div>
