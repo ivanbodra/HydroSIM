@@ -15,11 +15,22 @@ from .roll_offset import (
     load_roll_offset_scenario,
     run_roll_offset_scenario,
 )
+from .patch_test_signatures import (
+    PatchSignatureConfig,
+    PatchSignaturePoint,
+    PatchSignatureResult,
+    PatchSignatureRun,
+    run_patch_signature_scenario,
+)
 
 __all__ = [
     "PitchCalibrationResult",
     "PitchCalibrationScenarioConfig",
     "PitchProfile",
+    "PatchSignatureConfig",
+    "PatchSignaturePoint",
+    "PatchSignatureResult",
+    "PatchSignatureRun",
     "RollOffsetResult",
     "RollOffsetScenarioConfig",
     "RollOffsetSummary",
@@ -27,5 +38,6 @@ __all__ = [
     "load_roll_offset_scenario",
     "pitch_profile_mismatch_rms",
     "run_pitch_calibration_scenario",
+    "run_patch_signature_scenario",
     "run_roll_offset_scenario",
 ]
