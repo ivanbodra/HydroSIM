@@ -72,6 +72,11 @@ from hydrosim.app.patch_test_assessment_api import (
     PatchAssessmentResponse,
     prepare_patch_assessment_response,
 )
+from hydrosim.app.patch_test_risc_api import (
+    RiscVisualizationRequest,
+    RiscVisualizationResponse,
+    prepare_risc_visualization_response,
+)
 from hydrosim.app.pu_sensor_api import (
     D13PuSensorRequest,
     D13PuSensorResponse,
@@ -506,6 +511,18 @@ def create_fastapi_app():
     def patch_test_assessment(request: PatchAssessmentRequest) -> PatchAssessmentResponse:
         try:
             return prepare_patch_assessment_response(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post(
+        "/api/v1/pedagogical/patch-test/risc-visualization",
+        response_model=RiscVisualizationResponse,
+    )
+    def patch_test_risc_visualization(
+        request: RiscVisualizationRequest,
+    ) -> RiscVisualizationResponse:
+        try:
+            return prepare_risc_visualization_response(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
