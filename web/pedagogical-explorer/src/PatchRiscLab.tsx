@@ -13,7 +13,7 @@ export default function PatchRiscLab(){
  const pt=lang==='pt';
  useEffect(()=>{setValue(null)},[parameter]);
  useEffect(()=>{const ac=new AbortController();setError(false);const body:value===null?{parameter}:{parameter,value};fetch('/api/v1/pedagogical/patch-test/risc-visualization',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),signal:ac.signal}).then(r=>{if(!r.ok)throw new Error();return r.json()}).then((next:Result)=>{setData(next);if(value===null)setValue(next.configured_value)}).catch(e=>{if(e.name!=='AbortError')setError(true)});return()=>ac.abort()},[parameter,value]);
- const meta=data?.parameter_metadata;const zero=meta?.zero_value??0;const demo=meta?.default_demo_value??1;const span=Math.max(Math.abs(demo-zero)*2,parameter==='delta_rho'?.08:.01);const min=parameter==='delta_rho'?Math.max(.01,zero-span):zero-span;const max=zero+span;const step=Math.max(span/100,.0001);
+ const meta=data?.parameter_metadata;const zero=meta?.zero_value??0;const demo=meta?.default_demo_value??1;const span=Math.max(Math.abs(demo-zero)*2,parameter==='delta_rho' ? 0.08 : 0.01);const min=parameter==='delta_rho'?Math.max(.01,zero-span):zero-span;const max=zero+span;const step=Math.max(span/100,.0001);
  const scale=data?.display_scale_m??2.5;
  const plot=useMemo(()=>{const points=[...(data?.baseline??[]),...(data?.changed??[])];const along=points.map(p=>p.along_m);return{minA:Math.min(...along,0),maxA:Math.max(...along,1)}},[data]);
  const x=(v:number)=>44+(v-plot.minA)/Math.max(plot.maxA-plot.minA,1e-9)*692;const y=(v:number)=>155-v/scale*118;
