@@ -1,84 +1,59 @@
 # CAHO curricular alignment
 
-Status: initial repository baseline; course-source access blocked; no CAHO lesson alignment verified.
+Status: first source-backed, partial curricular map; progressive absorption continues.
 Inspection date: 2026-10-16.
-Repository baseline: `eed7bedc19f654b9adc13275a249a57576720e5d` (`main`).
+HydroSIM implementation baseline: `eed7bedc19f654b9adc13275a249a57576720e5d`.
 
-## Purpose and ownership
+## Purpose and authority
 
-`caho-pedagogy` connects HydroSIM activities to the actual lessons and learning objectives of the Curso de Aperfeiçoamento de Hidrografia para Oficiais (CAHO). The Product Owner is final authority. Course materials are curricular authority; HydroSIM science contracts remain scientific authority.
+`caho-pedagogy` connects HydroSIM to the actual lessons and objectives of the Curso de Aperfeiçoamento de Hidrografia para Oficiais (CAHO). The Product Owner is final authority. CAHO materials define curricular intent; HydroSIM scientific contracts define valid simulation behavior.
 
-The role owns curricular analysis, prerequisite sequencing, learning objectives, activity structure, misconceptions, scaffolding, assessment intent and pedagogical acceptance criteria. It does not own scientific models, software/API implementation, production UX, final visual design, routine QA or integration.
+This role owns lesson alignment, objectives, prerequisites, learning activities, misconceptions, scaffolding and pedagogical acceptance. Science, software/API, production UX, final visual design, independent QA and integration retain their specialist owners.
 
-This directory indexes and aligns existing specifications. It does not replace the canonical Acoustic Lab or Patch Test documents or authorize implementation.
+This directory supplements the existing modular specifications. It does not replace them, certify runtime readiness or authorize new product scope.
 
-## Reading order
+## Read by purpose
 
-- [Existing coverage](existing_coverage.md): repository evidence and identifiers, with CAHO links still pending.
-- [Mapping roadmap](mapping_roadmap.md): the next source-analysis cycle and provisional reuse sequence.
+- [Curricular map](curriculum_map.md): source-backed links, title-only candidates, prerequisites and treatment choices.
+- [Source inventory](source_inventory.csv): 166 observed entries from 27 folder listings; exact relative paths, reading states and hashes for the five obtained PDFs.
+- [Reading log](reading_log.md): exact pages and visual sampling examined; what remains unread.
+- [Existing HydroSIM coverage](existing_coverage.md): semantic identifier crosswalk and inspected implementation evidence.
+- [Prioritized roadmap](mapping_roadmap.md): classroom value, dependencies and next bounded work.
+- [First classroom activity](activities/CAHO-HYD05-REFRACTION.md): a guided use of existing PED-D4, not a new scientific model or duplicated laboratory.
 
-For an active laboratory, read its existing modular specification rather than importing the whole course into one working context.
+## Source access and extent
 
-## Course source and access evidence
+Course entry point: <https://bit.ly/CIAARA_CAHO>.
+Direct shared-folder link supplied by the Product Owner: <https://1drv.ms/f/c/4403e8e210681632/IgDupVBOgdQ3RbudVK96ZlyEAcqE2t2MX0O8i1eJutLkv4Q>.
 
-| Source | Observed result on 2026-10-16 | Reading status |
-|---|---|---|
-| Product Owner course entry point: <https://bit.ly/CIAARA_CAHO> | HTTP redirect to a personal OneDrive shared folder | Link resolution only |
-| Redirect target: <https://1drv.ms/f/c/4403e8e210681632/IgDupVBOgdQ3RbudVK96ZlyEAcqE2t2MX0O8i1eJutLkv4Q?e=HTI5Zc> | Redirect to `onedrive.live.com`; direct retrieval ended in a proxy HTTP 502; web retrieval reported the source inaccessible | Folder contents unread |
+Direct HTTP/web retrieval failed earlier. Browser access to the supplied direct link succeeded without sign-in on 2026-10-16, and the course PDFs used here were obtained from the viewer. **The earlier course-access blocker is resolved.**
 
-The folder listing, course year, subjects, lesson order, instructors, presentations, exercises, page counts and revision dates have **not** been inspected. No inference about access permissions, authentication requirements, site availability or the course's contents follows from this retrieval failure.
+The root contains `Acústica Submarina`, `Hidrografia`, `Material de Apoio`, the 285-page July-2026 hydrography handout and a QR image. This establishes the extent of this shared collection, not the complete official CAHO syllabus. Materials span different years; filenames labelled CAHO24 must not silently become a 2026 syllabus.
 
-No CAHO-specific mapping directory was found in the inspected repository tree. No CAHO issue/PR or open handoff addressed to `caho-pedagogy` was returned by the startup searches. These are inspection results, not proof that no relevant teaching content exists elsewhere.
+The initial inventory lists all direct children of the root, acoustic subject and its PDS/TRACEO folders, all 19 displayed hydrography lesson folders, and the two supporting-reference folders. Deeper software, examples and calibration-data branches remain explicitly unexpanded. Counts are observed entries, not distinct lessons, fully read sources or curricular completion.
 
-## Initial curricular inventory
+## Evidence labels and reading discipline
 
-| Inventory level | Verified entries | Meaning |
-|---|---:|---|
-| Supplied course entry point | 1 | Root link only |
-| Listed folders / subjects | 0 | Not inspected; not an empty-course claim |
-| Lesson materials read | 0 | No course-content claims can be made |
-| Source-backed lesson-to-lab links | 0 | All links await course evidence |
-| Confirmed curricular gaps | 0 | Unknown until lesson mapping |
+- **Course-explicit**: identified source page states a topic, objective or activity.
+- **Pedagogical interpretation**: proposed learning question, prerequisite, misconception, assessment or treatment inferred from specified evidence.
+- **Scientific inference**: scientific interpretation requiring the applicable contract or Scientific Lead.
+- **Proposed extension**: beyond verified course content or current product/model scope.
+- **Unresolved question**: incomplete or contradictory evidence.
 
-The HydroSIM topic inventory in `existing_coverage.md` must not be relabelled as a CAHO syllabus.
+Source states are `listed_unread`, `partially_read`, `read`, `mapped` and `needs_recheck`; folders additionally record whether their children were listed. Reading the text of a presentation with sampled figure checks is recorded as partial review, not full audiovisual analysis. Page locators are **1-based PDF pages**, not printed slide numbers.
 
-## Evidence vocabulary
+A source-backed topic link is not evidence that a complete lesson has been mapped, implemented or assessed. No CAHO coverage percentage is claimed.
 
-Each future mapping must distinguish:
+## Required records and activity specification
 
-- **Course-explicit**: exact material and page/slide/section state the content or objective.
-- **Pedagogical interpretation**: a proposed objective, prerequisite, misconception or activity inferred from identified teaching material.
-- **Scientific inference**: a scientific interpretation that needs the applicable contract or Scientific Lead decision.
-- **Proposed HydroSIM extension**: useful content beyond the verified lesson or approved product boundary.
-- **Unresolved question**: missing or contradictory evidence.
+Maintain source identity/path, revision/cohort when stated, reading extent and next unread section. Preserve original Portuguese filenames/terminology; canonical analysis remains English. Do not commit teaching-source binaries, complete extracted texts, screenshots of teaching slides, installers or datasets.
 
-A scientific reference or IHO competence anchor is not evidence that CAHO teaches a particular lesson.
+Every new activity/laboratory specification must identify: stable ID/title; CAHO connection; target learners/prerequisites; learning problem; objectives; central phenomenon; pedagogical question; learning sequence; meaningful inputs; visible outputs; comparison states; guidance; misconceptions; assessment evidence; exact scientific/course sources; visual rationale; model boundaries; implementation dependencies; acceptance criteria.
 
-## Source and mapping records
+Use the smallest effective treatment: no HydroSIM treatment, static visual, guided animation, interactive demonstration, full laboratory or integrated scenario. Reuse existing activities before adding simulations. Do not invent controls that lack meaningful, scientifically supported consequences.
 
-For each material, record: stable local source ID; exact title; original folder/path or item link; author/instructor when stated; course cohort/date/revision when stated; file type; page/slide count; relevant pages/slides; reading status; next unread section. Retain source filenames and Portuguese course terminology. Do not copy the complete teaching archive into the repository.
+## Routing
 
-Reading states: `unlisted`, `listed_unread`, `partially_read`, `read`, `mapped`, `needs_recheck`. Record what was actually read; a title or folder name does not count as lesson analysis.
+Use canonical GitHub handoffs: science → `scientific-lead`; visual concept → `concept-designer`; missing Core/API → `software-engineering`; approved learner implementation → `interface-ux`; integrated verification → `qa-scientific-validation`; sequencing/integration → `technical-lead`.
 
-For each lesson-to-lab link, record: source ID and locator; subject/lesson/section; explicit course content; separately identified interpretation; intended learning outcome; prerequisites; existing HydroSIM semantic name and ID; treatment level; before/during/after-class use; assessment evidence; coverage or gap; unresolved dependencies. A link is verified only after its cited source section is read.
-
-## Treatment and specification rule
-
-Use the smallest useful treatment: no HydroSIM treatment, static visual, guided animation, interactive demonstration, full laboratory, or integrated scenario. Prefer existing activities when they already answer the lesson's learning question.
-
-A new laboratory specification must include: stable ID/title; CAHO subject/lesson/section/source; target learners and prerequisites; learning problem; objectives; central phenomenon; pedagogical question; observe/manipulate/compare/explain/apply sequence; meaningful inputs; visible outputs; reference/comparison states; guidance; misconceptions; assessment evidence; exact scientific/course sources; visual rationale; model boundaries; implementation dependencies; concrete learner-facing acceptance criteria.
-
-Do not issue an implementation handoff until curricular evidence, science, visual requirements and required capability are sufficiently resolved. Scope extensions require Product Owner sequencing rather than implicit expansion from the course's breadth.
-
-## Operational routing
-
-GitHub handoffs follow `docs/coordination/agent_handoffs.md` and #544 where Patch Test is involved.
-
-- Scientific ambiguity, units, frames and model limits: `scientific-lead`.
-- New visual concept: `concept-designer`.
-- Missing Core/API capability: `software-engineering`.
-- Approved production learner experience: `interface-ux`.
-- Integrated verification: `qa-scientific-validation`.
-- Integration, sequencing and ownership conflicts: `technical-lead`.
-
-An open handoff must request a bounded executable action. Course-access failure is not a reason to open speculative development handoffs.
+An open handoff must request executable bounded work. A reading backlog or a speculative scope extension is not an implementation order.

@@ -1,6 +1,6 @@
 # HydroSIM coverage available for CAHO mapping
 
-Status: repository inventory and pedagogical interpretation; **not a verified CAHO curricular map**.
+Status: implementation-side inventory and pedagogical reuse crosswalk. Source-backed CAHO links are maintained separately in curriculum_map.md.
 Baseline: `eed7bedc19f654b9adc13275a249a57576720e5d`; inspected 2026-10-16.
 
 ## Evidence limits and identifier crosswalk
@@ -13,7 +13,7 @@ The module identifier policy still describes 31 experiences, while the delivery 
 
 ## Existing acoustic and integration activities
 
-All CAHO subject, lesson and slide/page locators are **pending source access and reading**. Treatment recommendations below are pedagogical hypotheses about classroom reuse, not approvals to redesign existing labs.
+CAHO source access is now available. See curriculum_map.md links C01–C11 and reading_log.md for the subset verified by source pages. Rows here inventory HydroSIM implementation surfaces; they do not claim complete lesson coverage. Classroom treatments remain pedagogical interpretations rather than approvals to redesign existing labs.
 
 Paths in the specification column are relative to `docs/pedagogy/acoustic_lab/`.
 
@@ -43,12 +43,12 @@ The retired PED-D5 detection-fundamentals activity must not return as a separate
 
 | ID | Existing pedagogical specification under `docs/pedagogy/patch_test/` | Production evidence | CAHO alignment / candidate treatment |
 |---|---|---|---|
-| P1 | P01_fundamentals_error_signatures.md | #patch-test-signatures route on inspected main | Pending; interactive demonstration of residual signatures |
-| P2 | P02_line_planning.md | #patch-test-planning route on inspected main | Pending; planning stage of a full laboratory |
-| P3 | P03_synthetic_acquisition.md | #patch-test-acquisition route on inspected main | Pending; evidence-acquisition stage of that laboratory |
-| P4 | P04_manual_calibration.md | #patch-test-calibration route on inspected main | Pending; manual estimation and correction stage |
-| P5 | P05_assessment_validation.md | #patch-test-assessment route on inspected main; integration commit eed7bed | Pending; assessment and independent validation stage |
-| P6 | P06_risc_integrated_diagnostics.md | Absent from inspected main routes; open PR #602 at 50188a9a438355f2a0ba889ebd6e253467977d0f | Pending; advanced interactive demonstration only within current authorization |
+| P1 | P01_fundamentals_error_signatures.md | #patch-test-signatures route on inspected main | C08; interactive demonstration of residual signatures |
+| P2 | P02_line_planning.md | #patch-test-planning route on inspected main | C09; planning stage of a full laboratory |
+| P3 | P03_synthetic_acquisition.md | #patch-test-acquisition route on inspected main | C09; evidence-acquisition stage of that laboratory |
+| P4 | P04_manual_calibration.md | #patch-test-calibration route on inspected main | C10; manual estimation and correction stage |
+| P5 | P05_assessment_validation.md | #patch-test-assessment route on inspected main; integration commit eed7bed | C10; assessment and independent validation stage |
+| P6 | P06_risc_integrated_diagnostics.md | Absent from inspected main routes; open PR #602 at 50188a9a438355f2a0ba889ebd6e253467977d0f | C11, proposed complementary extension; current visualize_only authorization applies |
 
 P1–P5 should be considered as one coherent calibration learning sequence before proposing duplicate isolated experiences. Presence of routes is not certification of that whole sequence.
 
@@ -64,7 +64,7 @@ Synthetic export intended for CARIS HIPS & SIPS is a product intention, not veri
 
 ## Scope and prerequisite interpretation
 
-The existing plan excludes complete GNSS/geodesy, tide theory, bathymetric post-processing, side-scan, backscatter, LiDAR, AUV/ROV, subsea positioning, cartography/ENC, MSDI/database administration, legal aspects, project management and formal survey reporting from current teaching modules. Whether CAHO teaches these areas is not yet known. A relevant course lesson would justify evaluation of a small visual aid or explicit extension proposal, not automatic product expansion.
+The existing plan excludes complete GNSS/geodesy, tide theory, bathymetric post-processing, side-scan, backscatter, LiDAR, AUV/ROV, subsea positioning, cartography/ENC, MSDI/database administration, legal aspects, project management and formal survey reporting from current teaching modules. The visible CAHO collection includes several of these areas, documented in curriculum_map.md. Their presence justifies evaluating a small visual aid or an explicit extension proposal after reading the lesson, not automatic product expansion.
 
 Provisional HydroSIM learning dependencies, to be reconciled with actual CAHO lesson order:
 
@@ -74,7 +74,7 @@ Provisional HydroSIM learning dependencies, to be reconciled with actual CAHO le
 - Geometry, timing, motion and residual signatures support P1–P5.
 - P6 remains optional advanced support after classic calibration concepts; it is not a prerequisite for P1–P5.
 
-These are pedagogical interpretations of existing HydroSIM architecture, not claims about CAHO prerequisites.
+These are pedagogical interpretations of existing HydroSIM architecture. Course-explicit prerequisite anchors are distinguished in curriculum_map.md.
 
 ## Inspected reference set
 
