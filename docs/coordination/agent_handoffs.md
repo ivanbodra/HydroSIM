@@ -18,6 +18,7 @@ Use these identifiers in handoff issues:
 - `qa-scientific-validation` — independent scientific and computational validation, invariants, units, signs, frames, limits and reference-vs-implementation checks.
 - `interface-ux` — production learner experience, interaction implementation, information architecture, visualization behaviour and bilingual user-facing interface. Legacy or accidental `ux-ui` handoffs should be treated as addressed to `interface-ux` and normalized when touched.
 - `concept-designer` — visual-design authority and upstream visual exploration for HydroSIM. Owns visual identity, composition, hierarchy, spatial presentation, visual effects and design-language improvements, while not changing scientific behaviour, canonical pedagogy, learner atom definitions or production API contracts.
+- `caho-pedagogy` — CAHO curricular alignment, lesson-to-laboratory traceability, learning objectives, activity sequencing, scaffolding, misconceptions and pedagogical acceptance criteria. Maintains `docs/pedagogy/caho/`; uses course materials as curricular authority without replacing scientific, visual, implementation, QA or integration ownership.
 - `coordination-secretary` — cross-agent routing, queue hygiene and detection of unaddressed dependencies.
 
 New specialist agents may be added later, but their identifier must be documented here before use.
