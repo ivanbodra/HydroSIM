@@ -1,6 +1,6 @@
 # Pedagogical treatises for the next HydroSIM generation
 
-Document revision: 1.0 — 2026-10-16.
+Document revision: 1.1 — 2026-10-16.
 Owner: caho-pedagogy. Product Owner: final authority.
 
 ## Purpose
@@ -13,12 +13,12 @@ This series is the pedagogical foundation of that future generation. It does not
 
 ## Current series
 
-| Experience | Canonical treatise | Portuguese reading edition | Status |
-|---|---|---|---|
-| PED-D1 — Acoustic wave, observation and acoustic quantities | [D1 treatise](PED-D1_acoustic_foundations.md) | [Tratado do D1](pt-BR/PED-D1_fundamentos_acusticos.md) | Product Owner direction recorded; proposed treatment specified; scientific extension and visual concept required |
-| Other Acoustic Lab experiences | Not yet written | Not yet written | Review individually with the Product Owner; no findings or redesigns inferred from D1 |
+| Experience | Treatise | Status |
+|---|---|---|
+| PED-D1 — Acoustic wave, observation and acoustic quantities | [D1 treatise](PED-D1_acoustic_foundations.md) | Product Owner direction recorded; proposed treatment specified; scientific extension and visual concept required |
+| Other Acoustic Lab experiences | Not yet written | Review individually with the Product Owner; no findings or redesigns inferred from D1 |
 
-The English edition is canonical under the repository language policy. The Portuguese edition identifies the same revision and section structure for Product Owner review. Scientific identifiers, units and conventions remain shared.
+All repository documentation is written in English. Brazilian Portuguese is an optional language for HydroSIM's user-facing presentation, not a parallel repository documentation edition.
 
 ## Precedence and continuity
 

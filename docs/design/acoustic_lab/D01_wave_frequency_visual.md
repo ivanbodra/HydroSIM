@@ -6,7 +6,7 @@ Production source: `web/pedagogical-explorer/src/WaveLab.tsx`
 
 ## Next-generation direction
 
-The [D1 pedagogical treatise, revision 1.0](../../pedagogy/treatises/PED-D1_acoustic_foundations.md) records the Product Owner's expanded target for the next HydroSIM generation. Develop its connected physical scene, particle/probe/instant distinctions and shared observation/control grammar as a new concept. The sections below retain the existing release's two-trace visual brief; they do not define the complete new target.
+The [D1 pedagogical treatise, revision 1.1](../../pedagogy/treatises/PED-D1_acoustic_foundations.md) records the Product Owner's expanded target for the next HydroSIM generation. Develop its connected physical scene, particle/probe/instant distinctions and shared observation/control grammar as a new concept. The sections below retain the existing release's two-trace visual brief; they do not define the complete new target.
 
 Mark pressure, particle-motion and energy/level outputs against their approved scientific capability; do not invent the missing physical relationships to complete a mockup.
 

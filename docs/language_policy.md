@@ -1,11 +1,12 @@
 # HydroSIM Language and Localization Policy
 
-Version: 0.1.0
+Version: 0.1.1
+Product Owner clarification: 2026-10-16
 Status: Normative project convention
 
 ## 1. Principle
 
-English is the canonical language of HydroSIM.
+English is the canonical language of HydroSIM. All repository documentation and GitHub coordination text must be written in English. Brazilian Portuguese is an optional language for the application's user-facing presentation.
 
 The scientific and software architecture must have one authoritative vocabulary. Translations are presentation layers and must not create alternative internal names, identifiers, schemas, or scientific semantics.
 
@@ -24,7 +25,8 @@ The following must be written in English:
 - internal/logical state names;
 - internal diagnostic and machine-readable messages;
 - scenario identifiers and configuration keys;
-- canonical scientific and developer documentation.
+- all repository documentation, including scientific, developer, pedagogical, design and coordination documents;
+- GitHub issue and pull request titles, descriptions and review documentation.
 
 Examples of canonical terminology include:
 
@@ -59,18 +61,11 @@ Language switching must not require rebuilding scientific state and should not r
 
 ## 4. Documentation
 
-The English documentation is canonical.
+All repository documentation must be written in English so that it is accessible to an international audience. Do not maintain parallel Portuguese editions of repository documents.
 
-Portuguese documentation is a translated edition of a corresponding English version. A translation must identify the version of the canonical documentation to which it corresponds.
+The optional Brazilian Portuguese presentation is implemented through application localization resources, including user-facing tutorials and exercises. Those resources may contain Portuguese strings; their presence does not authorize translated repository documentation.
 
-Recommended version presentation:
-
-- `Scientific Documentation vX.Y.Z — English (canonical)`
-- `Documentação Científica vX.Y.Z — Português (translation)`
-
-If a translated document and its canonical English source disagree, the English canonical version governs the software/scientific definition until the discrepancy is reviewed.
-
-Translations should preserve equations, symbols, identifiers, units, citations, and references unchanged unless localization specifically requires explanatory text.
+Original bibliographic titles, source filenames and attributed quotations may retain their source language for accurate identification. Explanatory documentation surrounding them remains in English.
 
 ## 5. Along-track and across-track terminology
 
@@ -98,11 +93,11 @@ Scientific-registry entries are canonical in English. This includes model names,
 
 Bibliographic titles and quotations retain their source language. Established terminology from the literature, such as `wobble`, `motion residual`, `beam steering`, `matched filter`, and `crossline`, should not be translated inside canonical identifiers merely to support a localized interface.
 
-Localized documentation may explain these terms in Portuguese while retaining the canonical English term where useful for traceability to the literature.
+Localized user-facing presentation may explain these terms in Portuguese while retaining the canonical English term where useful for traceability to the literature.
 
 ## 7. Compatibility rule
 
-Localization must be reversible at the presentation boundary: changing the UI/documentation language must not change simulation results, stored scientific state, schema meaning, scenario identity, or reproducibility.
+Localization must be reversible at the presentation boundary: changing the UI/presentation locale must not change simulation results, stored scientific state, schema meaning, scenario identity, or reproducibility.
 
 No scientific model may branch on the selected human language except for presentation formatting.
 
@@ -111,3 +106,4 @@ No scientific model may branch on the selected human language except for present
 New canonical technical terms should be introduced in English and reused consistently across code, schemas, registry entries, tests, and documentation.
 
 If terminology changes, compatibility and migration of public APIs or persisted schemas must be considered explicitly rather than silently renaming fields.
+The Product Owner's 2026-10-16 clarification supersedes the earlier allowance for translated repository documentation. New and revised documentation must follow the English-only rule while preserving optional application presentation in Brazilian Portuguese.

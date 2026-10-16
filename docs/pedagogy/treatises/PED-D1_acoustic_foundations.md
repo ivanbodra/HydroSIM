@@ -1,7 +1,7 @@
 # PED-D1 pedagogical treatise — Acoustic foundations through connected observation
 
-Revision: 1.0 — 2026-10-16.
-Canonical language: English. [Portuguese edition](pt-BR/PED-D1_fundamentos_acusticos.md).
+Revision: 1.1 — 2026-10-16.
+Documentation language: English. Brazilian Portuguese is an optional user-facing presentation locale.
 Owner: caho-pedagogy. Final authority: Product Owner.
 Target: next HydroSIM generation; implementation baseline inspected: eed7bedc19f654b9adc13275a249a57576720e5d.
 Status: Product Owner direction recorded; detailed pedagogical treatment recommended; physical-quantity scientific contract and visual concept pending.
@@ -335,7 +335,7 @@ Until these conditions are demonstrated, the redesigned D1 is specified/in devel
 
 ## 20. Delivery and review sequence
 
-1. Persist the treatise, its Portuguese edition and the link from the modular D1 specification.
+1. Persist the English treatise and the link from the modular D1 specification.
 2. Scientific Lead resolves SQ1–SQ5 in a bounded contract/extension with authoritative references and validation anchors.
 3. Concept Designer proposes the connected experience and shared observation/control grammar, coordinated with available scientific outputs.
 4. Technical Lead sequences the changes and identifies independently deliverable portions without dropping required depth.
@@ -361,3 +361,5 @@ The references motivate the treatment. Scientific Lead must document the exact e
 ## 22. Revision record
 
 Revision 1.0, 2026-10-16: initial treatise following Product Owner review of D1; expanded physical/measurement/quantity target; explicit preservation of frequency hierarchy; next-generation visual consistency, learning sequence, dependencies and acceptance.
+
+Revision 1.1, 2026-10-16: Product Owner clarified that all GitHub documentation must be in English. Removed the Portuguese documentation edition; retained English as the default application language and Brazilian Portuguese as an optional presentation locale.
