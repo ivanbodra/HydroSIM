@@ -5,6 +5,14 @@ Status: **Mapped**
 **Decision:** `KEEP + REFINE`  
 **Current:** `web/pedagogical-explorer/src/WaveLab.tsx`
 
+## Next-generation pedagogical target
+
+The Product Owner's 2026-10-16 direction expands D1 into the physical and observational foundation of the next HydroSIM generation: local motion/propagation, fixed-point time records, spatial snapshots, frequency hierarchy, pressure/intensity/power distinctions and referenced logarithmic levels.
+
+See the [canonical D1 pedagogical treatise, revision 1.1](../treatises/PED-D1_acoustic_foundations.md). The treatise governs that next-generation learning target; the remaining sections below preserve the current normalized-wave release baseline and reuse evidence.
+
+The physical-quantity extension requires Scientific Lead decisions before implementation. Existing normalized values must not be relabelled as calibrated pressure, intensity, power or sound levels.
+
 ## Purpose
 Build the minimum wave intuition reused later.
 
